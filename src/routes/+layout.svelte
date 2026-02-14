@@ -9,7 +9,7 @@
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
-<div class="theme-gruvbox w-full min-h-screen bg-bg0 text-fg0">
+<div class="theme-gruvbox w-full min-h-screen bg-bg0 text-fg0 font-jetbrains">
 	{@render children()}
 </div>
 
