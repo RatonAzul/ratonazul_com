@@ -16,8 +16,8 @@
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
-<div class="theme-{theme.current} w-full min-h-screen bg-bg0 text-fg0 font-jetbrains {showCrt.current ? 'crt' : ''}">
-	<div class="min-h-screen xl:max-w-[80%] mx-auto p-4 flex flex-col items-center relative">
+<div class="theme-{theme.current} w-full min-h-dvh bg-bg0 text-fg0 font-jetbrains {showCrt.current ? 'crt' : ''}">
+	<div class="min-h-dvh xl:max-w-[80%] mx-auto p-4 flex flex-col items-center relative">
 		<Header/>
 		{@render children()}
 		<Footer/>
