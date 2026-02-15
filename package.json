@@ -4,7 +4,7 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev",
+		"dev": "vite dev --port 2601",
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
@@ -17,10 +17,15 @@
 		"@sveltejs/kit": "^2.50.2",
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"@tailwindcss/vite": "^4.1.18",
+		"phosphor-svelte": "^3.1.0",
 		"svelte": "^5.49.2",
 		"svelte-check": "^4.3.6",
 		"tailwindcss": "^4.1.18",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.1"
+	},
+	"dependencies": {
+		"bits-ui": "^2.15.5",
+		"runed": "^0.37.1"
 	}
 }

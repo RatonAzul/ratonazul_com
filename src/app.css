@@ -3,7 +3,7 @@
 @layer base {
 
   * {
-    @apply transition-colors duration-500 ease-in-out;
+    @apply transition-colors duration-300 ease-in-out;
   }
 
 }
@@ -122,14 +122,14 @@
   --bg3: #414b50;
   --bg4: #495156;
 
-  --fg: #d3c6aa;
+  --fg0: #d3c6aa;
 
 }
 
 .theme-ayu-mirage {
 
-  --red-dark: #f07178;
-  --red: #ff616e;
+  --red-dark: #ff616e;
+  --red: #f07178;
 
   --green-dark: #87d96c;
   --green: #a2f080;
@@ -174,18 +174,4 @@
   font-weight: auto;
 
   src: url("/fonts/JetBrainsMono-VariableFont_wght.ttf") format("truetype");
-}
-
-body:not(.crt-filter-off)::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.4) 1px, transparent 1px);
-  background-size: 2px 2px;
-  background-repeat: repeat;
-  pointer-events: none;
-  z-index: 9999;
 }
