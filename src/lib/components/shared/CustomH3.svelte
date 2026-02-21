@@ -1,6 +1,6 @@
 <script lang="ts">
     let { children }: { children?: any } = $props();
 </script>
-<main class="w-full mt-8">
+<h1 class="text-aqua mb-2 font-semibold">
     {@render children()}
-</main>
+</h1>
