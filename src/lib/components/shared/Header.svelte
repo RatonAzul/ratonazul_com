@@ -9,23 +9,13 @@
         toggleShowCrt
     } from "$lib/stores/globalSettings";
     import Navbar from "$lib/components/shared/Navbar.svelte";
-    import {page} from "$app/state";
     import { Select } from "bits-ui";
     import ColorPalette from "$lib/components/shared/ColorPalette.svelte";
     import {browser} from "$app/environment";
+    import LogInUser from "$lib/components/shared/LogInUser.svelte";
 
     // -- toggle theme and header bar
-    const isHome = $derived(page.url.pathname === "/media");
-    let isExpanded = $derived(isHome ? expandedHomeMenu.current : expandedMenu.current);
     const themes = ["gruvbox", "everforest", "ayu-mirage"];
-
-    function handleBurgerMenuClick() {
-        if (isHome) {
-            toggleExpandedMenu()
-        } else {
-            toggleMenu();
-        }
-    }
 
     // -- align theme dropdown with header end
     let alignOffset = $state(-83);
@@ -40,8 +30,8 @@
     }
 
 </script>
-<div class="bg-bg1 p-2 h-12 mx-auto me-0 {isExpanded ? 'w-full' : 'w-auto'} flex items-center transition-all duration-250 sticky top-4">
-    <div class="flex items-center flex-1 gap-4 sm:text-base text-sm {isExpanded ? 'visible' : 'hidden'}">
+<div class="bg-bg1 h-10 mx-auto me-0 w-full flex items-center sticky top-4 ps-2">
+    <div class="flex items-center flex-1 sm:text-base text-sm relative">
         <div class="flex items-center gap-2 px-2 sm:text-base">
             <a href="/" class="text-blue hover:text-blue-dark font-bold text-xl sm:block hidden">ratonazul</a>
             <a href="/" class="text-blue hover:text-blue-dark font-bold text-xl sm:hidden block">rt</a>
@@ -49,7 +39,8 @@
                 <Navbar/>
             </div>
         </div>
-        <div class="flex items-center sm:gap-4 gap-2 px-2 ms-auto sm:me-4 me-2">
+        <div class="flex items-center gap-4 ms-auto h-10">
+            <!-- Theme selector -->
             <Select.Root type="single" bind:value={theme.current}>
                 <Select.Trigger class="hover:cursor-pointer text-gray hover:text-gray-dark">
                     <PaletteIcon class="sm:size-6 size-5" weight="regular" />
@@ -73,16 +64,18 @@
                     </Select.Content>
                 </Select.Portal>
             </Select.Root>
-            <button class="hover:cursor-pointer flex gap-2 text-gray hover:text-gray-dark" onclick={toggleShowCrt}>
+
+            <!-- Crt effect toggle button -->
+            <button class="hover:cursor-pointer flex gap-2 text-gray hover:text-gray-dark sm:me-4 me-2" onclick={toggleShowCrt}>
                 {#if showCrt.current}
                     <EyeIcon class="sm:size-6 size-5" weight="regular" />
                 {:else}
                     <EyeSlashIcon class="sm:size-6 size-5" weight="regular" />
                 {/if}
             </button>
+
+            <!-- Login/out widget -->
+            <LogInUser/>
         </div>
     </div>
-    <button onclick={handleBurgerMenuClick} class="ms-auto hover:cursor-pointer text-purple hover:text-purple-dark">
-        <ListIcon weight="regular" class="size-8"/>
-    </button>
 </div>

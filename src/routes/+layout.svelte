@@ -1,7 +1,5 @@
 <script lang="ts">
 	import './layout.css';
-	import { page } from '$app/state';
-	import { locales, localizeHref } from '$lib/paraglide/runtime';
 	import favicon from '$lib/assets/favicon.svg';
 	import "../app.css";
 	import Header from "$lib/components/shared/Header.svelte";
@@ -24,15 +22,6 @@
 	</div>
 </div>
 
-<div style="display:none">
-	{#each locales as locale}
-		<a
-			href={localizeHref(page.url.pathname, { locale })}
-		>
-			{locale}
-		</a>
-	{/each}
-</div>
 
 <style>
 	.crt::after {

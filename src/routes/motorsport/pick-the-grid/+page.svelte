@@ -13,7 +13,7 @@
     <CustomH1>pick the grid</CustomH1>
     <MeetingsCarousel/>
     <CustomH2>your picks</CustomH2>
-    <div class="grid sm:grid-cols-2 grid-cols-1 gap-4">
+    <div class="grid sm:grid-cols-2 grid-cols-1 gap-4 mb-8">
         <div>
             <CustomH3>sprint qualy</CustomH3>
             <div class="flex flex-col gap-2">

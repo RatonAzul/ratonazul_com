@@ -7,6 +7,5 @@ export default defineConfig({
 	plugins: [
 		tailwindcss(),
 		sveltekit(),
-		paraglideVitePlugin({ project: './project.inlang', outdir: './src/lib/paraglide' })
 	]
 });
