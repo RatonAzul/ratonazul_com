@@ -5,8 +5,11 @@
 	import Header from "$lib/components/shared/Header.svelte";
 	import {showCrt, theme} from "$lib/stores/globalSettings";
 	import Footer from "$lib/components/shared/Footer.svelte";
+	import {QueryClientProvider} from "@tanstack/svelte-query";
+	import {SvelteQueryDevtools} from "@tanstack/svelte-query-devtools";
+	import {PUBLIC_ENVIRONMENT} from "$env/static/public";
 
-	let { children } = $props();
+	let { data, children } = $props();
 
 	$effect(() => {
 		document.documentElement.className= `theme-${theme.current}`;
@@ -14,14 +17,18 @@
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
-<div class="theme-{theme.current} w-full min-h-dvh bg-bg0 text-fg0 font-jetbrains {showCrt.current ? 'crt' : ''}">
-	<div class="min-h-dvh xl:max-w-[80%] mx-auto p-4 flex flex-col items-center relative">
-		<Header/>
-		{@render children()}
-		<Footer/>
+<QueryClientProvider client={data.queryClient}>
+	<div class="theme-{theme.current} w-full min-h-dvh bg-bg0 text-fg0 font-jetbrains {showCrt.current ? 'crt' : ''}">
+		<div class="min-h-dvh xl:max-w-[80%] mx-auto p-4 flex flex-col items-center relative">
+			<Header/>
+			{@render children()}
+			<Footer/>
+		</div>
 	</div>
-</div>
-
+	{#if PUBLIC_ENVIRONMENT !== "prod" }
+		<SvelteQueryDevtools buttonPosition="bottom-right"/>
+	{/if}
+</QueryClientProvider>
 
 <style>
 	.crt::after {

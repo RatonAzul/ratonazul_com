@@ -7,11 +7,17 @@
     import TimeBetCard from "$lib/components/pick-the-grid/TimeBetCard.svelte";
     import StandingsCard from "$lib/components/pick-the-grid/StandingsCard.svelte";
     import CustomH3 from "$lib/components/shared/CustomH3.svelte";
+    import {createMeetingsBySeasonQuery} from "$lib/queries/motorsport/meetings";
+    import {getCurrentMeetingIndex} from "$lib/utils/motorsport/pick-the-grid/meetings";
+
+    const meetings = createMeetingsBySeasonQuery(2026);
+    let selectedMeetingIndex = $derived(getCurrentMeetingIndex(meetings.data))
+
 </script>
 
 <Body>
     <CustomH1>pick the grid</CustomH1>
-    <MeetingsCarousel/>
+    <MeetingsCarousel bind:selectedMeetingIndex={selectedMeetingIndex} {meetings}/>
     <CustomH2>your picks</CustomH2>
     <div class="grid sm:grid-cols-2 grid-cols-1 gap-4 mb-8">
         <div>
