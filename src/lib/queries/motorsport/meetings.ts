@@ -1,4 +1,4 @@
-import { type QueryClient, createQuery } from "@tanstack/svelte-query";
+import { createQuery } from "@tanstack/svelte-query";
 import { ONE_DAY } from "$lib/queries/base";
 import type {Meeting} from "$lib/types/motorsport";
 
@@ -6,7 +6,7 @@ export const meetingKeys = {
     bySeason: (season: number) => ['meetings', season] as const,
 }
 
-async function fetchMeetingsBySeason(season: number): Promise<Meeting[]> {
+export async function fetchMeetingsBySeason(season: number): Promise<Meeting[]> {
     const res = await fetch(`/api/motorsport/meetings/${season}`);
     if (!res.ok) throw new Error('Failed to fetch meetings');
     return res.json();
@@ -18,11 +18,4 @@ export function createMeetingsBySeasonQuery(season: number) {
         queryFn: () => fetchMeetingsBySeason(season),
         staleTime: ONE_DAY,
     }))
-}
-
-export async function prefetchMeetingsBySeason(queryClient: QueryClient, season: number) {
-    await queryClient.prefetchQuery({
-        queryKey: meetingKeys.bySeason(season),
-        queryFn: () => fetchMeetingsBySeason(season),
-    });
 }

@@ -41,7 +41,7 @@
                     {/if}
                 </span>
                 <span class="hidden sm:flex flex-col items-start justify-center">
-                    <span class="text-aqua font-semibold text-start">{previousMeeting.meetingName}</span>
+                    <span class="text-aqua font-semibold text-start">{previousMeeting.name}</span>
                     <span>R{selectedMeetingIndex} - {formatMeetingDate(previousMeeting.startDate)}</span>
                 </span>
             </button>
@@ -52,8 +52,8 @@
         {:else}
             <button class="p-2 sm:col-span-1 col-span-2 flex sm:flex-row flex-col items-center justify-center gap-2">
                 <span class="flex flex-col justify-start gap-1">
-                    <span class="text-aqua font-semibold sm:block hidden">{selectedMeeting.meetingName}</span>
-                    <span class="text-aqua font-semibold sm:hidden block">{formatShortMeetingName(selectedMeeting.meetingName)}</span>
+                    <span class="text-aqua font-semibold sm:block hidden">{selectedMeeting.name}</span>
+                    <span class="text-aqua font-semibold sm:hidden block">{formatShortMeetingName(selectedMeeting.name)}</span>
                     {#if selectedMeetingStatus.type === "open"}
                         <span class="bg-green text-bg0 sm:px-2 px-1">bet is open</span>
                     {:else if selectedMeetingStatus.type === "closed"}
@@ -77,7 +77,7 @@
         {:else}
             <button class="p-2 flex sm:flex-row flex-col items-center gap-2 hover:cursor-pointer hover:bg-bg2 w-full" onclick={increaseSelectedMeeting}>
                 <span class="sm:ms-auto h-full hidden sm:flex flex-col items-end justify-center">
-                    <span class="text-aqua font-semibold ">{nextMeeting.meetingName}</span>
+                    <span class="text-aqua font-semibold ">{nextMeeting.name}</span>
                     <span >R{selectedMeetingIndex + 2} - {formatMeetingDate(nextMeeting.startDate)}</span>
                 </span>
             <span class="flex items-center justify-center sm:ms-0 ms-auto h-full">
