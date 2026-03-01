@@ -3,22 +3,30 @@
     import {searchDriverById} from "$lib/utils/motorsport/pick-the-grid/drivers";
     import {Select} from "bits-ui";
 
-    let { drivers, bet = $bindable(), takenDriverIds = [] }: { drivers: Driver[], bet: PositionBetDraft, takenDriverIds?: number[] } = $props();
-    let selectedDriver = $derived(searchDriverById(drivers, bet.guessedDriverId))
+    let { drivers, bet = $bindable(), takenDriverIds = [], onDriverSelected }: {
+        drivers: Driver[],
+        bet: PositionBetDraft,
+        takenDriverIds?: number[],
+        onDriverSelected?: (driverId: number) => void
+    } = $props();
+
+    let selectedDriver = $derived(searchDriverById(drivers, bet.guessedDriverId));
     let selectedDriverId = $derived(bet?.guessedDriverId?.toString() || undefined);
 
     let isTaken = (driverId: number) =>
         takenDriverIds.includes(driverId) && driverId !== bet.guessedDriverId;
 
-    $effect(() => {
-        bet.guessedDriverId = Number(selectedDriverId);
-    })
+    function onValueChange(value: string | undefined) {
+        const id = Number(value);
+        bet.guessedDriverId = id;
+        if (id) onDriverSelected?.(id);
+    }
 </script>
 
 <div class="flex gap-2 h-10">
     <div class="flex justify-center items-center aspect-square {bet.position === 1 ? 'bg-red text-bg0' : 'bg-bg1'}">{bet.position}</div>
     <div class="bg-bg1 flex justify-between flex-1">
-        <Select.Root type="single" bind:value={selectedDriverId}>
+        <Select.Root type="single" value={selectedDriverId} onValueChange={onValueChange}>
             <Select.Trigger class="hover:cursor-pointer hover:bg-bg2 w-full {selectedDriver ? 'border-' + selectedDriver.teamColor : 'border-l-transparent'} border-l-8">
                 <span class="flex flex-col ps-4 items-start justify-center text-sm">
                     {#if selectedDriver}
@@ -32,9 +40,11 @@
             <Select.Portal>
                 <Select.Content style="width: var(--bits-select-anchor-width)" sideOffset={8} align="start" class="font-jetbrains max-h-50 overflow-y-auto w-full">
                     <Select.Viewport>
-                        {#each drivers as driver }
-                            <Select.Item value={driver.id.toString()} disabled={isTaken(driver.id)}
-                                         class="w-full text-sm h-10 ps-4 flex flex-col justify-center text-bg0 bg-bg2 hover:bg-bg3 {isTaken(driver.id) ? 'hidden' : ''} hover:cursor-pointer border-l-8 border-{driver.teamColor}">
+                        {#each drivers as driver}
+                            <Select.Item
+                                    value={driver.id.toString()}
+                                    class="w-full text-sm h-10 ps-4 flex flex-col justify-center hover:cursor-pointer border-l-8 border-{driver.teamColor}
+                                       bg-bg2 hover:bg-bg3">
                                 <p class="text-fg0">{driver.firstName} {driver.lastName}</p>
                                 <p class="text-{driver.teamColor} text-sm">{driver.teamName}</p>
                             </Select.Item>
@@ -43,7 +53,7 @@
                 </Select.Content>
             </Select.Portal>
         </Select.Root>
-            <span class="text-bg0 {bet.points ? '' : 'bg-gray-dark'} font-medium text-lg flex justify-center items-center aspect-square">
+        <span class="text-bg0 {bet.points ? '' : 'bg-gray-dark'} font-medium text-lg flex justify-center items-center aspect-square">
             {bet.points ? '+' + bet.points : '-'}
         </span>
     </div>

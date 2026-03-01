@@ -11,13 +11,16 @@
     let secondsRef = $state<HTMLInputElement | null>(null);
     let millisecondsRef = $state<HTMLInputElement | null>(null);
     let minutesRef = $state<HTMLInputElement | null>(null);
-
     $effect(() => {
-        const m = parseInt(minutes) || 0;
-        const s = parseInt(seconds) || 0;
-        const ms = parseInt(milliseconds) || 0;
-        if (bet && seconds !== '' && milliseconds !== '') {
-            bet.guessedTime = (m * 60 * 1000) + (s * 1000) + ms;
+        if (bet?.guessedTime && !isEditing) {
+            const totalMs = bet.guessedTime;
+            const m = Math.floor(totalMs / 60000);
+            const s = Math.floor((totalMs % 60000) / 1000);
+            const ms = totalMs % 1000;
+            minutes = m.toString();
+            seconds = s.toString().padStart(2, '0');
+            milliseconds = ms.toString().padStart(3, '0');
+            isEditing = true;
         }
     });
 
@@ -64,8 +67,8 @@
 
 <div class="flex gap-2 h-10">
     <div class="flex justify-center items-center aspect-square bg-purple text-bg0">Q</div>
-    <div class="bg-bg1 flex w-full justify-between items-center border-l-purple border-l-8 h-10">
-        <div class="flex items-center ps-4 gap-0.5 flex-1 font-semibold text-sm">
+    <div class="bg-bg1 hover:bg-bg2 flex w-full justify-between items-center border-l-purple border-l-8 h-10">
+        <div class="flex items-center ps-4 gap-0.5 flex-1 text-sm">
             {#if isEditing}
                 <input
                         bind:this={minutesRef}

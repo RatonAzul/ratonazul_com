@@ -37,7 +37,6 @@ export enum SessionName {
 
 export type PositionBet = {
     id: number;
-    userId: string;
     position: number;
     guessedDriverId?: number;
     points?: number;
@@ -48,7 +47,6 @@ export type PositionBetDraft = Omit<PositionBet, 'id' | 'userId'> & { id?: numbe
 
 export type TimeBet = {
     id: number;
-    userId: string;
     guessedTime?: number;
     points?: number;
     sessionName: SessionName;

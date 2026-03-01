@@ -21,8 +21,11 @@
     let selectedMeetingIndex = $derived(getCurrentMeetingIndex(meetings.data))
     let selectedMeeting = $derived(meetings.data ? meetings.data[selectedMeetingIndex] : undefined)
 
-    const positionBets = $derived(createPositionBetsByUserAndMeeting($session.data?.user.id || "", selectedMeetingIndex))
-    const timeBets = $derived(createTimeBetsByUserAndMeeting($session.data?.user.id || "", selectedMeetingIndex))
+    let userId = $derived($session.data?.user.id ?? '');
+    let meetingId = $derived(selectedMeeting?.id ?? 0);
+
+    let positionBets = $derived(createPositionBetsByUserAndMeeting(userId, meetingId));
+    let timeBets = $derived(createTimeBetsByUserAndMeeting(userId, meetingId));
 
 </script>
 

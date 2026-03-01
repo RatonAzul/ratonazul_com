@@ -2,7 +2,7 @@
     import { authClient } from "$lib/auth-client";
     import { page } from "$app/state";
     import { UserIcon, SignOutIcon, SignInIcon, GoogleLogoIcon, PencilIcon } from "phosphor-svelte";
-    import { DropdownMenu } from "bits-ui"; // adjust to your import path
+    import { DropdownMenu } from "bits-ui";
 
     const session = authClient.useSession();
 
@@ -73,6 +73,7 @@
             <p class="text-gray text-sm">edit name</p>
             <input
                     class="bg-bg2 text-gray p-2 text-sm outline-none"
+                    maxlength="15"
                     bind:value={newName}
                     onkeydown={(e) => e.key === "Enter" && saveName()}
             />
