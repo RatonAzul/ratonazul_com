@@ -28,6 +28,8 @@
 	{#if PUBLIC_ENVIRONMENT !== "prod" }
 		<SvelteQueryDevtools buttonPosition="bottom-right"/>
 	{/if}
+	<!-- load color classes so i can dinamically import them later -->
+	<div class="text-orange border-red border-green border-blue border-yellow border-gray border-aqua border-purple border-orange"></div>
 </QueryClientProvider>
 
 <style>

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import MeetingsCarousel from "$lib/components/pick-the-grid/MeetingsCarousel.svelte";
     import Body from "$lib/components/shared/Body.svelte";
     import CustomH1 from "$lib/components/shared/CustomH1.svelte";
@@ -9,6 +9,11 @@
     import BetComponent from "$lib/components/pick-the-grid/BetComponent.svelte";
     import {createDriversBySeasonQuery} from "$lib/queries/motorsport/drivers";
     import {CURRENT_YEAR} from "$lib/utils/shared/general";
+    import {createPositionBetsByUserAndMeeting} from "$lib/queries/motorsport/positionBets";
+    import {authClient} from "$lib/auth-client";
+    import {createTimeBetsByUserAndMeeting} from "$lib/queries/motorsport/timeBets";
+
+    const session = authClient.useSession();
 
     const meetings = createMeetingsBySeasonQuery(CURRENT_YEAR);
     const drivers = createDriversBySeasonQuery(CURRENT_YEAR);
@@ -16,13 +21,16 @@
     let selectedMeetingIndex = $derived(getCurrentMeetingIndex(meetings.data))
     let selectedMeeting = $derived(meetings.data ? meetings.data[selectedMeetingIndex] : undefined)
 
+    const positionBets = $derived(createPositionBetsByUserAndMeeting($session.data?.user.id || "", selectedMeetingIndex))
+    const timeBets = $derived(createTimeBetsByUserAndMeeting($session.data?.user.id || "", selectedMeetingIndex))
+
 </script>
 
 <Body>
     <CustomH1>pick the grid</CustomH1>
     <MeetingsCarousel bind:selectedMeetingIndex={selectedMeetingIndex} {meetings}/>
     <CustomH2>your picks</CustomH2>
-    <BetComponent meeting={selectedMeeting}/>
+    <BetComponent meeting={selectedMeeting} {drivers} {positionBets} {timeBets}/>
     <div>
         <CustomH2>standings</CustomH2>
         <div class="grid grid-cols-1 gap-2">

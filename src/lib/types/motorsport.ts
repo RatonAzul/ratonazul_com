@@ -27,3 +27,31 @@ export type Driver = {
     teamName: string;
     teamColor: string;
 }
+
+export enum SessionName {
+    SprintQualifying = 'Sprint Qualifying',
+    SprintRace = 'Sprint',
+    Qualifying = "Qualifying",
+    Race = 'Race',
+}
+
+export type PositionBet = {
+    id: number;
+    userId: string;
+    position: number;
+    guessedDriverId?: number;
+    points?: number;
+    sessionName: SessionName;
+}
+
+export type PositionBetDraft = Omit<PositionBet, 'id' | 'userId'> & { id?: number };
+
+export type TimeBet = {
+    id: number;
+    userId: string;
+    guessedTime?: number;
+    points?: number;
+    sessionName: SessionName;
+}
+
+export type TimeBetDraft = Omit<TimeBet, 'id' | 'userId'> & { id?: number };
