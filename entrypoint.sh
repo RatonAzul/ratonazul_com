@@ -1,3 +1,3 @@
 #!/bin/sh
-npx better-auth migrate
-exec node build
+node_modules/.bin/drizzle-kit migrate
+exec node build/index.js
