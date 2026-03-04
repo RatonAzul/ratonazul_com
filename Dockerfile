@@ -4,7 +4,7 @@ RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
-RUN NODE_OPTIONS="--max-old-space-size=3072" pnpm build
+RUN pnpm exec svelte-kit sync && NODE_OPTIONS="--max-old-space-size=2048" pnpm build
 
 FROM node:22-alpine
 WORKDIR /app
