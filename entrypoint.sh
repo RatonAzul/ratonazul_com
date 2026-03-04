@@ -1,3 +1,8 @@
 #!/bin/sh
-node_modules/.bin/drizzle-kit migrate --config drizzle.config.ts
+set -e
+
+echo "Running Drizzle migrations..."
+npx drizzle-kit push
+
+echo "Starting app..."
 exec node build/index.js
