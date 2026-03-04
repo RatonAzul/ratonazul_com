@@ -30,7 +30,6 @@
 		"@types/node": "^24",
 		"better-auth": "^1.4.18",
 		"drizzle-kit": "^0.31.8",
-		"drizzle-orm": "^0.45.1",
 		"phosphor-svelte": "^3.1.0",
 		"svelte": "5.53.5",
 		"svelte-check": "^4.3.6",
@@ -45,6 +44,7 @@
 		"bits-ui": "^2.15.5",
 		"jsonwebtoken": "^9.0.3",
 		"postgres": "^3.4.8",
-		"runed": "^0.37.1"
+		"runed": "^0.37.1",
+		"drizzle-orm": "^0.45.1"
 	}
 }
