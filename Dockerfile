@@ -1,17 +1,29 @@
-FROM node:22-alpine AS builder
+FROM node:lts AS build
+
+RUN corepack enable
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:PATH"
+
 WORKDIR /app
 
-RUN npm install -g pnpm
+COPY pnpm-lock.yaml ./
 
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/pnpm/store \
+    pnpm fetch --frozen-lockfile \
+
+COPY package.json ./
+
+RUN --mount=type=cache,target=/pnpm/store \
+    pnpm install --frozen-lockfile --prod --offline
 
 COPY . .
+
 RUN pnpm build
 
 # -------------------
 
-FROM node:22-alpine
+FROM node:lts
 WORKDIR /app
 
 COPY --from=builder /app/build ./build
@@ -23,4 +35,4 @@ COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 
 EXPOSE 3000
-CMD ["./entrypoint.sh"]
+CMD ["node build/index.js"]
