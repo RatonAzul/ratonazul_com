@@ -1,4 +1,4 @@
-<div>
+<div class="mt-8">
     {@render link("https://github.com/ratonazul", "github")}
     {@render link("https://twitter.com/ratonazul_", "twitter")}
 </div>
