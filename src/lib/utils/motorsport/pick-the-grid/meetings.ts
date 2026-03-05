@@ -10,7 +10,7 @@ export function getCurrentMeetingIndex(meetings?: Meeting[]): number {
 
 export type MeetingStatus =
     | { type: 'closed' }
-    | { type: 'open' }
+    | { type: 'open'; label: string }
     | { type: 'opens_in'; label: string }
     | { type: 'ended'; label: string };
 
@@ -35,7 +35,7 @@ export function getMeetingStatus(meeting?: Meeting): MeetingStatus {
     // RAWE CEEK
     const raceWeekStart = getMondayOf(start);
     if (now >= raceWeekStart) {
-        return { type: 'open' };
+        return { type: 'open', label: formatTimeUntil(now, start) };
     }
 
     // meeting is yet to come

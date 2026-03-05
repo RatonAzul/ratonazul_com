@@ -1,6 +1,6 @@
-import {CURRENT_YEAR} from "$lib/utils/shared/general";
-import {fetchMeetingsBySeason, meetingKeys} from "$lib/queries/motorsport/meetings";
-import {driversKeys, fetchDriversBySeason} from "$lib/queries/motorsport/drivers";
+import {CURRENT_YEAR} from "$lib/utils/shared/general.ts";
+import {fetchMeetingsBySeason, meetingKeys} from "$lib/queries/motorsport/meetings.ts";
+import {driversKeys, fetchDriversBySeason} from "$lib/queries/motorsport/drivers.ts";
 
 export async function load({ parent }) {
     const { queryClient } = await parent()

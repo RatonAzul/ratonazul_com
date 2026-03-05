@@ -17,6 +17,7 @@
     import {createMutation, useQueryClient} from "@tanstack/svelte-query";
     import {authClient, useSession} from "$lib/auth-client";
     import {page} from "$app/state";
+    import {getMeetingStatus} from "$lib/utils/motorsport/pick-the-grid/meetings";
 
     const session = useSession();
 
@@ -33,18 +34,16 @@
     let qualyBets = $state<PositionBetDraft[]>([]);
     let raceBets = $state<PositionBetDraft[]>([]);
     let qualyTimeBet = $state<TimeBetDraft | undefined>(undefined);
-
+    $inspect("qualytimebet: ", qualyTimeBet)
+    let isMeetingOpen = $derived(getMeetingStatus(meeting).type === "open")
     let betsToFill = $derived(meeting?.isSprint ? 9 : 7);
     let filledBetsCount = $derived(
         [...sprintQualyBets, ...sprintRaceBets, ...qualyBets, ...raceBets]
             .filter(b => b.guessedDriverId && b.guessedDriverId !== 0).length
         + (qualyTimeBet?.guessedTime ? 1 : 0)
     );
-    let sendButtonIsActive = $derived(betsToFill === filledBetsCount);
+    let sendButtonIsActive = $derived(betsToFill === filledBetsCount && isMeetingOpen);
 
-    let selectedRaceDriverIds = $derived(
-        raceBets.map(b => b.guessedDriverId).filter(id => id !== undefined) as number[]
-    );
     // deselect the selected driver from other positions
     function handleRaceDriverSelected(pickedByIndex: number, driverId: number) {
         raceBets = raceBets.map((b, i) => {
@@ -105,7 +104,7 @@
                 <CustomH3>sprint qualy</CustomH3>
                 <div class="flex flex-col gap-2">
                     {#each sprintQualyBets as _, i}
-                        <DriverBetCard drivers={driverList} bind:bet={sprintQualyBets[i]} />
+                        <DriverBetCard drivers={driverList} bind:bet={sprintQualyBets[i]} disabled={!isMeetingOpen}/>
                     {/each}
                 </div>
             </div>
@@ -113,7 +112,7 @@
                 <CustomH3>sprint race</CustomH3>
                 <div class="flex flex-col gap-2">
                     {#each sprintRaceBets as _, i}
-                        <DriverBetCard drivers={driverList} bind:bet={sprintRaceBets[i]} />
+                        <DriverBetCard drivers={driverList} bind:bet={sprintRaceBets[i]} disabled={!isMeetingOpen} />
                     {/each}
                 </div>
             </div>
@@ -122,9 +121,9 @@
             <CustomH3>qualy</CustomH3>
             <div class="flex flex-col gap-2">
                 {#each qualyBets as _, i}
-                    <DriverBetCard drivers={driverList} bind:bet={qualyBets[i]} />
+                    <DriverBetCard drivers={driverList} bind:bet={qualyBets[i]} disabled={!isMeetingOpen} />
                 {/each}
-                <TimeBetCard bind:bet={qualyTimeBet} />
+                <TimeBetCard bind:bet={qualyTimeBet} disabled={!isMeetingOpen} />
             </div>
         </div>
         <div>
@@ -134,8 +133,8 @@
                     <DriverBetCard
                             drivers={driverList}
                             bind:bet={raceBets[i]}
-                            takenDriverIds={selectedRaceDriverIds}
                             onDriverSelected={(driverId) => handleRaceDriverSelected(i, driverId)}
+                            disabled={!isMeetingOpen}
                     />
                 {/each}
             </div>
@@ -171,5 +170,5 @@
         </div>
     </section>
 {:else}
-    <div>loading</div>
+    <section class="bg-bg1 animate-pulse sm:h-17 h-26 w-full mb-8"></section>
 {/if}

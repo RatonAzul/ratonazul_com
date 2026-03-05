@@ -55,7 +55,7 @@
                     <span class="text-aqua font-semibold sm:block hidden">{selectedMeeting.name}</span>
                     <span class="text-aqua font-semibold sm:hidden block">{formatShortMeetingName(selectedMeeting.name)}</span>
                     {#if selectedMeetingStatus.type === "open"}
-                        <span class="bg-green text-bg0 sm:px-2 px-1">bet is open</span>
+                        <span class="bg-green text-bg0 sm:px-2 px-1">closes in {selectedMeetingStatus.label}</span>
                     {:else if selectedMeetingStatus.type === "closed"}
                         <span class="bg-red text-bg0 sm:px-2 px-1">bet is closed</span>
                     {:else if selectedMeetingStatus.type === "opens_in"}

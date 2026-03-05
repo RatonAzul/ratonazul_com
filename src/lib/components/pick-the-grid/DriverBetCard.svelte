@@ -3,18 +3,16 @@
     import {searchDriverById} from "$lib/utils/motorsport/pick-the-grid/drivers";
     import {Select} from "bits-ui";
 
-    let { drivers, bet = $bindable(), takenDriverIds = [], onDriverSelected }: {
+    let { drivers, bet = $bindable(), disabled, onDriverSelected }: {
         drivers: Driver[],
         bet: PositionBetDraft,
+        disabled: boolean,
         takenDriverIds?: number[],
         onDriverSelected?: (driverId: number) => void
     } = $props();
 
     let selectedDriver = $derived(searchDriverById(drivers, bet.guessedDriverId));
     let selectedDriverId = $derived(bet?.guessedDriverId?.toString() || undefined);
-
-    let isTaken = (driverId: number) =>
-        takenDriverIds.includes(driverId) && driverId !== bet.guessedDriverId;
 
     function onValueChange(value: string | undefined) {
         const id = Number(value);
@@ -26,14 +24,14 @@
 <div class="flex gap-2 h-10">
     <div class="flex justify-center items-center aspect-square {bet.position === 1 ? 'bg-red text-bg0' : 'bg-bg1'}">{bet.position}</div>
     <div class="bg-bg1 flex justify-between flex-1">
-        <Select.Root type="single" value={selectedDriverId} onValueChange={onValueChange}>
-            <Select.Trigger class="hover:cursor-pointer hover:bg-bg2 w-full {selectedDriver ? 'border-' + selectedDriver.teamColor : 'border-l-transparent'} border-l-8">
+        <Select.Root type="single" value={selectedDriverId} onValueChange={onValueChange} {disabled}>
+            <Select.Trigger class=" {disabled ? '' : 'hover:cursor-pointer hover:bg-bg2'} w-full {selectedDriver ? 'border-' + selectedDriver.teamColor : 'border-l-transparent'} border-l-8">
                 <span class="flex flex-col ps-4 items-start justify-center text-sm">
                     {#if selectedDriver}
                         <span>{selectedDriver.firstName} {selectedDriver.lastName}</span>
                         <span class="text-{selectedDriver.teamColor} text-sm">{selectedDriver.teamName}</span>
                     {:else}
-                        <span class="text-gray-dark">Select a driver</span>
+                        <span class="text-gray-dark">{disabled ? 'Bet is closed' : 'Select a driver'}</span>
                     {/if}
                 </span>
             </Select.Trigger>

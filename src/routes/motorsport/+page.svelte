@@ -5,5 +5,5 @@
 
 <Body>
     <CustomH1>motorsport</CustomH1>
-    <a class="text-purple underline" href="/motorsport/pick-the-grid">pick the grid</a>
+    <a class="text-purple underline" href="/pick-the-grid">pick the grid</a>
 </Body>

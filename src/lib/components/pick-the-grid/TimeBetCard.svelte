@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {TimeBetDraft} from "$lib/types/motorsport";
 
-    let { bet = $bindable() }: { bet?: TimeBetDraft } = $props();
+    let { bet = $bindable(), disabled }: { bet?: TimeBetDraft, disabled: boolean } = $props();
 
     let minutes = $state('');
     let seconds = $state('');
@@ -12,7 +12,7 @@
     let millisecondsRef = $state<HTMLInputElement | null>(null);
     let minutesRef = $state<HTMLInputElement | null>(null);
     $effect(() => {
-        if (bet?.guessedTime && !isEditing) {
+        if (bet?.guessedTime) {
             const totalMs = bet.guessedTime;
             const m = Math.floor(totalMs / 60000);
             const s = Math.floor((totalMs % 60000) / 1000);
@@ -21,10 +21,30 @@
             seconds = s.toString().padStart(2, '0');
             milliseconds = ms.toString().padStart(3, '0');
             isEditing = true;
+        } else {
+            minutes = '';
+            seconds = '';
+            milliseconds = '';
+            isEditing = false;
         }
     });
 
+    $effect(() => {
+        if (!bet) return;
+        const isComplete = minutes.length === 1 && seconds.length === 2 && milliseconds.length === 3;
+        if (isComplete) {
+            const m = parseInt(minutes) || 0;
+            const s = parseInt(seconds) || 0;
+            const ms = parseInt(milliseconds) || 0;
+            bet.guessedTime = (m * 60 * 1000) + (s * 1000) + ms;
+        } else {
+            bet.guessedTime = undefined;
+        }
+    });
+
+
     function startEditing() {
+        if (disabled) return;
         isEditing = true;
         // focus minutes after svelte renders the inputs
         setTimeout(() => minutesRef?.focus(), 0);
@@ -67,10 +87,11 @@
 
 <div class="flex gap-2 h-10">
     <div class="flex justify-center items-center aspect-square bg-purple text-bg0">Q</div>
-    <div class="bg-bg1 hover:bg-bg2 flex w-full justify-between items-center border-l-purple border-l-8 h-10">
+    <div class="bg-bg1 {disabled ? '' : 'hover:bg-bg2'} flex w-full justify-between items-center border-l-purple border-l-8 h-10">
         <div class="flex items-center ps-4 gap-0.5 flex-1 text-sm">
             {#if isEditing}
                 <input
+                        {disabled}
                         bind:this={minutesRef}
                         type="text"
                         inputmode="numeric"
@@ -82,6 +103,7 @@
                 />
                 <span class="text-gray-dark">:</span>
                 <input
+                        {disabled}
                         bind:this={secondsRef}
                         type="text"
                         inputmode="numeric"
@@ -94,6 +116,7 @@
                 />
                 <span class="text-gray-dark">.</span>
                 <input
+                        {disabled}
                         bind:this={millisecondsRef}
                         type="text"
                         inputmode="numeric"
@@ -109,7 +132,7 @@
                         onclick={startEditing}
                         class="text-gray-dark text-sm font-normal hover:cursor-text"
                 >
-                    Select the pole position time
+                    {disabled ? 'Bet is closed' : 'Select the pole time'}
                 </button>
             {/if}
         </div>
