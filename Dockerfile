@@ -13,7 +13,7 @@ RUN --mount=type=cache,target=/pnpm/store \
     pnpm install --frozen-lockfile --offline
 
 COPY . .
-RUN pnpm build
+RUN node --max-old-space-size=4096 node_modules/.bin/vite build
 
 # -------------------
 FROM node:lts-alpine
