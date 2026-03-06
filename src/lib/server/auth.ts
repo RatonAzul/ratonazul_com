@@ -16,5 +16,13 @@ export const auth = betterAuth({
 			clientSecret: env.GOOGLE_CLIENT_SECRET as string,
 		}
 	},
+	user: {
+		additionalFields: {
+			username: {
+				type: "string",
+				required: false,
+			}
+		}
+	},
 	plugins: [sveltekitCookies(getRequestEvent)] // make sure this is the last plugin in the array
 });

@@ -34,7 +34,7 @@
     let qualyBets = $state<PositionBetDraft[]>([]);
     let raceBets = $state<PositionBetDraft[]>([]);
     let qualyTimeBet = $state<TimeBetDraft | undefined>(undefined);
-    $inspect("qualytimebet: ", qualyTimeBet)
+
     let isMeetingOpen = $derived(getMeetingStatus(meeting).type === "open")
     let betsToFill = $derived(meeting?.isSprint ? 9 : 7);
     let filledBetsCount = $derived(
