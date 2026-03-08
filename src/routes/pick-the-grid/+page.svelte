@@ -12,7 +12,6 @@
     import {createPositionBetsByUserAndMeeting} from "$lib/queries/motorsport/positionBets";
     import {authClient} from "$lib/auth-client";
     import {createTimeBetsByUserAndMeeting} from "$lib/queries/motorsport/timeBets";
-    import CustomH3 from "$lib/components/shared/CustomH3.svelte";
     import PointInfo from "$lib/components/pick-the-grid/PointInfo.svelte";
 
     const session = authClient.useSession();

@@ -61,7 +61,7 @@
                     {:else if selectedMeetingStatus.type === "opens_in"}
                         <span class="bg-gray-dark text-bg0 sm:px-2 px-1">opens in {selectedMeetingStatus.label}</span>
                     {:else if selectedMeetingStatus.type === "ended"}
-                        <span class="bg-gray text-bg-0 sm:px-2 px-1">ended {selectedMeetingStatus.label} ago</span>
+                        <span class="bg-red text-bg0 sm:px-2 px-1">ended {selectedMeetingStatus.label} ago</span>
                     {/if}
                 </span>
                 {#if selectedMeeting.country.image && selectedMeeting.country.image.length !== 0}

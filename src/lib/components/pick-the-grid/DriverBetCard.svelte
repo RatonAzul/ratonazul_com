@@ -2,6 +2,7 @@
     import type {Driver, PositionBetDraft} from "$lib/types/motorsport";
     import {searchDriverById} from "$lib/utils/motorsport/pick-the-grid/drivers";
     import {Select} from "bits-ui";
+    import {getPositionBetPointColors} from "$lib/utils/motorsport/pick-the-grid/bets";
 
     let { drivers, bet = $bindable(), disabled, onDriverSelected }: {
         drivers: Driver[],
@@ -51,8 +52,8 @@
                 </Select.Content>
             </Select.Portal>
         </Select.Root>
-        <span class="text-bg0 {bet.points ? '' : 'bg-gray-dark'} font-medium text-lg flex justify-center items-center aspect-square">
-            {bet.points ? '+' + bet.points : '-'}
+        <span class="text-bg0 {disabled && bet.points === null || bet.points === undefined ? 'bg-gray-dark' : getPositionBetPointColors(bet.points)} text-lg flex justify-center items-center aspect-square">
+            {bet.points !== undefined && bet.points !== null ? '+' + bet.points : '-'}
         </span>
     </div>
 </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
     import type {TimeBetDraft} from "$lib/types/motorsport";
+    import {getTimeBetPointsColor} from "$lib/utils/motorsport/pick-the-grid/bets";
 
     let { bet = $bindable(), disabled }: { bet?: TimeBetDraft, disabled: boolean } = $props();
 
@@ -136,8 +137,8 @@
                 </button>
             {/if}
         </div>
-        <span class="text-bg0 {bet?.points ? '' : 'bg-gray-dark'} font-medium text-lg flex justify-center items-center aspect-square h-full">
-        {bet?.points ? '+' + bet?.points : '-'}
+        <span class="text-bg0 {disabled && bet?.points === null || bet?.points === undefined ? 'bg-gray-dark' : getTimeBetPointsColor(bet?.points)} font-medium text-lg flex justify-center items-center aspect-square h-full">
+        {bet?.points !== undefined && bet?.points !== null ? '+' + bet?.points : '-'}
     </span>
     </div>
 </div>

@@ -15,7 +15,7 @@ export function buildPositionBetDrafts(
         const position = i + 1;
         const found = existing.find(b => b.sessionName === sessionName && b.position === position);
         return found
-            ? { id: found.id, position, sessionName, guessedDriverId: found.guessedDriverId }
+            ? { id: found.id, position, sessionName, guessedDriverId: found.guessedDriverId, points: found.points }
             : { position, sessionName };
     });
 }
@@ -23,6 +23,26 @@ export function buildPositionBetDrafts(
 export function buildTimeBetDraft(existing: TimeBet[], sessionName: SessionName): TimeBetDraft {
     const found = existing.find(b => b.sessionName === sessionName);
     return found
-        ? { id: found.id, sessionName, guessedTime: found.guessedTime }
+        ? { id: found.id, sessionName, guessedTime: found.guessedTime, points: found.points }
         : { sessionName };
+}
+
+export function getPositionBetPointColors(points: number | undefined) {
+    if (points === undefined || points === null) return "bg-gray"
+    switch (points) {
+        case 5: return "bg-purple"
+        case 3: return "bg-green"
+        case 1: return "bg-yellow"
+        default: return "bg-red"
+    }
+}
+
+export function getTimeBetPointsColor(points: number | undefined) {
+    if (points === undefined || points === null ) return "bg-gray"
+    switch (points) {
+        case 20: return "bg-purple"
+        case 5: return "bg-green"
+        case 2: return "bg-yellow"
+        default: return "bg-red"
+    }
 }
