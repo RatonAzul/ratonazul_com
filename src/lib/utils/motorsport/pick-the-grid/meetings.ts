@@ -20,9 +20,6 @@ export function getMeetingStatus(meeting?: Meeting): MeetingStatus {
 
     const now = new Date();
     const start = new Date(meeting.startDate);
-    // TEMP: OPEN BET UNTIL AUSTRALIA QUALY
-    start.setHours(start.getHours() + 26.5);
-
     const end = new Date(meeting.endDate);
 
     // meeting in progress

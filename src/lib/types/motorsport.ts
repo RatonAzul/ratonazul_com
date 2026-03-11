@@ -53,3 +53,16 @@ export type TimeBet = {
 }
 
 export type TimeBetDraft = Omit<TimeBet, 'id' | 'userId'> & { id?: number };
+
+export type StandingsTableRow = {
+    userId: string;
+    username?: string;
+    totalPoints: number;
+    rank: number;
+    meetingPoints: MeetingPoints[];
+}
+
+export type MeetingPoints = {
+    meetingId: number;
+    points: number;
+}
