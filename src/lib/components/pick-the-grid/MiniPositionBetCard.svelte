@@ -9,7 +9,7 @@
 
 <div class="flex gap-1 text-xs h-6">
     <div class="{positionBet.position === 1 ? 'bg-red text-bg0' : 'bg-bg1 text-gray'} aspect-square flex justify-center items-center">{positionBet.position}</div>
-    <div class="text-bg0 flex justify-center items-center w-12 bg-{driver.teamColor}">{driver.acronym}</div>
+    <div class="flex justify-center items-center w-12 border-s-4 bg-bg1 text-gray border-{driver.teamColor}">{driver.acronym}</div>
     <div class="{positionBet.points !== null && positionBet.points !== undefined  ? getPositionBetPointColors(positionBet.points) : 'bg-gray-dark'} text-bg0 aspect-square flex justify-center items-center">
         {positionBet.points !== null && positionBet !== undefined ? '+' + positionBet.points : '-'}
     </div>
