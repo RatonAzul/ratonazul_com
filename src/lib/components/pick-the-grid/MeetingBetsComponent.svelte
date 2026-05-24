@@ -22,9 +22,6 @@
             {#each meetingBets.data.users as user, i}
                 <MiniBetComponent meetingBets={user} {drivers} position={i+1} />
             {/each}
-            {#each meetingBets.data.users as user, i}
-                <MiniBetComponent meetingBets={user} {drivers} position={i+1} />
-            {/each}
         </div>
     </div>
 {/if}
