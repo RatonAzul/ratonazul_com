@@ -13,11 +13,12 @@
 </script>
 
 <div class="mb-8">
-    <CustomH2>pick results</CustomH2>
     {#if meetingBets.isLoading || meetingBets.isLoadingError}
+        <CustomH2>pick results</CustomH2>
         <section class="bg-bg1 animate-pulse sm:h-17 h-26 w-full mb-8"></section>
     {/if}
     {#if meetingBets.isSuccess && meetingBets.data.users.length !== 0}
+        <CustomH2>pick results</CustomH2>
         <div class="mb-8">
             <div class="flex gap-8 overflow-x-scroll">
                 {#each meetingBets.data.users as user, i}
