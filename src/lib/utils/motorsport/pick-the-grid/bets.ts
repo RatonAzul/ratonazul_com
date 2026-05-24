@@ -46,3 +46,11 @@ export function getTimeBetPointsColor(points: number | undefined) {
         default: return "bg-red"
     }
 }
+
+export function getF1TimeFromMilliseconds(timeInMs: number): string {
+    const minutes = Math.floor(timeInMs / 60000);
+    const seconds = Math.floor((timeInMs % 60000) / 1000);
+    const ms = timeInMs % 1000;
+
+    return `${minutes}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+}
