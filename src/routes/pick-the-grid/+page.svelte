@@ -14,6 +14,8 @@
     import PointInfo from "$lib/components/pick-the-grid/PointInfo.svelte";
     import {createStandingsBySeasonQuery} from "$lib/queries/motorsport/standings";
     import StandingsTable from "$lib/components/pick-the-grid/StandingsTable.svelte";
+    import {createMeetingBetsByMeetingId} from "$lib/queries/motorsport/meetingBets.ts";
+    import MeetingBetsComponent from "$lib/components/pick-the-grid/MeetingBetsComponent.svelte";
 
     const session = authClient.useSession();
 
@@ -29,6 +31,7 @@
 
     let positionBets = $derived(createPositionBetsByUserAndMeeting(userId, meetingId));
     let timeBets = $derived(createTimeBetsByUserAndMeeting(userId, meetingId));
+    let meetingBets = $derived(createMeetingBetsByMeetingId(meetingId));
 
 </script>
 
@@ -37,6 +40,7 @@
     <MeetingsCarousel bind:selectedMeetingIndex={selectedMeetingIndex} {meetings}/>
     <CustomH2>your picks</CustomH2>
     <BetComponent meeting={selectedMeeting} {drivers} {positionBets} {timeBets}/>
+    <MeetingBetsComponent {meetingBets} {drivers} />
     <div>
         <CustomH2>standings</CustomH2>
         <div class="grid grid-cols-1 gap-2">

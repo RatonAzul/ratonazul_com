@@ -20,7 +20,7 @@
             <thead>
             <tr class="h-9">
                 <th class="w-8"></th>
-                <th class="w-32 text-left text-sm font-normal text-gray-dark px-2">Player</th>
+                <th class="w-32 text-left text-sm font-normal text-gray-dark px-2"></th>
                 <th class="w-2 min-w-2"></th>  <!-- gap -->
                 {#each meetings.data as meeting, i}
                     <th class="h-9 text-center border-b-2 pb-2 {meeting.id === currentMeeting?.id ? 'border-green' : 'border-transparent'}">

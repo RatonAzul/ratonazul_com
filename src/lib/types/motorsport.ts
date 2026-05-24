@@ -66,3 +66,16 @@ export type MeetingPoints = {
     meetingId: number;
     points: number;
 }
+
+export type MeetingBetResponse = {
+    meetingId: number;
+    users: UserMeetingBet[]
+}
+
+export type UserMeetingBet = {
+    userId: string;
+    username?: string;
+    points: number;
+    timeBet: TimeBet;
+    positionBets: PositionBet[];
+}
