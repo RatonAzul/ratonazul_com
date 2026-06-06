@@ -1,12 +1,14 @@
 <script>
     import { ListIcon, CameraIcon, TelevisionSimpleIcon, TireIcon } from "phosphor-svelte";
     import {DropdownMenu} from "bits-ui";
+    import {page} from "$app/state";
+    let currentPage = $derived(page.route.id)
 </script>
 
 <nav class=" text-gray [&_a]:hover:text-gray-dark md:block hidden">
-    <a href="/media">[media]</a>
-    <a href="/pics">[pics]</a>
-    <a href="/motorsport">[motorsport]</a>
+    <a href="/media" class="{currentPage === '/media' ? 'text-fg0' : ''}">[media]</a>
+    <a href="/pics" class="{currentPage === '/pics' ? 'text-fg0' : ''}">[pics]</a>
+    <a href="/motorsport" class="{currentPage === '/motorsport' ? 'text-fg0' : ''}">[motorsport]</a>
 </nav>
 
 <DropdownMenu.Root>

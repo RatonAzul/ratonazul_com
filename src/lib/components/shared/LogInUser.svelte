@@ -40,10 +40,10 @@
         </span>
     </DropdownMenu.Trigger>
     <DropdownMenu.Portal>
-        <DropdownMenu.Content sideOffset={12} align="end" class="bg-bg2 flex flex-col font-jetbrains h-full">
+        <DropdownMenu.Content sideOffset={12} align="end" class="bg-bg1 flex flex-col font-jetbrains h-full">
             {#if $session.data}
                 <DropdownMenu.Item
-                        class="hover:cursor-pointer hover:bg-bg3 text-sm text-gray p-2 flex items-center gap-2"
+                        class="hover:cursor-pointer hover:bg-bg2 text-sm text-fg0 p-2 flex items-center gap-2"
                         onSelect={() => {
                         newName = $session.data?.user.username ?? "";
                         editingName = true;
@@ -53,7 +53,7 @@
                     change username
                 </DropdownMenu.Item>
                 <DropdownMenu.Item
-                        class="hover:cursor-pointer hover:bg-bg3 text-sm text-red p-2 flex items-center gap-2"
+                        class="hover:cursor-pointer hover:bg-bg2 text-sm text-red p-2 flex items-center gap-2"
                         onSelect={() => authClient.signOut()}
                 >
                     <SignOutIcon weight="fill" class="sm:size-6 size-5" />

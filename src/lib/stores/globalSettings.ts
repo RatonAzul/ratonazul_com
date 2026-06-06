@@ -1,6 +1,6 @@
 import {PersistedState} from "runed";
 
-export const theme = new PersistedState<string>("theme", "gruvbox");
+export const theme = new PersistedState<string>("theme", "ratonazul");
 export const expandedMenu = new PersistedState<boolean>("expandedMenu", true);
 export const expandedHomeMenu = new PersistedState<boolean>("expandedHomeMenu", false);
 export const showCrt = new PersistedState<boolean>("showCrt", true);

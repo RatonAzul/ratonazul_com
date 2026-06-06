@@ -15,7 +15,7 @@
     import LogInUser from "$lib/components/shared/LogInUser.svelte";
 
     // -- toggle theme and header bar
-    const themes = ["gruvbox", "everforest", "ayu-mirage"];
+    const themes = ["ratonazul", "gruvbox"];
 
     // -- align theme dropdown with header end
     let alignOffset = $state(-83);

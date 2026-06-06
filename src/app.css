@@ -3,7 +3,7 @@
 @layer base {
 
   * {
-    @apply transition-colors duration-300 ease-in-out;
+    @apply transition-colors duration-100 ease-in-out;
   }
 
 }
@@ -87,6 +87,40 @@
   --fg2: #d5c4a1;
   --fg3: #bdae93;
   --fg4: #a89984;
+}
+
+.theme-ratonazul {
+  --red-dark: #b93737;
+  --red: #e55b4c;
+
+  --green-dark: #829f38;
+  --green: #A4C745;
+
+  --yellow-dark: #daaf4f;
+  --yellow: #F9D560;
+
+  --blue-dark: #379cb7;
+  --blue: #50c5e5;
+
+  --purple-dark: #9e72bb;
+  --purple: #d199ea;
+
+  --aqua-dark: #61b66f;
+  --aqua: #7edb9b;
+
+  --orange-dark: #d36b4b;
+  --orange: #EA844E;
+
+  --gray-dark: #6c6c98;
+  --gray: #8e8ec2;
+
+  --bg-dim: #1d2021;
+  --bg0: #1b1828;
+  --bg1: #25233b;
+  --bg2: #2c2b49;
+  --bg3: #373a5b;
+
+  --fg0: #e1e3ff;
 }
 
 .theme-everforest {

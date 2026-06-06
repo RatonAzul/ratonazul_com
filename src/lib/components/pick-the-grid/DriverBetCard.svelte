@@ -32,7 +32,7 @@
                         <span>{selectedDriver.firstName} {selectedDriver.lastName}</span>
                         <span class="text-{selectedDriver.teamColor} text-sm">{selectedDriver.teamName}</span>
                     {:else}
-                        <span class="text-gray-dark">{disabled ? 'Bet is closed' : 'Select a driver'}</span>
+                        <span class="text-gray-dark">{disabled ? 'bet is closed' : 'Select a driver'}</span>
                     {/if}
                 </span>
             </Select.Trigger>

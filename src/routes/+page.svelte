@@ -8,5 +8,5 @@ import HomeNavbar from "$lib/components/shared/HomeNavbar.svelte";
     <a class="font-bold lg:text-5xl text-4xl text-blue hover:text-blue-dark" href="/">ratonazul</a>
     <HomeNavbar/>
     <ColorPalette/>
-    <p class="mt-2 italic font-light">"I believe we're stronger than they know"</p>
+    <p class="mt-2 text-sm font-light">"I believe we're stronger than they know"</p>
 </div>

@@ -41,8 +41,8 @@
                     {/if}
                 </span>
                 <span class="hidden sm:flex flex-col items-start justify-center">
-                    <span class="text-aqua font-semibold text-start">{previousMeeting.name}</span>
-                    <span>R{selectedMeetingIndex} - {formatMeetingDate(previousMeeting.startDate)}</span>
+                    <span class="text-fg0 font-semibold text-start">{formatShortMeetingName(previousMeeting.name)}</span>
+                    <span class="text-gray">R{selectedMeetingIndex} - {formatMeetingDate(previousMeeting.startDate)}</span>
                 </span>
             </button>
         {/if}
@@ -52,8 +52,7 @@
         {:else}
             <button class="p-2 sm:col-span-1 col-span-2 flex sm:flex-row flex-col items-center justify-center gap-2">
                 <span class="flex flex-col justify-start gap-1">
-                    <span class="text-aqua font-semibold sm:block hidden">{selectedMeeting.name}</span>
-                    <span class="text-aqua font-semibold sm:hidden block">{formatShortMeetingName(selectedMeeting.name)}</span>
+                    <span class="text-fg0 font-semibold">{formatShortMeetingName(selectedMeeting.name)}</span>
                     {#if selectedMeetingStatus.type === "open"}
                         <span class="bg-green text-bg0 sm:px-2 px-1">closes in {selectedMeetingStatus.label}</span>
                     {:else if selectedMeetingStatus.type === "closed"}
@@ -61,7 +60,7 @@
                     {:else if selectedMeetingStatus.type === "opens_in"}
                         <span class="bg-gray-dark text-bg0 sm:px-2 px-1">opens in {selectedMeetingStatus.label}</span>
                     {:else if selectedMeetingStatus.type === "ended"}
-                        <span class="bg-red text-bg0 sm:px-2 px-1">ended {selectedMeetingStatus.label} ago</span>
+                        <span class="bg-red text-bg0 sm:px-2 px-1">ended {selectedMeetingStatus.label}</span>
                     {/if}
                 </span>
                 {#if selectedMeeting.country.image && selectedMeeting.country.image.length !== 0}
@@ -77,8 +76,8 @@
         {:else}
             <button class="p-2 flex sm:flex-row flex-col items-center gap-2 hover:cursor-pointer hover:bg-bg2 w-full" onclick={increaseSelectedMeeting}>
                 <span class="sm:ms-auto h-full hidden sm:flex flex-col items-end justify-center">
-                    <span class="text-aqua font-semibold ">{nextMeeting.name}</span>
-                    <span >R{selectedMeetingIndex + 2} - {formatMeetingDate(nextMeeting.startDate)}</span>
+                    <span class="text-fg0 font-semibold ">{formatShortMeetingName(nextMeeting.name)}</span>
+                    <span class="text-gray" >R{selectedMeetingIndex + 2} - {formatMeetingDate(nextMeeting.startDate)}</span>
                 </span>
             <span class="flex items-center justify-center sm:ms-0 ms-auto h-full">
                 {#if nextMeeting.country.image && nextMeeting.country.image.length !== 0}
