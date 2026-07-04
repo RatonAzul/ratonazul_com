@@ -29,7 +29,7 @@
 		<SvelteQueryDevtools buttonPosition="bottom-right"/>
 	{/if}
 	<!-- load color classes so i can dinamically import them later -->
-	<div class="text-orange border-red border-green border-blue border-yellow border-gray border-aqua border-purple border-orange"></div>
+	<div class="text-orange text-aqua border-red border-green border-blue border-yellow border-gray border-aqua border-purple border-orange"></div>
 	<div class="bg-red bg-green bg-blue bg-yellow bg-gray bg-aqua bg-purple bg-orange"/>
 </QueryClientProvider>
 

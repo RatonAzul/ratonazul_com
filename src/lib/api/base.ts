@@ -1,5 +1,8 @@
 import jwt from 'jsonwebtoken';
-import {MOTORSPORT_API_URL, PRIVATE_MOTORSPORT_API_JWT_SECRET} from "$env/static/private";
+import {
+    MEDIA_TRACKER_API_URL, MOTORSPORT_API_URL,
+    PRIVATE_MEDIA_TRACKER_API_JWT_SECRET, PRIVATE_MOTORSPORT_API_JWT_SECRET
+} from "$env/static/private";
 
 function generateToken(userId: string, secret: string): string {
     return jwt.sign({ userId }, secret, { algorithm: 'HS256', expiresIn: '1h' });
@@ -58,3 +61,4 @@ export function createApiClient(baseUrl: string, secret: string) {
 
 // API CLIENTS
 export const motorsportApi = createApiClient(MOTORSPORT_API_URL, PRIVATE_MOTORSPORT_API_JWT_SECRET);
+export const mediaTrackerApi = createApiClient(MEDIA_TRACKER_API_URL, PRIVATE_MEDIA_TRACKER_API_JWT_SECRET)
