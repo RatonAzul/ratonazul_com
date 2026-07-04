@@ -1,10 +1,10 @@
-import {api} from "$lib/api/base";
-import type {PositionBetDraft, TimeBet, TimeBetDraft} from "$lib/types/motorsport";
+import {motorsportApi} from "$lib/api/base";
+import type {TimeBet, TimeBetDraft} from "$lib/types/motorsport";
 
 export const timeBetsApi = {
     getByUserAndMeeting: (userId: string, meetingId: number) =>
-        api.get<TimeBet[]>(`/timeBets/user/${userId}/meeting/${meetingId}`),
+        motorsportApi.get<TimeBet[]>(`/timeBets/user/${userId}/meeting/${meetingId}`),
 
     upsert: (bets: TimeBetDraft[], userId: string, meetingId: number) =>
-        api.post<TimeBet[]>(`/timeBets/upsert/${meetingId}`, bets, userId)
+        motorsportApi.post<TimeBet[]>(`/timeBets/upsert/${meetingId}`, bets, userId)
 }
