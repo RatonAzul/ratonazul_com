@@ -10,6 +10,7 @@
 
 @theme inline {
   --font-jetbrains: 'JetBrains Mono', monospace;
+  --text-xxs: 0.625rem;
 
   --color-red-dark: var(--red-dark);
   --color-red: var(--red);

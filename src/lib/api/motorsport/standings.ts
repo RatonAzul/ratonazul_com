@@ -1,7 +1,7 @@
 import type {StandingsTableRow} from "$lib/types/motorsport";
-import {api} from "$lib/api/base";
+import {motorsportApi} from "$lib/api/base";
 
 export const standingsApi = {
     getSeasonStandings: (season: number) =>
-        api.get<StandingsTableRow[]>(`/standings/${season}`),
+        motorsportApi.get<StandingsTableRow[]>(`/standings/${season}`),
 }
