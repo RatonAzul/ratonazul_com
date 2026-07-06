@@ -5,7 +5,7 @@
         currentlyReadingBooks: CurrentlyReadingBook[]
     } = $props()
 
-    let mostRecentBook = currentlyReadingBooks.length > 0 ? currentlyReadingBooks[0] : null;
+    let mostRecentBook = $derived(currentlyReadingBooks.length > 0 ? currentlyReadingBooks[0] : null)
 </script>
 
 <div class="flex flex-col gap-2 w-full">
@@ -39,6 +39,8 @@
                     <div class="bg-yellow lg:h-2 h-1" style="width: {mostRecentBook.progress}%"></div>
                 </div>
             </div>
+        {:else}
+            <p class="text-gray m-auto">no book in progress</p>
         {/if}
     </div>
 </div>
