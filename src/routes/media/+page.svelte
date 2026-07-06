@@ -12,6 +12,8 @@
 <Body>
     <CustomH1>media</CustomH1>
     <div class="grid lg:grid-cols-2 grid-cols-1 lg:gap-8 gap-y-8 w-full">
+
+        <!-- BOOKS -->
         <div class="flex flex-col col-span-1">
             <CustomH2>books</CustomH2>
             <BookSection {currentlyReadingBooks} {recentlyReadBooks}/>
