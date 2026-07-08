@@ -35,10 +35,10 @@
                         <p class="text-green lg:text-xs text-xxs pb-1 flex justify-between w-full">
                             {book.rating}
                             <span class="text-gray lg:hidden inline">
-                                Read {getShortTimeFromNow(book.startedAt)} ago
+                                Read {getShortTimeFromNow(book.finishedAt)} ago
                             </span>
                             <span class="text-gray lg:inline hidden">
-                                Read {getTimeFromNow(book.startedAt)}
+                                Read {getTimeFromNow(book.finishedAt)}
                             </span>
                         </p>
                     </div>

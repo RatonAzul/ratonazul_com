@@ -40,7 +40,7 @@
                 </div>
             </div>
         {:else}
-            <p class="text-gray m-auto">no book in progress</p>
+            <p class="text-gray m-auto lg:text-base text-sm">no book in progress</p>
         {/if}
     </div>
 </div>
