@@ -16,7 +16,7 @@
             <div class="w-full flex flex-col">
                 <div class="flex flex-col lg:text-sm text-xs p-2">
                     <h4 class="font-semibold text-fg0 lg:text-base text-sm">{mostRecentBook.title}</h4>
-                    <p class="text-gray">{mostRecentBook.author}</p>
+                    <p class="text-gray">{mostRecentBook.authors[0]}</p>
                 </div>
 
                 {#if mostRecentBook.series}

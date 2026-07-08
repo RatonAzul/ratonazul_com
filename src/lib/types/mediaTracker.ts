@@ -2,7 +2,7 @@
 interface BasicBookInfo {
     title: string;
     status: string;
-    author: string;
+    authors: string[];
     series?: BasicSeriesInfo;
     seriesPosition?: number;
     pages: number;

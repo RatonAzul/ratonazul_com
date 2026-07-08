@@ -15,7 +15,7 @@
                 <div class="lg:text-sm text-xs flex flex-col px-2 w-full">
                     <div class="py-1">
                         <h5 class="text-fg0 font-semibold">{book.title}</h5>
-                        <p class="text-gray">{book.author}</p>
+                        <p class="text-gray">{book.authors[0]}</p>
                     </div>
 
                     <div class="flex gap-2 mt-auto w-full">
