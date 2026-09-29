@@ -13,8 +13,8 @@ export async function load({ parent }) {
         }),
 
         await queryClient.prefetchQuery({
-            queryKey: driversKeys.bySeason(CURRENT_YEAR),
-            queryFn: () => fetchDriversBySeason(CURRENT_YEAR),
+            queryKey: driversKeys.bySeason(CURRENT_YEAR, true),
+            queryFn: () => fetchDriversBySeason(CURRENT_YEAR, true),
         }),
 
         await queryClient.prefetchQuery({

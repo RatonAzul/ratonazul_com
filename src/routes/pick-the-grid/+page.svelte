@@ -20,7 +20,7 @@
     const session = authClient.useSession();
 
     const meetings = createMeetingsBySeasonQuery(CURRENT_YEAR);
-    const drivers = createDriversBySeasonQuery(CURRENT_YEAR);
+    const drivers = createDriversBySeasonQuery(CURRENT_YEAR, true);
     const standings = createStandingsBySeasonQuery(CURRENT_YEAR);
 
     let selectedMeetingIndex = $derived(getCurrentMeetingIndex(meetings.data))
