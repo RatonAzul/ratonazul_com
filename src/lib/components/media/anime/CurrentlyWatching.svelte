@@ -1,7 +1,7 @@
 <script lang="ts">
 
     import {getProgressPercentage} from "$lib/utils/mediaTracker/utils.ts";
-    import {getShortTimeFromNow, getTimeFromNow} from "$lib/utils/shared/dates.ts";
+    import {getShortTimeFromNow} from "$lib/utils/shared/dates.ts";
 
     let { currentlyWatchingAnime }: {
         currentlyWatchingAnime: BasicAnime[]
@@ -11,7 +11,7 @@
 
 <div class="flex flex-col gap-2 w-full">
     <div class="bg-yellow text-bg0 ps-2 lg:text-base text-sm">currently watching</div>
-    <div class="w-full h-58 grid grid-cols-1 gap-2">
+    <div class="w-full grid grid-cols-1 gap-2">
         {#each currentlyWatchingAnime as anime}
             <div class="bg-bg1 hover:bg-bg2 flex h-18">
                 <img src="{anime.image}" class="h-full" alt="{anime.title}">

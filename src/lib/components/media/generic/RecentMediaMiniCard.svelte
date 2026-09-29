@@ -9,7 +9,7 @@
 
 
 <div class="w-full h-18 bg-bg1 hover:bg-bg2 flex">
-    <img src="{recentItem.imageUrl}" class="h-full" alt="{recentItem.title}">
+    <img src="{recentItem.image}" class="h-full" alt="{recentItem.title}">
     <div class="lg:text-sm text-xs flex flex-col px-2 w-full">
         <div class="py-1">
             <h5 class="text-fg0 font-semibold">{recentItem.title}</h5>

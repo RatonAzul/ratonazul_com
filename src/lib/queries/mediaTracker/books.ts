@@ -2,8 +2,8 @@ import {createQuery} from "@tanstack/svelte-query";
 import {ONE_HOUR} from "$lib/queries/base";
 
 export const booksKeys = {
-    currentlyReading: ["currentlyReading"] as const,
-    recentlyRead: ["recentlyRead"] as const,
+    currentlyReading: ["currentlyReadingBooks"] as const,
+    recentlyRead: ["recentlyReadBooks"] as const,
 }
 
 export async function fetchCurrentlyReadingBooks(): Promise<CurrentlyReadingBook[]> {

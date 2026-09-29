@@ -5,7 +5,7 @@ interface RecentMiniCardItem {
     maxScore: number
     date: string
     dateVerb: string
-    imageUrl: string
+    image: string
 }
 
 export function miniCardItemFromBasicAnime(basicAnime: BasicAnime): RecentMiniCardItem {
@@ -16,6 +16,18 @@ export function miniCardItemFromBasicAnime(basicAnime: BasicAnime): RecentMiniCa
         maxScore: 10,
         date: basicAnime.finishedAt,
         dateVerb: "Seen",
-        imageUrl: basicAnime.image ? basicAnime.image : ""
+        image: basicAnime.image ? basicAnime.image : ""
+    }
+}
+
+export function miniCardItemFromBasicManga(basicManga: BasicManga): RecentMiniCardItem {
+    return {
+        title: basicManga.title ? basicManga.title : basicManga.titleRomaji,
+        subtitle: basicManga.mangaka,
+        score: basicManga.score,
+        maxScore: 10,
+        date: basicManga.finishedAt,
+        dateVerb: "Read",
+        image: basicManga.image ? basicManga.image : ""
     }
 }

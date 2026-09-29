@@ -2,8 +2,8 @@ import {createQuery} from "@tanstack/svelte-query"
 import {ONE_HOUR} from "$lib/queries/base";
 
 export const animeKeys = {
-    currentlyWatching: ["currentlyWatching"] as const,
-    recentlyWatched: ["recentlyWatched"] as const,
+    currentlyWatching: ["currentlyWatchingAnime"] as const,
+    recentlyWatched: ["recentlyWatchedAnime"] as const,
 }
 
 export async function fetchCurrentlyWatchingAnime(): Promise<BasicAnime[]> {
