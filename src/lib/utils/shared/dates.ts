@@ -1,12 +1,12 @@
 import {formatDistance} from 'date-fns';
 import {enUS} from "date-fns/locale";
 
-export function getTimeFromNow(date: string) {
+export function getTimeFromNow(date: string | undefined) {
     if (!date) return "A long time ago"
     return formatDistance(date, Date.now(), {addSuffix: true, locale: enUS})
 }
 
-export function getShortTimeFromNow(date: string): string {
+export function getShortTimeFromNow(date: string | undefined): string {
     if (!date) return '?';
 
     const diffMs = Date.now() - new Date(date).getTime();
