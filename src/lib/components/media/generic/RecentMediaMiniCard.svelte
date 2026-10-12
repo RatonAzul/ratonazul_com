@@ -1,9 +1,10 @@
 <script lang="ts">
     import {getShortTimeFromNow, getTimeFromNow} from "$lib/utils/shared/dates.ts";
     import Score from "$lib/components/media/generic/Score.svelte";
+    import type {MediaMiniCardItem} from "$lib/types/mediaTracker/generic.ts";
 
     let { recentItem }: {
-        recentItem: RecentMiniCardItem;
+        recentItem: MediaMiniCardItem;
     } = $props()
 </script>
 
@@ -22,10 +23,10 @@
             <p class="text-green lg:text-xs text-xxs pb-1 flex justify-between w-full">
                 {recentItem.score}
                 <span class="text-gray lg:hidden inline">
-                    {recentItem.dateVerb} {getShortTimeFromNow(recentItem.date)} ago
+                    {recentItem.dateVerb} {getShortTimeFromNow(recentItem.finishDate)} ago
                 </span>
                 <span class="text-gray lg:inline hidden">
-                    {recentItem.dateVerb} {getTimeFromNow(recentItem.date)}
+                    {recentItem.dateVerb} {getTimeFromNow(recentItem.finishDate)}
                 </span>
             </p>
         </div>

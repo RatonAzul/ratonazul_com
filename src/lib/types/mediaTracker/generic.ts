@@ -1,32 +1,41 @@
-interface RecentMiniCardItem {
+export interface MediaMiniCardItem {
     title: string
     subtitle: string
     score: number
     maxScore: number
-    date: string
+    progress: number
+    maxProgress: number
+    finishDate: string
+    lastActivityDate: string
     dateVerb: string
     image: string
 }
 
-export function miniCardItemFromBasicAnime(basicAnime: BasicAnime): RecentMiniCardItem {
+export function miniCardItemFromBasicAnime(basicAnime: BasicAnime): MediaMiniCardItem {
     return {
         title: basicAnime.title ? basicAnime.title : basicAnime.titleRomaji,
         subtitle: basicAnime.studio,
         score: basicAnime.score,
         maxScore: 10,
-        date: basicAnime.finishedAt,
+        progress: basicAnime.progress,
+        maxProgress: basicAnime.episodes,
+        finishDate: basicAnime.finishedAt,
+        lastActivityDate: basicAnime.lastActivityAt,
         dateVerb: "Seen",
         image: basicAnime.image ? basicAnime.image : ""
     }
 }
 
-export function miniCardItemFromBasicManga(basicManga: BasicManga): RecentMiniCardItem {
+export function miniCardItemFromBasicManga(basicManga: BasicManga): MediaMiniCardItem {
     return {
         title: basicManga.title ? basicManga.title : basicManga.titleRomaji,
         subtitle: basicManga.mangaka,
         score: basicManga.score,
         maxScore: 10,
-        date: basicManga.finishedAt,
+        progress: basicManga.progress,
+        maxProgress: basicManga.chapters,
+        finishDate: basicManga.finishedAt,
+        lastActivityDate: basicManga.lastActivityAt,
         dateVerb: "Read",
         image: basicManga.image ? basicManga.image : ""
     }
