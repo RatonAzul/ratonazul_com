@@ -1,14 +1,19 @@
 <script>
-    import { ListIcon, CameraIcon, TelevisionSimpleIcon, TireIcon } from "phosphor-svelte";
+    import { ListIcon, CameraIcon, TelevisionSimpleIcon, TireIcon, ShieldIcon } from "phosphor-svelte";
     import {DropdownMenu} from "bits-ui";
     import {page} from "$app/state";
-    let currentPage = $derived(page.route.id)
+    import {useSession} from "$lib/auth-client.ts";
+    let currentPath = $derived(page.url.pathname)
+
+    const session = useSession()
+    let isAdmin = $derived($session.data?.user.role === "admin")
 </script>
 
 <nav class=" text-gray [&_a]:hover:text-gray-dark md:block hidden">
-    <a href="/media" class="{currentPage === '/media' ? 'text-fg0' : ''}">[media]</a>
-    <a href="/pics" class="{currentPage === '/pics' ? 'text-fg0' : ''}">[pics]</a>
-    <a href="/motorsport" class="{currentPage === '/motorsport' ? 'text-fg0' : ''}">[motorsport]</a>
+    {@render link("/media", "media")}
+    {@render link("/pics", "pics")}
+    {@render link("/motorsport", "motorsport")}
+    {#if isAdmin}{@render link("/admin", "admin")}{/if}
 </nav>
 
 <DropdownMenu.Root>
@@ -29,6 +34,16 @@
                 <TireIcon class="sm:size-6 size-5"/>
                 <a href="/motorsport">motorsport</a>
             </DropdownMenu.Item>
+            {#if isAdmin}
+                <DropdownMenu.Item class="hover:bg-bg1 hover:cursor-pointer p-2 flex gap-2">
+                    <ShieldIcon class="sm:size-6 size-5"/>
+                    <a class={currentPath === '/admin' || currentPath.startsWith('/admin/') ? 'text-fg0' : ''} href="/admin">admin</a>
+                </DropdownMenu.Item>
+            {/if}
         </DropdownMenu.Content>
     </DropdownMenu.Portal>
 </DropdownMenu.Root>
+
+{#snippet link(endpoint, text)}
+    <a href={endpoint} class="{currentPath === endpoint || currentPath.startsWith(`${endpoint}/`) ? 'text-fg0' : ''}">[{text}]</a>
+{/snippet}
