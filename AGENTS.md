@@ -101,6 +101,13 @@ the external service; local helpers only format/display them.
 - Use existing semantic theme classes (`bg-bg1`, `text-fg0`, `text-purple`, etc.)
   and responsive Tailwind utilities. Dynamic color classes need to be visible
   to Tailwind; the root layout currently includes explicit color class lists.
+- Shared visual primitives in `src/app.css` include `surface-card`,
+  `surface-card-hover`, `section-label`, `internal-link`, `external-link`, and
+  `data-table`; use these for new surfaces, links, section labels and tables.
+- Media sections use `MediaColoredTitle` with `gap-2` between a title and its
+  content and `gap-4` between the current/recent sections. Relative media dates
+  come from `src/lib/utils/shared/dates.ts`; `formatExactDate` is used for the
+  hover tooltip and strict relative formatting floors elapsed units.
 - Keep browser queries separate from external API wrappers. Despite its path,
   `src/lib/api/base.ts` is server-only because it imports private env values.
   Never import those wrappers into browser components or universal load code.

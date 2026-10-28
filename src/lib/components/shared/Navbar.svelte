@@ -9,7 +9,7 @@
     let isAdmin = $derived($session.data?.user.role === "admin")
 </script>
 
-<nav class=" text-gray [&_a]:hover:text-gray-dark md:block hidden">
+<nav class="hidden text-gray [&_a]:hover:text-gray-dark md:block">
     {@render link("/media", "media")}
     {@render link("/pics", "pics")}
     {@render link("/motorsport", "motorsport")}
@@ -21,21 +21,21 @@
         <ListIcon class="sm:size-6 size-5"/>
     </DropdownMenu.Trigger>
     <DropdownMenu.Portal>
-        <DropdownMenu.Content sideOffset={8} alignOffset={-56} align="start" class="md:hidden bg-bg2 text-gray text-sm font-jetbrains">
-            <DropdownMenu.Item class="hover:bg-bg3 hover:cursor-pointer p-2 flex gap-2">
+        <DropdownMenu.Content sideOffset={8} alignOffset={-56} align="start" class="md:hidden bg-bg1 text-gray text-sm font-jetbrains p-1">
+            <DropdownMenu.Item class="cursor-pointer hover:bg-bg2 p-2 flex gap-2">
                 <TelevisionSimpleIcon class="sm:size-6 size-5"/>
                 <a href="/media">media</a>
             </DropdownMenu.Item>
-            <DropdownMenu.Item class="hover:bg-bg1 hover:cursor-pointer p-2 flex gap-2">
+            <DropdownMenu.Item class="cursor-pointer hover:bg-bg2 p-2 flex gap-2">
                 <CameraIcon class="sm:size-6 size-5"/>
                 <a href="/pics">pics</a>
             </DropdownMenu.Item>
-            <DropdownMenu.Item class="hover:bg-bg1 hover:cursor-pointer p-2 flex gap-2">
+            <DropdownMenu.Item class="cursor-pointer hover:bg-bg2 p-2 flex gap-2">
                 <TireIcon class="sm:size-6 size-5"/>
                 <a href="/motorsport">motorsport</a>
             </DropdownMenu.Item>
             {#if isAdmin}
-                <DropdownMenu.Item class="hover:bg-bg1 hover:cursor-pointer p-2 flex gap-2">
+                <DropdownMenu.Item class="cursor-pointer hover:bg-bg2 p-2 flex gap-2">
                     <ShieldIcon class="sm:size-6 size-5"/>
                     <a class={currentPath === '/admin' || currentPath.startsWith('/admin/') ? 'text-fg0' : ''} href="/admin">admin</a>
                 </DropdownMenu.Item>

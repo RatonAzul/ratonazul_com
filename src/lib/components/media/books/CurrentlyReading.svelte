@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {getShortTimeFromNow, getTimeFromNow} from "$lib/utils/shared/dates.ts";
+    import {formatExactDate, getShortTimeFromNow, getTimeFromNow} from "$lib/utils/shared/dates.ts";
     import MediaColoredTitle from "$lib/components/media/generic/MediaColoredTitle.svelte";
 
     let { currentlyReadingBooks}: {
@@ -11,26 +11,26 @@
 
 <div class="flex flex-col gap-2 w-full">
     <MediaColoredTitle title="currently reading" bgColor="bg-yellow"/>
-    <div class="w-full h-38 bg-bg1 hover:bg-bg2 flex">
+    <div class="surface-card-hover flex min-h-40 w-full">
         {#if currentlyReadingBooks.length === 1}
-            <img src="{mostRecentBook?.coverImage}" alt="{mostRecentBook?.title}" class="h-full">
+            <img src="{mostRecentBook?.coverImage}" alt="{mostRecentBook?.title}" class="h-40 w-28 object-cover">
             <div class="w-full flex flex-col">
-                <div class="flex flex-col lg:text-sm text-xs p-2">
-                    <h4 class="font-semibold text-fg0 lg:text-base text-sm">{mostRecentBook?.title}</h4>
-                    <p class="text-gray">{mostRecentBook?.authors[0]}</p>
+                <div class="flex flex-col p-3 text-xs lg:text-sm">
+                    <h4 class="text-fg0 text-base font-semibold lg:text-lg">{mostRecentBook?.title}</h4>
+                    <p class="text-gray text-sm lg:text-base">{mostRecentBook?.authors[0]}</p>
                 </div>
 
                 {#if mostRecentBook?.series}
-                    <p class="lg:text-sm text-xs text-bg0 bg-gray flex-0 mx-2 px-2 self-start">{mostRecentBook?.series?.name} - Book {mostRecentBook.seriesPosition}/{mostRecentBook.series?.booksCount}</p>
+                    <p class="mx-3 flex-0 self-start bg-gray px-2 py-1 text-xs text-bg0">{mostRecentBook?.series?.name} - Book {mostRecentBook.seriesPosition}/{mostRecentBook.series?.booksCount}</p>
                 {/if}
 
                 <!-- Page count -->
-                <div class="text-yellow lg:text-sm text-xs px-2 mt-auto flex">
+                <div class="mt-auto flex px-3 text-xs text-yellow lg:text-sm">
                     <span>Page {mostRecentBook.progressPages} of {mostRecentBook.pages} <span class="lg:inline hidden">({mostRecentBook.progress}%)</span></span>
-                    <span class="ms-auto text-gray lg:hidden inline">
+                        <span class="ms-auto text-gray lg:hidden inline" title={formatExactDate(mostRecentBook?.startedAt)}>
                         Started {getShortTimeFromNow(mostRecentBook?.startedAt)} ago
                     </span>
-                    <span class="ms-auto text-gray lg:inline hidden">
+                        <span class="ms-auto text-gray lg:inline hidden" title={formatExactDate(mostRecentBook?.startedAt)}>
                         Started {getTimeFromNow(mostRecentBook?.startedAt)}
                     </span>
                 </div>

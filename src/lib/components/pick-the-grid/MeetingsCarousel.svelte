@@ -27,11 +27,11 @@
 {#if meetings.isLoading || meetings.isLoadingError}
     <section class="bg-bg1 animate-pulse sm:h-17 h-26 w-full mb-8"></section>
 {:else if meetings.data}
-    <section class="bg-bg1 mb-8 grid sm:grid-cols-3 grid-cols-4">
+    <section class="surface-card mb-8 grid sm:grid-cols-3 grid-cols-4">
         {#if !previousMeeting}
             <div></div>
         {:else}
-            <button class="p-2 flex sm:flex-row flex-col-reverse sm:items-center items-start sm:justify-start justify-end gap-2 hover:cursor-pointer hover:bg-bg2" onclick={decreaseSelectedMeeting}>
+            <button class="cursor-pointer p-2 flex sm:flex-row flex-col-reverse sm:items-center items-start sm:justify-start justify-end gap-2 hover:bg-bg2" onclick={decreaseSelectedMeeting}>
                 <span class="flex justify-center items-center sm:me-0 me-auto h-full">
                     <CaretLeftIcon class="sm:size-6 size-6" weight="bold" />
                     {#if previousMeeting.country.image && previousMeeting.country.image.length !== 0}
@@ -50,7 +50,7 @@
         {#if !selectedMeeting}
             <div></div>
         {:else}
-            <button class="p-2 sm:col-span-1 col-span-2 flex sm:flex-row flex-col items-center justify-center gap-2">
+            <button class="cursor-default p-2 sm:col-span-1 col-span-2 flex sm:flex-row flex-col items-center justify-center gap-2">
                 <span class="flex flex-col justify-start gap-1">
                     <span class="text-fg0 font-semibold">{formatShortMeetingName(selectedMeeting.name)}</span>
                     {#if selectedMeetingStatus.type === "open"}
@@ -74,7 +74,7 @@
         {#if !nextMeeting}
             <div></div>
         {:else}
-            <button class="p-2 flex sm:flex-row flex-col items-center gap-2 hover:cursor-pointer hover:bg-bg2 w-full" onclick={increaseSelectedMeeting}>
+            <button class="cursor-pointer p-2 flex sm:flex-row flex-col items-center gap-2 hover:bg-bg2 w-full" onclick={increaseSelectedMeeting}>
                 <span class="sm:ms-auto h-full hidden sm:flex flex-col items-end justify-center">
                     <span class="text-fg0 font-semibold ">{formatShortMeetingName(nextMeeting.name)}</span>
                     <span class="text-gray" >R{selectedMeetingIndex + 2} - {formatMeetingDate(nextMeeting.startDate)}</span>

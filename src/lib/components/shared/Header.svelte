@@ -30,7 +30,7 @@
     }
 
 </script>
-<div class="bg-bg1 h-10 mx-auto me-0 w-full flex items-center sticky top-4 ps-2">
+<div class="surface-card sticky top-4 z-20 mx-auto me-0 flex h-10 w-full items-center ps-2">
     <div class="flex items-center flex-1 sm:text-base text-sm relative">
         <div class="flex items-center gap-2 px-2 sm:text-base">
             <a href="/" class="text-blue hover:text-blue-dark font-bold text-xl sm:block hidden">ratonazul</a>
@@ -39,7 +39,7 @@
                 <Navbar/>
             </div>
         </div>
-        <div class="flex items-center gap-4 ms-auto h-10">
+        <div class="ms-auto flex h-10 items-center gap-3">
             <!-- Theme selector -->
             <Select.Root type="single" bind:value={theme.current}>
                 <Select.Trigger class="hover:cursor-pointer text-gray hover:text-gray-dark">
@@ -49,7 +49,7 @@
                     <Select.Content sideOffset={30} align="end" alignOffset={alignOffset}>
                         <Select.Viewport>
                             {#each themes as themeOption, i}
-                                <Select.Item class="theme-{themeOption} hover:cursor-pointer hover:bg-bg2 sm:text-base text-sm font-jetbrains text-gray bg-bg1 flex items-center gap-4 p-2"
+                    <Select.Item class="theme-{themeOption} cursor-pointer bg-bg1 p-2 text-sm text-gray hover:bg-bg2 sm:text-base font-jetbrains flex items-center gap-4"
                                              value={themeOption} label={themeOption}>
                                     <p class="me-auto">{themeOption}</p>
                                     <ColorPalette size="small" />
@@ -66,7 +66,7 @@
             </Select.Root>
 
             <!-- Crt effect toggle button -->
-            <button class="hover:cursor-pointer flex gap-2 text-gray hover:text-gray-dark sm:me-4 me-2" onclick={toggleShowCrt}>
+            <button class="cursor-pointer flex gap-2 text-gray hover:text-gray-dark sm:me-4 me-2" onclick={toggleShowCrt} aria-label="Toggle CRT effect">
                 {#if showCrt.current}
                     <EyeIcon class="sm:size-6 size-5" weight="regular" />
                 {:else}

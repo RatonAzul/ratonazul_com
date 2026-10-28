@@ -88,7 +88,7 @@
 
 <div class="flex gap-2 h-10">
     <div class="flex justify-center items-center aspect-square bg-purple text-bg0">Q</div>
-    <div class="bg-bg1 {disabled ? '' : 'hover:bg-bg2'} flex w-full justify-between items-center border-l-purple border-l-8 h-10">
+    <div class="surface-card {disabled ? '' : 'hover:bg-bg2'} flex w-full justify-between items-center border-l-purple border-l-8 h-10">
         <div class="flex items-center ps-4 gap-0.5 flex-1 text-sm">
             {#if isEditing}
                 <input

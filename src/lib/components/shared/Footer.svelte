@@ -4,5 +4,5 @@
 </div>
 
 {#snippet link(link, name)}
-    <a class="text-purple hover:text-purple-dark underline" href={link}>{name}</a>
+    <a class="external-link" href={link}>{name}</a>
 {/snippet}

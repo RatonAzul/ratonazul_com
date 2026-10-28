@@ -28,8 +28,8 @@
 </script>
 
 <DropdownMenu.Root>
-    <DropdownMenu.Trigger class="hover:cursor-pointer text-gray hover:text-gray-dark flex items-center gap-2 h-10">
-        <span class="h-full flex items-center justify-center gap-2 text-bg1 sm:px-4 font-medium sm:aspect-auto aspect-square
+    <DropdownMenu.Trigger class="cursor-pointer text-gray hover:text-gray-dark flex items-center gap-2 h-10">
+        <span class="flex h-full items-center justify-center gap-2 px-3 text-bg1 font-medium sm:aspect-auto aspect-square
                 {$session.data ? 'bg-blue hover:bg-blue-dark' : 'bg-green hover:bg-green-dark'}">
             {#if $session.data}
                 <UserIcon weight="fill" class="sm:size-6 size-5" />
@@ -40,10 +40,10 @@
         </span>
     </DropdownMenu.Trigger>
     <DropdownMenu.Portal>
-        <DropdownMenu.Content sideOffset={12} align="end" class="bg-bg1 flex flex-col font-jetbrains h-full">
+        <DropdownMenu.Content sideOffset={8} align="end" class="surface-card min-w-44 flex flex-col p-1 font-jetbrains">
             {#if $session.data}
                 <DropdownMenu.Item
-                        class="hover:cursor-pointer hover:bg-bg2 text-sm text-fg0 p-2 flex items-center gap-2"
+                        class="cursor-pointer hover:bg-bg2 text-sm text-fg0 p-2 flex items-center gap-2"
                         onSelect={() => {
                         newName = $session.data?.user.username ?? "";
                         editingName = true;
@@ -53,7 +53,7 @@
                     change username
                 </DropdownMenu.Item>
                 <DropdownMenu.Item
-                        class="hover:cursor-pointer hover:bg-bg2 text-sm text-red p-2 flex items-center gap-2"
+                        class="cursor-pointer hover:bg-bg2 text-sm text-red p-2 flex items-center gap-2"
                         onSelect={() => authClient.signOut()}
                 >
                     <SignOutIcon weight="fill" class="sm:size-6 size-5" />
@@ -61,7 +61,7 @@
                 </DropdownMenu.Item>
             {:else}
                 <DropdownMenu.Item
-                        class="hover:cursor-pointer hover:bg-bg3 text-sm text-gray p-2 flex items-center gap-2"
+                        class="cursor-pointer hover:bg-bg2 text-sm text-gray p-2 flex items-center gap-2"
                         onSelect={() =>
                         authClient.signIn.social({
                             provider: "google",
@@ -81,7 +81,7 @@
         <div class="bg-bg1 p-4 flex flex-col gap-3">
             <p class="text-gray text-sm">{$session.data?.user.username ? 'edit username' : 'choose a username'}</p>
             <input
-                    class="bg-bg2 text-gray p-2 text-sm outline-none"
+                    class="surface-card-hover text-fg0 p-2 text-sm outline-none"
                     maxlength="15"
                     bind:value={newName}
                     onkeydown={(e) => e.key === "Enter" && saveName()}
@@ -89,14 +89,14 @@
             <div class="flex gap-2 justify-end">
                 {#if $session.data?.user.username}
                     <button
-                            class="text-gray text-sm hover:text-gray-dark hover:cursor-pointer"
+                            class="cursor-pointer text-gray text-sm hover:text-gray-dark"
                             onclick={() => (editingName = false)}
                     >
                         cancel
                     </button>
                 {/if}
                 <button
-                        class="text-green text-sm hover:text-green-dark hover:cursor-pointer"
+                        class="cursor-pointer text-green text-sm hover:text-green-dark"
                         onclick={saveName}
                 >
                     save

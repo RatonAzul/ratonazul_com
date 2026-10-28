@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import CustomH1 from "$lib/components/shared/CustomH1.svelte";
     import Body from "$lib/components/shared/Body.svelte";
 </script>

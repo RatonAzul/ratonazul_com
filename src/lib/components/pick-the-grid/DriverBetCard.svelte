@@ -24,7 +24,7 @@
 
 <div class="flex gap-2 h-10">
     <div class="flex justify-center items-center aspect-square {bet.position === 1 ? 'bg-red text-bg0' : 'bg-bg1'}">{bet.position}</div>
-    <div class="bg-bg1 flex justify-between flex-1">
+    <div class="surface-card-hover flex justify-between flex-1">
         <Select.Root type="single" value={selectedDriverId} onValueChange={onValueChange} {disabled}>
             <Select.Trigger class=" {disabled ? '' : 'hover:cursor-pointer hover:bg-bg2'} w-full {selectedDriver ? 'border-' + selectedDriver.teamColor : 'border-l-transparent'} border-l-8">
                 <span class="flex flex-col ps-4 items-start justify-center text-sm">

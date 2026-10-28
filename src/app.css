@@ -8,6 +8,40 @@
 
 }
 
+@layer components {
+  .surface-card {
+    @apply bg-bg1;
+  }
+
+  .surface-card-hover {
+    @apply bg-bg1 hover:bg-bg2;
+  }
+
+  .section-label {
+    @apply flex h-8 items-center px-2 text-base text-bg0;
+  }
+
+  .internal-link {
+    @apply cursor-pointer text-gray hover:text-gray-dark;
+  }
+
+  .external-link {
+    @apply cursor-pointer text-purple underline hover:text-purple-dark;
+  }
+
+  .data-table {
+    @apply w-full border-collapse text-left text-sm;
+  }
+
+  .data-table th {
+    @apply border-b-2 border-bg2 px-3 py-2 font-normal text-gray-dark;
+  }
+
+  .data-table td {
+    @apply border-b border-bg2 px-3 py-3 text-fg0;
+  }
+}
+
 @theme inline {
   --font-jetbrains: 'JetBrains Mono', monospace;
   --text-xxs: 0.625rem;
@@ -73,8 +107,8 @@
   --orange-dark: #d65d0e;
   --orange: #fe8019;
 
-  --gray-dark: #a89984;
-  --gray: #ebdbb2;
+  --gray-dark: #665c54;
+  --gray: #a89984;
 
   --bg-dim: #1d2021;
   --bg0: #282828;

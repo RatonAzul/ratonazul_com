@@ -5,4 +5,4 @@
     } = $props()
 </script>
 
-<div class="{bgColor} lg:text-base text-sm text-bg0 ps-2">{title}</div>
+<div class="section-label {bgColor}">{title}</div>

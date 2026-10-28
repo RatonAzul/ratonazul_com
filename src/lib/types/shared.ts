@@ -9,14 +9,14 @@ export enum ButtonStatus {
 export function getButtonStyles(status: ButtonStatus) {
     switch (status) {
         case ButtonStatus.default:
-            return "bg-blue hover:bg-blue-dark text-bg0 hover:cursor-pointer"
+            return "bg-blue hover:bg-blue-dark text-bg0"
         case ButtonStatus.error:
-            return "bg-red hover:bg-red-dark text-bg0 hover:cursor-pointer"
+            return "bg-red hover:bg-red-dark text-bg0"
         case ButtonStatus.warning:
-            return "bg-yellow hover:bg-yellow-dark text-bg0 hover:cursor-pointer"
+            return "bg-yellow hover:bg-yellow-dark text-bg0"
         case ButtonStatus.disabled:
             return "bg-gray-dark text-bg0"
         case ButtonStatus.success:
-            return "bg-green hover:bg-green-dark text-bg0 hover:cursor-pointer"
+            return "bg-green hover:bg-green-dark text-bg0"
     }
 }
