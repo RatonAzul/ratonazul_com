@@ -18,6 +18,7 @@
     import MeetingBetsComponent from "$lib/components/pick-the-grid/MeetingBetsComponent.svelte";
 
     const session = authClient.useSession();
+    let comparisonInfo = $state({ selectedUsers: 0, sharedRounds: 0 });
 
     const meetings = createMeetingsBySeasonQuery(CURRENT_YEAR);
     const drivers = createDriversBySeasonQuery(CURRENT_YEAR, true);
@@ -32,6 +33,11 @@
     let positionBets = $derived(createPositionBetsByUserAndMeeting(userId, meetingId));
     let timeBets = $derived(createTimeBetsByUserAndMeeting(userId, meetingId));
     let meetingBets = $derived(createMeetingBetsByMeetingId(meetingId));
+    let standingsSubtitle = $derived(
+        comparisonInfo.selectedUsers > 0
+            ? `comparing ${comparisonInfo.sharedRounds} shared rounds · click a username to add or remove a player`
+            : 'click a username to compare shared rounds'
+    );
 
 </script>
 
@@ -42,10 +48,10 @@
     <BetComponent meeting={selectedMeeting} {drivers} {positionBets} {timeBets}/>
     <MeetingBetsComponent {meetingBets} {drivers} />
     <div>
-        <CustomH2>standings</CustomH2>
-        <div class="grid grid-cols-1 gap-2">
-            <StandingsTable {standings} {meetings} />
-            <PointInfo/>
+        <div class="flex items-baseline justify-between gap-4">
+            <CustomH2 subtitle={standingsSubtitle}>standings</CustomH2>
         </div>
+        <StandingsTable {standings} {meetings} bind:comparisonInfo />
+        <PointInfo/>
     </div>
 </Body>

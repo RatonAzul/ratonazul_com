@@ -88,6 +88,15 @@ using browser-local dates. `BetComponent.svelte` builds drafts and posts the
 combined payload; the server derives the user ID from the authenticated session
 and forwards position/time writes concurrently. Points and standings come from
 the external service; local helpers only format/display them.
+`StandingsTable.svelte` automatically includes the logged-in user when that
+user has a standing. Clicking other usernames toggles them into a comparison;
+the displayed totals then sum only rounds shared by every selected player.
+Selected user IDs are persisted in local storage through Runed's
+`PersistedState`, and the logged-in user can also be toggled off.
+In non-production environments it also adds deterministic fixture points with
+5–7 missing meetings per player plus sample players, marked in the UI as a
+development fixture, so this comparison can be exercised without mutating
+external data.
 
 ## Coding conventions and boundaries
 
