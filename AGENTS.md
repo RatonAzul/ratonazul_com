@@ -222,3 +222,10 @@ These are observations, not instructions to fix unrelated code automatically:
   call inside `Promise.all`; SSR compatibility and intended parallelism need
   review if that loading path is changed.
 - README is mostly the original Svelte scaffold and is not an architecture guide.
+
+La Palabra del Día also offers a shared-result input method. `parseSpanishWordle`
+validates the header, score and emoji board (including X/6 failures), and both
+preview and save enforce the selected date's puzzle number. Shared results use
+`is_simple: true` and `words: []`, without creating or changing daily solutions.
+Existing Spanish board-only records reopen in share mode. Selected-date headings
+include the derived puzzle number for all three games.

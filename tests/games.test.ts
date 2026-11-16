@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calendarMonths, puzzleDay, isaacDay, isaacShare, parseIsaac, playerCounts, recordDate, scoreGuess, validDate, wordleResult } from '../src/lib/utils/games.ts';
+import { calendarMonths, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, playerCounts, recordDate, scoreGuess, validDate, wordleResult } from '../src/lib/utils/games.ts';
 
 test('Wordle and La Palabra puzzle numbers follow the November 14 2026 anchors across years', () => {
     for (const [game, anchor] of [['wordle', 1974], ['la-palabra-del-dia', 1773]] as const) {
@@ -79,4 +79,29 @@ test('Calendar handles leap years, Monday offsets and distinct players per date'
     assert.equal(calendarMonths(2028)[1].dates.length, 29);
     const record = { ...parseIsaac(share), id: 1, user_id: 'alice' };
     assert.deepEqual(playerCounts([record, { ...record, id: 2 }, { ...record, id: 3, user_id: 'bob' }]), { '2026-11-13': 2 });
+});
+
+const spanishShare = `La palabra del día #1760 4/6
+
+🟨🟨⬛🟨⬛
+🟨⬛🟨🟨⬛
+🟩🟩⬛🟨🟩
+🟩🟩🟩🟩🟩
+
+https://lapalabradeldia.com/`;
+
+test('Spanish share parses board-only results without inventing guesses', () => {
+    const parsed = parseSpanishWordle(spanishShare);
+    assert.deepEqual(parsed, { day: 1760, board: 'iixixixiixooxioooooo', score: 4, is_simple: true, words: [] });
+    assert.deepEqual(parseSpanishWordle(spanishShare.replaceAll('⬛', '⬜').replaceAll('\n', '\r\n')), parsed);
+    assert.deepEqual(parseSpanishWordle(spanishWordleShare({ ...parsed, date: '2026-11-01', user_id: 'alice' })), parsed);
+    assert.equal(puzzleDay('la-palabra-del-dia', '2026-11-01'), parsed.day);
+});
+
+test('Spanish share validates score, board rows, completion and puzzle number', () => {
+    for (const invalid of [spanishShare.replace('4/6', '3/6'), spanishShare.replace('🟩🟩🟩🟩🟩', '⬛⬛⬛⬛⬛'), spanishShare.replace('#1760', '#0'), spanishShare + '\nextra', spanishShare.replace('🟨🟨⬛🟨⬛', '🟨🟨')]) assert.throws(() => parseSpanishWordle(invalid));
+    const failed = `La palabra del día #1760 X/6\n${Array(6).fill('⬛⬛⬛⬛⬛').join('\n')}`;
+    assert.equal(parseSpanishWordle(failed).score, 7);
+    assert.equal(parseSpanishWordle(failed).board.length, 30);
+    assert.throws(() => parseSpanishWordle(failed.replace('X/6', '6/6')));
 });

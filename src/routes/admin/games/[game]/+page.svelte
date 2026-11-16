@@ -26,7 +26,7 @@
     {:else}
         <GameCalendar year={data.year} currentYear={data.currentYear} {counts} date={data.date} today={data.today} />
         <div class="mt-6 mb-4 flex flex-col items-start gap-1" id="daily-results">
-            <div><p class="section-label mb-1">selected day</p><h2 class="text-2xl text-green font-semibold">{data.date}</h2></div>
+            <div><p class="section-label mb-1">selected day</p><h2 class="text-2xl text-green font-semibold">{data.date} · #{puzzleDay(data.game, data.date)}</h2></div>
             <span class="text-sm text-gray">{counts[data.date] ?? 0} / 2 players · {data.daily.length} results</span>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] gap-5 items-start mb-8">
