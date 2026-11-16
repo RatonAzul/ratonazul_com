@@ -100,3 +100,26 @@ export function isaacShare(record: IsaacInput): string {
     const colors: Record<string, string> = { B: '🟦', R: '🟥', Y: '🟨', G: '🟩' };
     return `Isaaconnect #${record.day}\n✅: ${record.points}/4 ❤️: ${record.lifes}/4\n${record.board.map(row => [...row].map(cell => colors[cell] ?? cell).join('')).join('\n')}\nTime: ${String(Math.floor(record.time / 60)).padStart(2, '0')}:${String(record.time % 60).padStart(2, '0')}\nhttps://isaaconnect.com/`;
 }
+
+export function parseSpanishWordle(text: string) {
+    const lines = text.trim().split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+    const header = /^La palabra del d[ií]a\s+#(\d+)\s+([1-6X])\/6$/iu.exec(lines.shift() ?? '');
+    if (!header) throw new Error('Paste the complete La Palabra del Día result, including puzzle number and score.');
+    if (/^https:\/\/(www\.)?lapalabradeldia\.com\/?$/i.test(lines.at(-1) ?? '')) lines.pop();
+    const colors: Record<string, string> = { '🟩': 'o', '🟨': 'i', '⬛': 'x', '⬜': 'x' };
+    const rows = lines.map(line => {
+        const cells = [...line.replace(/\s|\uFE0F/gu, '')];
+        if (cells.length !== 5 || cells.some(cell => !colors[cell])) throw new Error('Each row must contain five green, yellow, black or white squares.');
+        return cells.map(cell => colors[cell]).join('');
+    });
+    const day = Number(header[1]);
+    const score = header[2].toUpperCase() === 'X' ? 7 : Number(header[2]);
+    if (!Number.isSafeInteger(day) || day < 1 || day > 2_147_483_647) throw new Error('Invalid puzzle number.');
+    if (rows.length !== (score === 7 ? 6 : score) || rows.slice(0, -1).includes('ooooo') || (rows.at(-1) === 'ooooo') !== (score !== 7)) throw new Error('The board must match the shared score and end with five green squares only for a solved game.');
+    return { day, board: rows.join(''), score, is_simple: true as const, words: [] as string[] };
+}
+
+export function spanishWordleShare(record: WordleInput): string {
+    const colors: Record<string, string> = { o: '🟩', i: '🟨', x: '⬛' };
+    return `La palabra del día #${record.day} ${record.score === 7 ? 'X' : record.score}/6\n\n${(record.board.match(/.{5}/gu) ?? []).map(row => [...row].map(cell => colors[cell]).join('')).join('\n')}\n\nhttps://lapalabradeldia.com/`;
+}

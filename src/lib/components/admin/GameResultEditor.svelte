@@ -1,21 +1,23 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import { untrack } from 'svelte';
-    import { games, puzzleDay, isaacDay, isaacShare, parseIsaac, wordleResult, type Game, type GameRecord, type Player } from '$lib/utils/games';
+    import { games, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, wordleResult, type Game, type GameRecord, type Player } from '$lib/utils/games';
     import GameBoard from './GameBoard.svelte';
 
-    type Values = { id: string; userId: string; date: string; answer: string; words: string[]; share: string };
+    type Values = { id: string; userId: string; date: string; answer: string; words: string[]; share: string; mode?: string };
     let { game, date, record, answer, defaultUserId, players, values = null }: { game: Game; date: string; record?: GameRecord; answer: string; defaultUserId: string; players: Player[]; values?: Values | null } = $props();
     let userId = $state(untrack(() => values?.userId ?? record?.user_id ?? defaultUserId));
     let solution = $state('');
     let guesses = $state<string[]>(Array(6).fill(''));
     let share = $state('');
+    let mode = $state('words');
     let pending = $state(false);
     $effect(() => {
         userId = values?.userId ?? record?.user_id ?? defaultUserId;
         solution = values?.answer ?? answer;
         guesses = values?.words ?? Array.from({ length: 6 }, (_, i) => record && 'words' in record ? record.words?.[i] ?? '' : '');
-        share = values?.share ?? (record && 'points' in record ? isaacShare(record) : '');
+        mode = values?.mode ?? (game === 'la-palabra-del-dia' && record && 'is_simple' in record && record.is_simple ? 'share' : 'words');
+        share = values?.share ?? (record && 'points' in record ? isaacShare(record) : game === 'la-palabra-del-dia' && record && 'score' in record ? spanishWordleShare(record) : '');
     });
     let preview = $derived.by(() => {
         try {
@@ -23,6 +25,11 @@
                 if (!share.trim()) return null;
                 const result = parseIsaac(share);
                 return { kind: 'isaac' as const, result, rows: result.board, words: [], error: result.day !== isaacDay(date) ? `This date expects puzzle #${isaacDay(date)}.` : '' };
+            }
+            if (game === 'la-palabra-del-dia' && mode === 'share') {
+                if (!share.trim()) return null;
+                const result = parseSpanishWordle(share);
+                return { kind: 'wordle' as const, result, rows: result.board.match(/.{5}/gu) ?? [], words: result.words, error: result.day !== puzzleDay(game, date) ? `This date expects puzzle #${puzzleDay(game, date)}.` : '' };
             }
             if (!solution.trim() && guesses.every(word => !word.trim())) return null;
             const result = wordleResult(guesses, solution);
@@ -61,6 +68,20 @@
             </label>
             <p class="text-xs text-gray">Paste the full result. The API stores time in whole seconds; fractional seconds are rounded down.</p>
         {:else}
+            {#if game === 'la-palabra-del-dia'}
+                <label class="flex flex-col gap-2 text-sm">input method
+                    <select name="mode" bind:value={mode} class={inputClass}>
+                        <option value="words">enter words</option>
+                        <option value="share">paste shared result</option>
+                    </select>
+                </label>
+            {/if}
+            {#if game === 'la-palabra-del-dia' && mode === 'share'}
+                <label class="flex flex-col gap-2 text-sm">share text
+                    <textarea name="share" bind:value={share} rows="10" maxlength="20000" required class={`${inputClass} resize-y text-sm`} placeholder="La palabra del día #1760 4/6"></textarea>
+                </label>
+                <p class="text-xs text-gray">Paste the complete shared result to save its board and score.</p>
+            {:else}
             <label class="flex flex-col gap-2 text-sm">answer
                 <input class={`${inputClass} uppercase tracking-widest`} name="answer" bind:value={solution} autocomplete="off" required />
             </label>
@@ -74,6 +95,7 @@
                 {/each}
             </fieldset>
             {#if record && 'is_simple' in record && record.is_simple}<p class="text-xs text-yellow">This is a board-only result. Enter its guesses and answer to edit it.</p>{/if}
+            {/if}
         {/if}
         {#if preview}
             <div class="border-t border-bg3 pt-4 flex flex-col gap-3" aria-live="polite">
@@ -100,7 +122,7 @@
                                     <dt class="text-gray">date</dt><dd><time datetime={date}>{date}</time></dd>
                                 </dl>
                             </div>
-                            <p class="text-sm text-fg0"><span class={preview.result.score === 7 ? 'text-red' : 'text-green'}>{preview.result.score === 7 ? 'X' : preview.result.score}/6</span> - {solution.trim().toLowerCase()}</p>
+                            <p class="text-sm text-fg0"><span class={preview.result.score === 7 ? 'text-red' : 'text-green'}>{preview.result.score === 7 ? 'X' : preview.result.score}/6</span> - {solution.trim().toLowerCase() || 'not recorded'}</p>
                         </div>
                     {/if}
                 {/if}
