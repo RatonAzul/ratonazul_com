@@ -5,7 +5,7 @@
 This is ratonazul's personal website: Svelte 5, SvelteKit 2, strict TypeScript,
 Tailwind CSS 4, and Vite. Production uses `@sveltejs/adapter-node`.
 The repository owns the website, Better Auth accounts/sessions, and a SvelteKit
-gateway to two separate services. Motorsport and media domain databases and
+gateway to three separate services. Motorsport, media, and games domain databases and
 their scoring/business logic are outside this repository.
 
 Typical data flow:
@@ -24,6 +24,23 @@ page also attempts to prefetch in its universal load function.
 - `src/routes/pick-the-grid/`: game page and prefetch load function.
 - `src/routes/pics/+page.svelte`: placeholder page.
 - `src/routes/admin/`: admin landing page and initial user administration.
+- `src/routes/admin/games/`: game cards and per-game calendar/result management
+  at `/wordle`, `/la-palabra-del-dia`, and `/isaaconnect` using `[game]`.
+- `src/lib/components/admin/Game{Calendar,Board,ResultEditor}.svelte`: reusable
+  yearly calendar, accessible colored board and result editor. Result cards use
+  two columns on large screens, labeled edit/delete icon buttons, and Wordle
+  score/answer summaries below each board.
+  The calendar pages through six month cards on desktop, three on tablets, and one on mobile,
+  with arrows and native horizontal swipe/scroll snapping. It opens at the
+  selected date's month and retains separate year navigation.
+- `src/lib/server/games-api.ts`: server-only JWT client for `ratonazul_com_api`;
+  exhaustive paginated lists and safe errors. Games actions independently check
+  the acting admin before any read/write; layout authorization alone is not enough.
+- `src/lib/utils/games.ts`: typed game models, Wordle duplicate-letter scoring,
+  Isaaconnect share parser and date calculations. On 2026-11-14, Wordle is
+  #1974, La Palabra del Día #1773 and Isaaconnect #856 (#855 on 2026-11-13).
+  All puzzle numbers are derived from the selected date on both client and server.
+  New result forms default to the authenticated admin; edits retain the record's player.
 - `src/routes/api/mediaTracker/`: six current/recent media GET endpoints.
 - `src/routes/api/motorsport/`: meetings, drivers, standings, meeting bets,
   user bets, and authenticated combined bet upsert.
@@ -113,6 +130,9 @@ external data.
 - Shared visual primitives in `src/app.css` include `surface-card`,
   `surface-card-hover`, `section-label`, `internal-link`, `external-link`, and
   `data-table`; use these for new surfaces, links, section labels and tables.
+  `action-icon` shares outlined edit/delete controls across games and users, with
+  borders inheriting the icon color. `form-field` shares game/user input styling
+  and the account username input, including the purple focus border.
 - Media sections use `MediaColoredTitle` with `gap-2` between a title and its
   content and `gap-4` between the current/recent sections. Relative media dates
   come from `src/lib/utils/shared/dates.ts`; `formatExactDate` is used for the
@@ -133,9 +153,17 @@ external data.
 
 Node requirement: `>=22.12.0`; the repo has `pnpm-lock.yaml` and pnpm workspace
 configuration. Use the package scripts rather than inventing new tooling.
+`nix develop` provides pinned Node.js 22, pnpm 10, Docker Compose, and
+PostgreSQL client tools; `.envrc` enables optional direnv activation.
+See `DEVELOPMENT.md` for local setup. The shell does not load secrets or run
+services/migrations.
+Compose pins PostgreSQL 18, binds to `127.0.0.1:1`, and requires
+`POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` matching `DATABASE_URL`.
+Drizzle configuration loads `.env` using Node's `loadEnvFile`.
 
 - `pnpm dev`: Vite development server on port 2601.
 - `pnpm check`: SvelteKit sync plus Svelte/TypeScript diagnostics.
+- `pnpm test:games`: focused Node tests for scoring, parsing and calendar behavior.
 - `pnpm build`: production build; `pnpm start`: run `build/index.js`.
 - `pnpm preview`: preview build.
 - `pnpm db:start`: Docker Compose PostgreSQL (foreground).
@@ -151,7 +179,18 @@ and `PUBLIC_ENVIRONMENT` (`prod` hides query devtools). Compose also uses
 the relevant keys during build. Do not run migrations or schema pushes merely
 to investigate code; they change database state.
 
-No automated test suite or test script was found. For code changes, run
+Games additionally use server-only `RATONAZUL_COM_API_URL` (base URL without
+`/v1`) and `PRIVATE_RATONAZUL_COM_API_JWT_SECRET` (matching the API's
+`JWT_SECRET_KEY`). Wordle forms accept six optional guess fields and a required
+answer, then send a compact lowercase `o/i/x` board to match the existing API.
+Isaaconnect rows use `B/R/Y/G`; its API stores whole seconds, so pasted
+milliseconds are truncated. Calendar counts distinct user IDs, not attempts.
+Daily answers are shared: changing one recalculates other full results where
+possible, and rejects corrections that would invalidate their guesses or
+board-only records. Result and solution writes use separate API requests;
+partial failures are reported for review rather than claimed as success.
+
+Focused game utility tests are available through `pnpm test:games`. For code changes, run
 `pnpm check` and appropriate build/UI validation, reporting existing failures
 separately. Documentation-only changes do not require new tests.
 

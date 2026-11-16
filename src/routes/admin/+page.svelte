@@ -9,6 +9,10 @@
 <Body>
     <H1WithBreadCrumb items={[{ label: 'admin' }]}>admin</H1WithBreadCrumb>
     <div class="grid sm:grid-cols-2 grid-cols-1 gap-4">
+        <a href="/admin/games" class="cursor-pointer bg-bg1 hover:bg-bg2 border-l-4 border-green p-4 flex flex-col gap-2">
+            <span class="text-green text-xl font-semibold">games</span>
+            <span class="text-gray text-sm">manage wordle, la palabra del día and isaaconnect results</span>
+        </a>
         <a
             href="/admin/users"
             class="cursor-pointer bg-bg1 hover:bg-bg2 border-l-4 border-blue p-4 flex flex-col gap-2"
