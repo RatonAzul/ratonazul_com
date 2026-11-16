@@ -44,12 +44,12 @@
 <Body>
     <CustomH1>pick the grid</CustomH1>
     <MeetingsCarousel bind:selectedMeetingIndex={selectedMeetingIndex} {meetings}/>
-    <CustomH2>your picks</CustomH2>
+    <CustomH2 class="mb-3">your picks</CustomH2>
     <BetComponent meeting={selectedMeeting} {drivers} {positionBets} {timeBets}/>
     <MeetingBetsComponent {meetingBets} {drivers} />
     <div>
         <div class="flex items-baseline justify-between gap-4">
-            <CustomH2 subtitle={standingsSubtitle}>standings</CustomH2>
+            <CustomH2 class="mb-3" subtitle={standingsSubtitle}>standings</CustomH2>
         </div>
         <StandingsTable {standings} {meetings} bind:comparisonInfo />
         <PointInfo/>

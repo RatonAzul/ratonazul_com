@@ -78,10 +78,12 @@
 
 {#if editingName}
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="bg-bg1 p-4 flex flex-col gap-3">
-            <p class="text-gray text-sm">{$session.data?.user.username ? 'edit username' : 'choose a username'}</p>
+        <div class="surface-card w-full max-w-sm mx-4 p-4 flex flex-col gap-3">
+            <label for="account-username" class="text-gray text-sm">{$session.data?.user.username ? 'edit username' : 'choose a username'}</label>
             <input
-                    class="surface-card-hover text-fg0 p-2 text-sm outline-none"
+                    id="account-username"
+                    autocomplete="username"
+                    class="form-field text-sm"
                     maxlength="15"
                     bind:value={newName}
                     onkeydown={(e) => e.key === "Enter" && saveName()}

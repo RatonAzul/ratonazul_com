@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { TrashIcon } from "phosphor-svelte";
     import Body from "$lib/components/shared/Body.svelte";
     import CustomH2 from "$lib/components/shared/CustomH2.svelte";
     import H1WithBreadCrumb from "$lib/components/shared/H1WithBreadCrumb.svelte";
@@ -18,7 +19,7 @@
 
 <Body>
     <H1WithBreadCrumb items={[{ label: 'admin', href: '/admin' }, { label: 'users', href: '/admin/users' }, { label: data.user.username || data.user.name || data.user.email }]}>user</H1WithBreadCrumb>
-    <CustomH2>{data.user.username || data.user.name || data.user.email}</CustomH2>
+    <CustomH2 class="mb-3">{data.user.username || data.user.name || data.user.email}</CustomH2>
 
     {#if form?.message}
         <p class="text-red text-sm mb-4">{form.message}</p>
@@ -27,19 +28,19 @@
     <form method="POST" action="?/save" class="bg-bg1 p-4 flex flex-col gap-4 max-w-xl">
         <label class="flex flex-col gap-1 text-sm text-gray">
             email
-            <input class="bg-bg2 text-fg0 p-2 outline-none" value={data.user.email} disabled />
+            <input class="form-field" value={data.user.email} disabled />
         </label>
         <label class="flex flex-col gap-1 text-sm text-gray">
             username
-            <input class="bg-bg2 text-fg0 p-2 outline-none" name="username" bind:value={username} maxlength="30" />
+            <input class="form-field" name="username" bind:value={username} maxlength="30" />
         </label>
         <label class="flex flex-col gap-1 text-sm text-gray">
             image URL
-            <input class="bg-bg2 text-fg0 p-2 outline-none" name="image" bind:value={image} type="url" />
+            <input class="form-field" name="image" bind:value={image} type="url" />
         </label>
         <label class="flex flex-col gap-1 text-sm text-gray">
             role
-            <select class="bg-bg2 text-fg0 p-2 outline-none" name="role" bind:value={role}>
+            <select class="form-field" name="role" bind:value={role}>
                 <option value="user">user</option>
                 <option value="admin">admin</option>
             </select>
@@ -53,6 +54,6 @@
     <form method="POST" action="?/delete" class="mt-6" onsubmit={(event) => {
         if (!confirm('Delete this account permanently?')) event.preventDefault();
     }}>
-        <button class="cursor-pointer text-red hover:text-red-dark text-sm" type="submit">delete account</button>
+        <button class="action-icon text-red hover:bg-red/15" type="submit" aria-label="Delete account" title="Delete account"><TrashIcon size={18} aria-hidden="true" /></button>
     </form>
 </Body>

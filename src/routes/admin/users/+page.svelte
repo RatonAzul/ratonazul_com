@@ -1,7 +1,7 @@
 <script lang="ts">
     import Body from "$lib/components/shared/Body.svelte";
     import CustomH2 from "$lib/components/shared/CustomH2.svelte";
-    import { StarIcon, TrashIcon } from "phosphor-svelte";
+    import { PencilIcon, StarIcon, TrashIcon } from "phosphor-svelte";
     import { authClient } from "$lib/auth-client";
     import H1WithBreadCrumb from "$lib/components/shared/H1WithBreadCrumb.svelte";
 
@@ -14,7 +14,7 @@
 
 <Body>
     <H1WithBreadCrumb items={[{ label: 'admin', href: '/admin' }, { label: 'users' }]}>users</H1WithBreadCrumb>
-    <CustomH2 subtitle="{data.total} registered users">users</CustomH2>
+    <CustomH2 class="mb-3" subtitle="{data.total} registered users">users</CustomH2>
 
     <div class="flex flex-col gap-2">
         {#each data.users as user (user.id)}
@@ -47,17 +47,18 @@
                         {user.role === 'admin' ? 'admin' : 'user'}
                     </button>
                 </form>
+                <a class="action-icon text-fg0 hover:bg-bg2 me-2" href={`/admin/users/${user.id}`} aria-label={`Edit ${user.username || user.name || user.email}`} title="Edit account"><PencilIcon size={18} aria-hidden="true" /></a>
                 <form method="POST" action="?/delete" onsubmit={(event) => {
                     if (!confirm('Delete this account permanently?')) event.preventDefault();
                 }}>
                     <input type="hidden" name="userId" value={user.id} />
                     <button
-                        class="cursor-pointer w-10 h-10 bg-red hover:bg-red-dark text-bg0 flex items-center justify-center"
+                        class="action-icon text-red hover:bg-red/15"
                         type="submit"
                         aria-label="Delete {user.username || user.name || user.email}"
                         title="Delete account"
                     >
-                        <TrashIcon size={22} weight="bold" />
+                        <TrashIcon size={18} aria-hidden="true" />
                     </button>
                 </form>
             </div>

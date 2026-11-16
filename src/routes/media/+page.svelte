@@ -25,13 +25,13 @@
 
         <!-- BOOKS -->
         <div class="flex flex-col col-span-1">
-            <CustomH2>books</CustomH2>
+            <CustomH2 class="mb-3">books</CustomH2>
             <BookSection {currentlyReadingBooks} {recentlyReadBooks}/>
         </div>
 
         <!-- ANIME -->
         <div class="flex flex-col col-span-1">
-            <CustomH2>anime</CustomH2>
+            <CustomH2 class="mb-3">anime</CustomH2>
             <AnimeSection {currentlyWatchingAnime} {recentlyWatchedAnime}/>
         </div>
 
@@ -39,7 +39,7 @@
 
         <!-- MANGA -->
         <div class="flex flex-col col-span-1">
-            <CustomH2>manga</CustomH2>
+            <CustomH2 class="mb-3">manga</CustomH2>
             <MangaSection {currentlyReadingManga} {recentlyReadManga}/>
         </div>
 

@@ -1,4 +1,8 @@
 import { defineConfig } from 'drizzle-kit';
+import { existsSync } from 'node:fs';
+import { loadEnvFile } from 'node:process';
+
+if (existsSync('.env')) loadEnvFile('.env');
 
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
 
