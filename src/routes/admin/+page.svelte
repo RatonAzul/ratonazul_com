@@ -9,23 +9,27 @@
 <Body>
     <H1WithBreadCrumb items={[{ label: 'admin' }]}>admin</H1WithBreadCrumb>
     <div class="grid sm:grid-cols-2 grid-cols-1 gap-4">
-        <a href="/admin/games" class="cursor-pointer bg-bg1 hover:bg-bg2 border-l-4 border-green p-4 flex flex-col gap-2">
-            <span class="text-green text-xl font-semibold">games</span>
-            <span class="text-gray text-sm">manage wordle, la palabra del día and isaaconnect results</span>
+        <a href="/admin/calendar" class="card-link border-yellow">
+            <span class="text-yellow text-card-title">calendar</span>
+            <span class="subtitle">manage calendar access</span>
+        </a>
+        <a href="/admin/games" class="card-link border-green">
+            <span class="text-green text-card-title">games</span>
+            <span class="subtitle">manage wordle, la palabra del día and isaaconnect results</span>
         </a>
         <a
             href="/admin/users"
-            class="cursor-pointer bg-bg1 hover:bg-bg2 border-l-4 border-blue p-4 flex flex-col gap-2"
+            class="card-link border-blue"
         >
-            <span class="text-blue text-xl font-semibold">users</span>
-            <span class="text-gray text-sm">view users and manage their roles</span>
+            <span class="text-blue text-card-title">users</span>
+            <span class="subtitle">view users and manage their roles</span>
         </a>
         <a
             href="/admin/motorsport"
-            class="cursor-pointer bg-bg1 hover:bg-bg2 border-l-4 border-purple p-4 flex flex-col gap-2"
+            class="card-link border-purple"
         >
-            <span class="text-purple text-xl font-semibold">motorsport</span>
-            <span class="text-gray text-sm">manage drivers, meetings and race data</span>
+            <span class="text-purple text-card-title">motorsport</span>
+            <span class="subtitle">manage drivers, meetings and race data</span>
         </a>
     </div>
 </Body>

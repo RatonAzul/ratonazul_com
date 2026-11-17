@@ -2,6 +2,7 @@
     import MeetingsCarousel from "$lib/components/pick-the-grid/MeetingsCarousel.svelte";
     import Body from "$lib/components/shared/Body.svelte";
     import CustomH1 from "$lib/components/shared/CustomH1.svelte";
+    import SectionSeparator from "$lib/components/shared/SectionSeparator.svelte";
     import CustomH2 from "$lib/components/shared/CustomH2.svelte";
     import {createMeetingsBySeasonQuery} from "$lib/queries/motorsport/meetings";
     import {getCurrentMeetingIndex} from "$lib/utils/motorsport/pick-the-grid/meetings";
@@ -33,6 +34,15 @@
     let positionBets = $derived(createPositionBetsByUserAndMeeting(userId, meetingId));
     let timeBets = $derived(createTimeBetsByUserAndMeeting(userId, meetingId));
     let meetingBets = $derived(createMeetingBetsByMeetingId(meetingId));
+    let picksSubtitle = $derived.by(() => {
+        const awardedPoints = [...(positionBets.data ?? []), ...(timeBets.data ?? [])]
+            .map((bet) => bet.points)
+            .filter((points): points is number => typeof points === 'number');
+        if (awardedPoints.length === 0) return 'no points awarded yet';
+
+        const total = awardedPoints.reduce((sum, points) => sum + points, 0);
+        return `${total} ${total === 1 ? 'point' : 'points'} earned`;
+    });
     let standingsSubtitle = $derived(
         comparisonInfo.selectedUsers > 0
             ? `comparing ${comparisonInfo.sharedRounds} shared rounds · click a username to add or remove a player`
@@ -42,16 +52,15 @@
 </script>
 
 <Body>
-    <CustomH1>pick the grid</CustomH1>
+    <CustomH1 class="text-section-title">pick the grid</CustomH1>
     <MeetingsCarousel bind:selectedMeetingIndex={selectedMeetingIndex} {meetings}/>
-    <CustomH2 class="mb-3">your picks</CustomH2>
+    <CustomH2 class="mb-3" headingClass="text-card-title" subtitle={picksSubtitle}>your picks</CustomH2>
     <BetComponent meeting={selectedMeeting} {drivers} {positionBets} {timeBets}/>
     <MeetingBetsComponent {meetingBets} {drivers} />
-    <div>
-        <div class="flex items-baseline justify-between gap-4">
-            <CustomH2 class="mb-3" subtitle={standingsSubtitle}>standings</CustomH2>
-        </div>
+    <SectionSeparator class="mb-6" />
+    <section>
+        <CustomH2 class="mb-3" headingClass="text-card-title" subtitle={standingsSubtitle}>standings</CustomH2>
         <StandingsTable {standings} {meetings} bind:comparisonInfo />
         <PointInfo/>
-    </div>
+    </section>
 </Body>

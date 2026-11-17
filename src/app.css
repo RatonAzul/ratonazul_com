@@ -1,58 +1,197 @@
 @import "tailwindcss";
 
-@layer base {
+@utility text-display {
+  @apply text-4xl leading-tight font-bold lg:text-5xl;
+}
+@utility text-page-title {
+  @apply text-3xl leading-tight font-semibold sm:text-4xl;
+}
+@utility text-section-title {
+  @apply text-xl leading-snug font-semibold sm:text-2xl;
+}
+@utility text-card-title {
+  @apply text-base leading-snug font-semibold sm:text-lg;
+}
+@utility text-body {
+  @apply text-sm leading-relaxed sm:text-base;
+}
+@utility text-secondary {
+  @apply text-sm leading-normal;
+}
+@utility text-meta {
+  @apply text-xs leading-normal;
+}
 
-  * {
-    @apply transition-colors duration-100 ease-in-out;
+@layer base {
+  body {
+    @apply font-jetbrains text-body;
   }
 
+  h1 {
+    @apply text-page-title text-blue;
+  }
+
+  h2 {
+    @apply text-section-title text-green;
+  }
+
+  h3, h4, h5, h6 {
+    @apply text-card-title;
+  }
+
+  a:focus-visible, button:focus-visible, [role="button"]:focus-visible {
+    @apply outline-2 outline-offset-2 outline-purple;
+  }
 }
 
 @layer components {
-  .surface-card {
+  .surface-card, .surface-card-hover, .card-link, .list-row, .menu-panel {
     @apply bg-bg1;
   }
 
-  .surface-card-hover {
-    @apply bg-bg1 hover:bg-bg2;
+  .surface-card-hover:hover, .surface-card-hover:focus-visible, .card-link:hover, .card-link:focus-visible {
+    @apply bg-bg2;
+  }
+
+  .card-link {
+    @apply flex flex-col gap-1 border-l-4 p-4;
+  }
+
+  .surface-list {
+    @apply flex flex-col gap-2;
+  }
+
+  .card-list {
+    @apply flex w-full flex-col gap-2;
+  }
+
+  .list-row {
+    @apply flex min-w-0 items-center justify-between gap-3 p-3 sm:p-4;
+  }
+
+  .subtitle {
+    @apply text-secondary font-normal text-gray;
   }
 
   .section-label {
-    @apply flex items-center px-2 text-sm text-bg0;
+    @apply flex min-h-8 items-center px-2 text-secondary font-semibold;
+  }
+
+  .field-group-label {
+    @apply mb-2 w-full text-bg0;
+  }
+
+  .tag {
+    @apply inline-flex w-fit items-center bg-bg3 px-2 py-1 text-meta text-fg0;
+  }
+
+  .tag-series {
+    @apply bg-gray text-bg0;
+  }
+
+  .compact-media-title {
+    @apply truncate text-secondary font-semibold text-fg0;
+  }
+
+  .compact-media-subtitle {
+    @apply text-meta text-gray;
   }
 
   .internal-link {
-    @apply cursor-pointer text-gray hover:text-gray-dark;
+    @apply text-gray hover:text-fg0;
   }
 
   .external-link {
-    @apply cursor-pointer text-purple underline hover:text-purple-dark;
+    @apply text-purple underline hover:text-purple-dark;
+  }
+
+  .button, .action-icon {
+    @apply inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 text-secondary font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .button {
+    @apply min-h-10 px-4 py-2;
+  }
+
+  .button-primary {
+    @apply bg-green text-bg0 enabled:hover:bg-green-dark;
+  }
+
+  .button-secondary {
+    @apply bg-bg3 text-fg0 hover:bg-bg4;
+  }
+
+  .button-quiet {
+    @apply text-gray hover:bg-bg2 hover:text-fg0;
+  }
+
+  .button-accent {
+    @apply bg-blue text-bg0 enabled:hover:bg-blue-dark;
+  }
+
+  .button-warning {
+    @apply bg-yellow text-bg0 enabled:hover:bg-yellow-dark;
+  }
+
+  .button-danger {
+    @apply bg-red text-bg0 enabled:hover:bg-red-dark;
   }
 
   .action-icon {
-    @apply size-9 shrink-0 inline-flex items-center justify-center border border-current cursor-pointer disabled:opacity-50 disabled:cursor-wait focus-visible:outline-2 focus-visible:outline-fg0;
+    @apply size-10 bg-bg3 text-fg0 hover:bg-bg4;
+  }
+
+  .action-icon-danger {
+    @apply bg-red text-bg0 hover:bg-red-dark;
+  }
+
+  .dialog-backdrop {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4;
+  }
+
+  .dialog-panel {
+    @apply w-full border border-bg3 bg-bg1 p-4;
+  }
+
+  .menu-panel {
+    @apply border border-bg3 p-1 text-secondary text-fg0;
+  }
+
+  .menu-item {
+    @apply flex min-h-10 cursor-pointer items-center gap-2 px-2 py-1 hover:bg-bg2 data-highlighted:bg-bg2;
+  }
+
+  .form-label {
+    @apply flex flex-col gap-1 text-secondary text-gray;
   }
 
   .form-field {
-    @apply w-full border border-bg3 bg-bg0 px-3 py-2 text-fg0 focus:border-purple focus:outline-none;
+    @apply min-h-10 w-full border border-bg3 bg-bg0 px-3 py-2 text-body text-fg0 placeholder:text-gray-dark focus-visible:border-purple focus-visible:outline-1 focus-visible:outline-purple disabled:opacity-60;
+  }
+
+  .form-feedback {
+    @apply border-l-4 border-current bg-bg1 p-3 text-secondary;
   }
 
   .data-table {
-    @apply w-full border-collapse text-left text-sm;
+    @apply w-full border-collapse text-left text-secondary;
   }
 
   .data-table th {
-    @apply border-b-2 border-bg2 px-3 py-2 font-normal text-gray-dark;
+    @apply font-normal text-gray;
   }
 
-  .data-table td {
-    @apply border-b border-bg2 px-3 py-3 text-fg0;
+  .data-table:not(.matrix-table) :is(th, td) {
+    @apply border-b border-bg3 px-3 py-2;
+  }
+
+  .matrix-table {
+    @apply w-auto border-separate border-spacing-y-2 tabular-nums;
   }
 }
 
 @theme inline {
   --font-jetbrains: 'JetBrains Mono', monospace;
-  --text-xxs: 0.625rem;
 
   --color-red-dark: var(--red-dark);
   --color-red: var(--red);
@@ -162,8 +301,10 @@
   --bg1: #25233b;
   --bg2: #2c2b49;
   --bg3: #373a5b;
+  --bg4: #484d73;
 
   --fg0: #e1e3ff;
+  --fg4: #8e8ec2;
 }
 
 .theme-everforest {
@@ -247,8 +388,8 @@
 
 @font-face {
   font-family: "JetBrains Mono";
-  font-style: auto;
-  font-weight: auto;
+  font-style: normal;
+  font-weight: 100 800;
 
   src: url("/fonts/JetBrainsMono-VariableFont_wght.ttf") format("truetype");
 }

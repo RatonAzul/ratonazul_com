@@ -4,9 +4,9 @@
 
     let { timeBet }: { timeBet: TimeBet } = $props();
 </script>
-<div class="flex gap-1 text-[0.70rem] h-6 text-bg0">
+<div class="flex gap-1 text-meta h-6 text-bg0">
     <div class="bg-bg1 text-fg0 flex-1 flex justify-center items-center">{getF1TimeFromMilliseconds(timeBet.guessedTime)}</div>
-    <div class="{timeBet.points !== null && timeBet.points !== undefined ? getTimeBetPointsColor(timeBet.points) : 'bg-gray-dark'} font-semibold text-xs w-6 flex justify-center items-center">
+    <div class="{timeBet.points !== null && timeBet.points !== undefined ? getTimeBetPointsColor(timeBet.points) : 'bg-gray-dark'} font-semibold text-meta w-6 flex justify-center items-center">
         {timeBet.points !== null && timeBet.points !== undefined ? '+' + timeBet.points : '-'}
     </div>
 </div>

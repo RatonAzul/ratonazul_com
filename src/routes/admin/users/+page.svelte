@@ -1,5 +1,6 @@
 <script lang="ts">
     import Body from "$lib/components/shared/Body.svelte";
+    import UserAvatar from "$lib/components/shared/UserAvatar.svelte";
     import CustomH2 from "$lib/components/shared/CustomH2.svelte";
     import { PencilIcon, StarIcon, TrashIcon } from "phosphor-svelte";
     import { authClient } from "$lib/auth-client";
@@ -16,65 +17,61 @@
     <H1WithBreadCrumb items={[{ label: 'admin', href: '/admin' }, { label: 'users' }]}>users</H1WithBreadCrumb>
     <CustomH2 class="mb-3" subtitle="{data.total} registered users">users</CustomH2>
 
-    <div class="flex flex-col gap-2">
+    <ul class="surface-list" role="list">
         {#each data.users as user (user.id)}
-            <div class="bg-bg1 pe-3 flex items-center border-l-4 {user.role === 'admin' ? 'border-purple' : 'border-gray'}">
-                <a href={`/admin/users/${user.id}`} class="cursor-pointer p-3 flex items-center gap-3 flex-1 min-w-0 hover:text-gray-dark">
-                    {#if user.image}
-                        <img src={user.image} alt="" class="size-10 object-cover" />
-                    {:else}
-                        <div class="size-10 bg-bg3 flex items-center justify-center text-blue font-semibold">
-                            {(user.username || user.name || '?').slice(0, 1).toUpperCase()}
-                        </div>
-                    {/if}
+            <li class="list-row flex-wrap border-l-4 {user.role === 'admin' ? 'border-blue' : 'border-gray'}">
+                <a href={`/admin/users/${user.id}`} class="flex min-w-32 flex-1 items-center gap-3 hover:text-blue">
+                    <UserAvatar image={user.image} name={user.username || user.name} />
                     <div class="min-w-0">
-                        <p class="text-fg0 truncate flex items-center gap-1">
+                        <p class="text-card-title truncate flex items-center gap-1">
                             {user.username || user.name || 'unnamed user'}
                             {#if $session.data?.user.id === user.id}
                                 <StarIcon class="text-yellow shrink-0" size={14} weight="fill" aria-label="current user" />
                             {/if}
                         </p>
-                        <p class="text-gray text-sm truncate">{user.email}</p>
+                        <p class="subtitle truncate">{user.email}</p>
                     </div>
                 </a>
-                <form method="POST" action="?/toggleAdmin" class="me-3">
-                    <input type="hidden" name="userId" value={user.id} />
-                    <input type="hidden" name="role" value={user.role || 'user'} />
-                    <button
-                        class="cursor-pointer text-bg0 text-xs w-15 h-10 {user.role === 'admin' ? 'bg-purple hover:bg-purple-dark' : 'bg-gray hover:bg-gray-dark'}"
-                        type="submit"
-                    >
-                        {user.role === 'admin' ? 'admin' : 'user'}
-                    </button>
-                </form>
-                <a class="action-icon text-fg0 hover:bg-bg2 me-2" href={`/admin/users/${user.id}`} aria-label={`Edit ${user.username || user.name || user.email}`} title="Edit account"><PencilIcon size={18} aria-hidden="true" /></a>
-                <form method="POST" action="?/delete" onsubmit={(event) => {
-                    if (!confirm('Delete this account permanently?')) event.preventDefault();
-                }}>
-                    <input type="hidden" name="userId" value={user.id} />
-                    <button
-                        class="action-icon text-red hover:bg-red/15"
-                        type="submit"
-                        aria-label="Delete {user.username || user.name || user.email}"
-                        title="Delete account"
-                    >
-                        <TrashIcon size={18} aria-hidden="true" />
-                    </button>
-                </form>
-            </div>
+                <div class="flex items-center gap-2">
+                    <form method="POST" action="?/toggleAdmin">
+                        <input type="hidden" name="userId" value={user.id} />
+                        <input type="hidden" name="role" value={user.role || 'user'} />
+                        <button
+                            class="button {user.role === 'admin' ? 'button-accent' : 'button-secondary'}"
+                            type="submit"
+                        >
+                            {user.role === 'admin' ? 'admin' : 'user'}
+                        </button>
+                    </form>
+                    <a class="action-icon" href={`/admin/users/${user.id}`} aria-label={`Edit ${user.username || user.name || user.email}`} title="Edit account"><PencilIcon size={18} aria-hidden="true" /></a>
+                    <form method="POST" action="?/delete" onsubmit={(event) => {
+                        if (!confirm('Delete this account permanently?')) event.preventDefault();
+                    }}>
+                        <input type="hidden" name="userId" value={user.id} />
+                        <button
+                            class="action-icon action-icon-danger"
+                            type="submit"
+                            aria-label="Delete {user.username || user.name || user.email}"
+                            title="Delete account"
+                        >
+                            <TrashIcon size={18} aria-hidden="true" />
+                        </button>
+                    </form>
+                </div>
+            </li>
         {:else}
-            <p class="text-gray text-sm">No users found.</p>
+            <li class="list-row text-gray">No users found.</li>
         {/each}
-    </div>
+    </ul>
 
     {#if totalPages > 1}
-        <nav class="flex justify-center gap-4 mt-6 text-sm" aria-label="Users pagination">
+        <nav class="flex justify-center gap-4 mt-6 text-secondary" aria-label="Users pagination">
             {#if data.page > 1}
-                <a class="cursor-pointer text-blue hover:text-blue-dark" href={`/admin/users?page=${data.page - 1}`}>previous</a>
+                <a class="internal-link" href={`/admin/users?page=${data.page - 1}`}>[previous]</a>
             {/if}
             <span class="text-gray">page {data.page} / {totalPages}</span>
             {#if data.page < totalPages}
-                <a class="cursor-pointer text-blue hover:text-blue-dark" href={`/admin/users?page=${data.page + 1}`}>next</a>
+                <a class="internal-link" href={`/admin/users?page=${data.page + 1}`}>[next]</a>
             {/if}
         </nav>
     {/if}

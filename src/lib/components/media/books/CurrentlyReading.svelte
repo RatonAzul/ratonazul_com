@@ -10,22 +10,22 @@
 </script>
 
 <div class="flex flex-col gap-2 w-full">
-    <MediaColoredTitle title="currently reading" bgColor="bg-yellow"/>
-    <div class="surface-card-hover flex min-h-40 w-full">
+    <MediaColoredTitle title="currently reading" bgColor="bg-yellow" />
+    <div class="surface-card flex min-h-40 w-full">
         {#if currentlyReadingBooks.length === 1}
-            <img src="{mostRecentBook?.coverImage}" alt="{mostRecentBook?.title}" class="h-40 w-28 object-cover">
-            <div class="w-full flex flex-col">
-                <div class="flex flex-col p-3 text-xs lg:text-sm">
-                    <h4 class="text-fg0 text-base font-semibold lg:text-lg">{mostRecentBook?.title}</h4>
-                    <p class="text-gray text-sm lg:text-base">{mostRecentBook?.authors[0]}</p>
+            <img src="{mostRecentBook?.coverImage}" alt="{mostRecentBook?.title}" class="h-40 w-28 shrink-0 object-cover">
+            <div class="flex min-w-0 flex-1 flex-col">
+                <div class="flex flex-col p-3 text-secondary">
+                    <h4>{mostRecentBook?.title}</h4>
+                    <p class="subtitle">{mostRecentBook?.authors[0]}</p>
                 </div>
 
                 {#if mostRecentBook?.series}
-                    <p class="mx-3 flex-0 self-start bg-gray px-2 py-1 text-xs text-bg0">{mostRecentBook?.series?.name} - Book {mostRecentBook.seriesPosition}/{mostRecentBook.series?.booksCount}</p>
+                    <p class="tag tag-series mx-3 self-start">{mostRecentBook?.series?.name} - Book {mostRecentBook.seriesPosition}/{mostRecentBook.series?.booksCount}</p>
                 {/if}
 
                 <!-- Page count -->
-                <div class="mt-auto flex px-3 text-xs text-yellow lg:text-sm">
+                <div class="mt-auto flex px-3 text-meta text-yellow lg:text-secondary">
                     <span>Page {mostRecentBook.progressPages} of {mostRecentBook.pages} <span class="lg:inline hidden">({mostRecentBook.progress}%)</span></span>
                         <span class="ms-auto text-gray lg:hidden inline" title={formatExactDate(mostRecentBook?.startedAt)}>
                         Started {getShortTimeFromNow(mostRecentBook?.startedAt)} ago
@@ -41,7 +41,7 @@
                 </div>
             </div>
         {:else}
-            <p class="text-gray m-auto lg:text-base text-sm">no book in progress</p>
+            <p class="text-gray m-auto text-body">no book in progress</p>
         {/if}
     </div>
 </div>

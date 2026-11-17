@@ -24,35 +24,34 @@
 
 <div class="flex gap-2 h-10">
     <div class="flex justify-center items-center aspect-square {bet.position === 1 ? 'bg-red text-bg0' : 'bg-bg1'}">{bet.position}</div>
-    <div class="surface-card-hover flex justify-between flex-1">
+    <div class="surface-card flex justify-between flex-1">
         <Select.Root type="single" value={selectedDriverId} onValueChange={onValueChange} {disabled}>
-            <Select.Trigger class=" {disabled ? '' : 'hover:cursor-pointer hover:bg-bg2'} w-full {selectedDriver ? 'border-' + selectedDriver.teamColor : 'border-l-transparent'} border-l-8">
-                <span class="flex flex-col ps-4 items-start justify-center text-sm">
+            <Select.Trigger class="w-full enabled:cursor-pointer enabled:hover:bg-bg2 {selectedDriver ? 'border-' + selectedDriver.teamColor : 'border-l-transparent'} border-l-4">
+                <span class="flex flex-col ps-4 items-start justify-center text-secondary">
                     {#if selectedDriver}
                         <span>{selectedDriver.firstName} {selectedDriver.lastName}</span>
-                        <span class="text-{selectedDriver.teamColor} text-sm">{selectedDriver.teamName}</span>
+                        <span class="text-{selectedDriver.teamColor} text-meta">{selectedDriver.teamName}</span>
                     {:else}
                         <span class="text-gray-dark">{disabled ? 'bet is closed' : 'Select a driver'}</span>
                     {/if}
                 </span>
             </Select.Trigger>
             <Select.Portal>
-                <Select.Content style="width: var(--bits-select-anchor-width)" sideOffset={8} align="start" class="font-jetbrains max-h-50 overflow-y-auto w-full">
+                <Select.Content style="width: var(--bits-select-anchor-width)" sideOffset={8} align="start" class="menu-panel max-h-50 overflow-y-auto">
                     <Select.Viewport>
                         {#each drivers as driver}
                             <Select.Item
                                     value={driver.id.toString()}
-                                    class="w-full text-sm h-10 ps-4 flex flex-col justify-center hover:cursor-pointer border-l-8 border-{driver.teamColor}
-                                       bg-bg2 hover:bg-bg3">
+                                    class="menu-item flex-col items-start justify-center gap-0 border-l-4 border-{driver.teamColor}">
                                 <p class="text-fg0">{driver.firstName} {driver.lastName}</p>
-                                <p class="text-{driver.teamColor} text-sm">{driver.teamName}</p>
+                                <p class="text-{driver.teamColor} text-meta">{driver.teamName}</p>
                             </Select.Item>
                         {/each}
                     </Select.Viewport>
                 </Select.Content>
             </Select.Portal>
         </Select.Root>
-        <span class="text-bg0 {disabled && bet.points === null || bet.points === undefined ? 'bg-gray-dark' : getPositionBetPointColors(bet.points)} text-lg flex justify-center items-center aspect-square">
+        <span class="text-bg0 {disabled && bet.points === null || bet.points === undefined ? 'bg-gray-dark' : getPositionBetPointColors(bet.points)} text-card-title flex justify-center items-center aspect-square">
             {bet.points !== undefined && bet.points !== null ? '+' + bet.points : '-'}
         </span>
     </div>

@@ -15,10 +15,13 @@
         meetings.data?.find(m => new Date(m.endDate) > new Date())
     );
 
-    // Keep a richer fixture available in local development so the comparison
-    // interaction can be tested without changing the external standings API.
+    const showDevelopmentFixture = $derived(
+        PUBLIC_ENVIRONMENT !== 'prod' && standings.data?.length === 0 && !!meetings.data?.length
+    );
+
+    // Let real API standings take precedence over the development fallback.
     const displayStandings = $derived.by(() => {
-        if (PUBLIC_ENVIRONMENT === 'prod' || !standings.data || !meetings.data) {
+        if (!showDevelopmentFixture || !meetings.data) {
             return standings.data;
         }
 
@@ -27,38 +30,13 @@
         function missingRoundIndexes(playerIndex: number) {
             const roundCount = rounds.length;
             const missingCount = Math.min(5 + (playerIndex % 3), Math.max(0, roundCount - 1));
-            const indexes = new Set<number>();
-            let cursor = (playerIndex * 3) % Math.max(roundCount, 1);
-
-            while (indexes.size < missingCount) {
-                indexes.add(cursor);
-                cursor = (cursor + playerIndex + 2) % roundCount;
-            }
-
-            return indexes;
+            const start = (playerIndex * 3) % roundCount;
+            return new Set(Array.from({ length: missingCount }, (_, index) => (start + index) % roundCount));
         }
 
         const demoNames = ['paddock fox', 'late braker', 'apex ghost', 'pit wall'];
-        const realRows = standings.data.map((standing, rowIndex) => {
-            const missingRounds = missingRoundIndexes(rowIndex);
-            const meetingPoints = rounds.flatMap((meeting, meetingIndex) => {
-                if (missingRounds.has(meetingIndex)) return [];
-                const existing = standing.meetingPoints.find(point => point.meetingId === meeting.id);
-                return [existing ?? {
-                    meetingId: meeting.id,
-                    points: ((meetingIndex + 2) * (rowIndex + 3) * 2) % 16,
-                }];
-            });
-
-            return {
-                ...standing,
-                meetingPoints,
-                totalPoints: meetingPoints.reduce((total, point) => total + point.points, 0),
-            };
-        });
-
         const demoRows: StandingsTableRow[] = demoNames.map((username, rowIndex) => {
-            const missingRounds = missingRoundIndexes(standings.data.length + rowIndex);
+            const missingRounds = missingRoundIndexes(rowIndex);
             const meetingPoints = rounds.flatMap((meeting, meetingIndex) => {
                 if (missingRounds.has(meetingIndex)) return [];
                 return [{
@@ -76,7 +54,7 @@
             };
         });
 
-        return [...realRows, ...demoRows]
+        return demoRows
             .sort((left, right) => right.totalPoints - left.totalPoints)
             .map((standing, index) => ({ ...standing, rank: index + 1 }));
     });
@@ -99,15 +77,14 @@
         selectionInitialized = true;
     });
 
-    const comparisonUserIds = $derived(
-        selectedUserIds.current.filter((userId, index, ids) => ids.indexOf(userId) === index)
+    // Saved selections can reference players from a previous season or dataset.
+    const selectedStandings = $derived(
+        displayStandings?.filter(standing => selectedUserIds.current.includes(standing.userId)) ?? []
     );
+    const comparisonUserIds = $derived(selectedStandings.map(standing => standing.userId));
 
     const commonMeetingIds = $derived.by(() => {
-        if (comparisonUserIds.length === 0 || !displayStandings) return undefined;
-
-        const selectedStandings = displayStandings?.filter(standing => comparisonUserIds.includes(standing.userId));
-        if (selectedStandings.length !== comparisonUserIds.length) return [];
+        if (selectedStandings.length === 0) return undefined;
 
         return selectedStandings[0].meetingPoints
             .map(meetingPoint => meetingPoint.meetingId)
@@ -152,15 +129,15 @@
 {#if standings.isLoading || standings.isLoadingError || meetings.isLoading || meetings.isLoadingError}
     <p>loading</p>
 {:else}
-    {#if PUBLIC_ENVIRONMENT !== 'prod'}
-        <p class="mb-2 text-xs text-yellow">development standings fixture enabled</p>
+    {#if showDevelopmentFixture}
+        <p class="mb-2 text-meta text-yellow">development standings fixture enabled</p>
     {/if}
     <div class="overflow-x-auto">
-        <table class="border-separate border-spacing-y-2 text-sm">
+        <table class="data-table matrix-table">
             <thead>
             <tr class="h-9">
                 <th class="w-8"></th>
-                <th class="w-32 text-left text-sm font-normal text-gray-dark px-2"></th>
+                <th class="w-32 px-2"></th>
                 <th class="w-2 min-w-2"></th>  <!-- gap -->
                 {#each meetings.data as meeting, i}
                     <th class="h-9 text-center border-b-2 pb-2 {meeting.id === currentMeeting?.id ? 'border-green' : 'border-transparent'}">
@@ -170,21 +147,22 @@
                     </th>
                 {/each}
                 <th class="w-2 min-w-2"></th>  <!-- gap -->
-                <th class="w-9 text-sm font-normal text-gray-dark flex justify-center items-center h-9">Pts</th>
+                <th class="w-9 h-9 text-center">Pts</th>
             </tr>
             </thead>
             <tbody>
             {#each rankedStandings as standing}
                 {@const isFirst = standing.rank === 1}
                 {@const isSelected = comparisonUserIds.includes(standing.userId)}
+                {@const rowColors = isFirst ? 'bg-red text-bg0' : isSelected ? 'bg-blue text-bg0' : 'bg-bg1 text-fg0'}
                 {@const displayedPoints = getDisplayedPoints(standing)}
                 <tr class="h-9">
-                    <td class="{isFirst ? 'bg-red text-bg0' : isSelected ? 'bg-blue text-bg0' : 'bg-bg1 text-fg0'} w-8 ps-2 text-center font-bold">
+                    <td class="{rowColors} w-8 ps-2 text-center font-bold">
                         {standing.rank}
                     </td>
-                    <td class="{isFirst ? 'bg-red text-bg0' : isSelected ? 'bg-blue text-bg0' : 'bg-bg1 text-fg0'} w-32 px-2">
+                    <td class="{rowColors} w-32 px-2">
                         <button
-                            class="w-full cursor-pointer text-left {isFirst? 'text-bg0' : isSelected ? 'text-bg0' : 'text-fg0'}"
+                            class="w-full cursor-pointer text-left hover:underline"
                             aria-pressed={isSelected}
                             onclick={() => toggleUser(standing.userId)}
                         >
@@ -195,15 +173,14 @@
                     {#each meetings.data as meeting}
                         {@const meetingPoints = standing.meetingPoints.find(mp => mp.meetingId === meeting.id)}
                         {@const isSharedRound = commonMeetingIds?.includes(meeting.id) ?? true}
-                        {@const emphasizePoints = comparisonUserIds.length === 0
-                            ? !!meetingPoints
-                            : !!meetingPoints && isSelected && isSharedRound}
-                        <td class="h-9 w-9 min-w-9 aspect-square text-center {emphasizePoints ? 'bg-bg1 text-fg0' : 'bg-bg0 text-gray-dark'}">
+                        {@const comparedPoints = !!meetingPoints && isSelected && isSharedRound}
+                        {@const normalPoints = !!meetingPoints && comparisonUserIds.length === 0}
+                        <td class="h-9 w-9 min-w-9 aspect-square text-center {comparedPoints ? 'bg-bg1 text-fg0 font-semibold' : normalPoints ? 'bg-bg1 text-fg0' : 'bg-bg0 text-gray-dark'}">
                             {meetingPoints?.points ?? '-'}
                         </td>
                     {/each}
                     <td class="w-2"></td>  <!-- gap -->
-                    <td class="{isFirst ? 'bg-red text-bg0' : isSelected ? 'bg-blue text-bg0' : comparisonUserIds.length === 0 ? 'bg-bg1 text-fg0' : 'bg-bg1 text-gray-dark'} w-9 text-center font-bold">
+                    <td class="{rowColors} w-9 text-center font-bold">
                         {displayedPoints}
                     </td>
                 </tr>

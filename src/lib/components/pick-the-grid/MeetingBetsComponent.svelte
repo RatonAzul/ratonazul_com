@@ -2,6 +2,7 @@
     import type {CreateQueryResult} from "@tanstack/svelte-query";
     import type {Driver, MeetingBetResponse} from "$lib/types/motorsport.ts";
     import MiniBetComponent from "$lib/components/pick-the-grid/MiniBetComponent.svelte";
+    import SectionSeparator from "$lib/components/shared/SectionSeparator.svelte";
     import CustomH2 from "$lib/components/shared/CustomH2.svelte";
 
     let { meetingBets, drivers }: {
@@ -9,22 +10,22 @@
         drivers: CreateQueryResult<Driver[], Error>,
     } = $props();
 
-
+    const count = $derived(meetingBets.data?.users.length);
+    const subtitle = $derived(count === undefined ? undefined : `${count} ${count === 1 ? "user submitted a bet" : "users submitted a bet"}`);
 </script>
 
-<div class="mb-8">
-    {#if meetingBets.isLoading || meetingBets.isLoadingError}
-        <CustomH2 class="mb-3">results</CustomH2>
-        <section class="bg-bg1 animate-pulse sm:h-17 h-26 w-full mb-8"></section>
-    {/if}
-    {#if meetingBets.isSuccess && meetingBets.data.users.length !== 0}
-        <CustomH2 class="mb-3">results</CustomH2>
-        <div class="mb-8">
+{#if meetingBets.isLoading || meetingBets.isLoadingError || (meetingBets.isSuccess && !!count)}
+    <SectionSeparator class="mb-6" />
+    <section class="mb-8">
+        <CustomH2 class="mb-3" headingClass="text-card-title" {subtitle}>results</CustomH2>
+        {#if meetingBets.isSuccess}
             <div class="flex gap-8 overflow-x-scroll">
                 {#each meetingBets.data.users as user, i}
-                    <MiniBetComponent meetingBets={user} {drivers} position={i+1} />
+                    <MiniBetComponent meetingBets={user} {drivers} position={i + 1} />
                 {/each}
             </div>
-        </div>
-    {/if}
-</div>
+        {:else}
+            <div class="surface-card h-26 w-full animate-pulse sm:h-17"></div>
+        {/if}
+    </section>
+{/if}

@@ -11,9 +11,9 @@
 
 <div class="flex flex-col gap-2 w-full">
     <MediaColoredTitle title="currently reading" bgColor="bg-yellow" />
-    <div class="w-full grid grid-cols-1 gap-2">
+    <ul class="card-list" role="list">
         {#each currentlyReadingManga as manga}
-            <CurrentMediaMiniCard currentItem={miniCardItemFromBasicManga(manga)} />
+            <li><CurrentMediaMiniCard currentItem={miniCardItemFromBasicManga(manga)} /></li>
         {/each}
-    </div>
+    </ul>
 </div>

@@ -9,21 +9,21 @@
 </script>
 
 <div class="flex flex-col gap-2 w-full">
-    <MediaColoredTitle title="recent reads" bgColor="bg-green"/>
-    <div class="flex flex-col gap-2 w-full">
+    <MediaColoredTitle title="recent reads" bgColor="bg-green" />
+    <ul class="card-list" role="list">
         {#each recentlyReadBooks as book}
-            <div class="surface-card-hover flex min-h-20 w-full">
-                <img src="{book.coverImage}" class="h-20 w-14 object-cover" alt="{book.title}">
-                <div class="flex w-full flex-col px-3 py-2 text-xs lg:text-sm">
+            <li class="surface-card flex min-h-20 w-full">
+                <img src="{book.coverImage}" class="h-20 w-14 shrink-0 object-cover" alt="{book.title}">
+                <div class="flex min-w-0 flex-1 flex-col px-3 py-2 text-secondary">
                     <div>
-                        <h5 class="text-fg0 text-xs font-semibold lg:text-sm">{book.title}</h5>
-                        <p class="text-gray text-xs">{book.authors[0]}</p>
+                        <h4 class="compact-media-title" title={book.title}>{book.title}</h4>
+                        <p class="compact-media-subtitle">{book.authors[0]}</p>
                     </div>
 
                     <div class="flex gap-2 mt-auto w-full">
                         <!-- Star rating -->
                         <Score score="{book.rating}" maxScore={10} />
-                        <p class="text-green lg:text-xs text-xxs pb-1 flex justify-between w-full">
+                        <p class="text-green text-meta pb-1 flex justify-between w-full">
                             {book.rating}
                                 <span class="text-gray lg:hidden inline" title={formatExactDate(book.finishedAt)}>
                                 Read {getShortTimeFromNow(book.finishedAt)} ago
@@ -34,7 +34,7 @@
                         </p>
                     </div>
                 </div>
-            </div>
+            </li>
         {/each}
-    </div>
+    </ul>
 </div>

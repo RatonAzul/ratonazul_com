@@ -24,6 +24,11 @@ page also attempts to prefetch in its universal load function.
 - `src/routes/pick-the-grid/`: game page and prefetch load function.
 - `src/routes/pics/+page.svelte`: placeholder page.
 - `src/routes/admin/`: admin landing page and initial user administration.
+- `src/routes/admin/calendar/`: admin-only calendar membership management; membership
+  is stored in `calendar_member` with cascading user deletion. Calendar pages and
+  actions must call `requireCalendarMember` in `src/lib/server/calendar/access.ts`.
+- `src/routes/profile/[userId]/`: owner-only profile editing and account deletion
+  using Better Auth. The header links to the current user's profile.
 - `src/routes/admin/games/`: game cards and per-game calendar/result management
   at `/wordle`, `/la-palabra-del-dia`, and `/isaaconnect` using `[game]`.
 - `src/lib/components/admin/Game{Calendar,Board,ResultEditor}.svelte`: reusable
@@ -109,11 +114,13 @@ the external service; local helpers only format/display them.
 user has a standing. Clicking other usernames toggles them into a comparison;
 the displayed totals then sum only rounds shared by every selected player.
 Selected user IDs are persisted in local storage through Runed's
-`PersistedState`, and the logged-in user can also be toggled off.
-In non-production environments it also adds deterministic fixture points with
-5–7 missing meetings per player plus sample players, marked in the UI as a
-development fixture, so this comparison can be exercised without mutating
-external data.
+`PersistedState`, and the logged-in user can also be toggled off. Only saved
+players present in the current standings participate in the comparison.
+In non-production environments the standings table shows a labeled fixture
+when the API returns no standings and meetings are available. When the API
+returns standings, including rows seeded into local PostgreSQL, the table shows
+those points. The development username endpoint supplies labels for the four
+local Motorsport demo player IDs without adding auth accounts.
 
 ## Coding conventions and boundaries
 
@@ -127,12 +134,10 @@ external data.
 - Use existing semantic theme classes (`bg-bg1`, `text-fg0`, `text-purple`, etc.)
   and responsive Tailwind utilities. Dynamic color classes need to be visible
   to Tailwind; the root layout currently includes explicit color class lists.
-- Shared visual primitives in `src/app.css` include `surface-card`,
-  `surface-card-hover`, `section-label`, `internal-link`, `external-link`, and
-  `data-table`; use these for new surfaces, links, section labels and tables.
-  `action-icon` shares outlined edit/delete controls across games and users, with
-  borders inheriting the icon color. `form-field` shares game/user input styling
-  and the account username input, including the purple focus border.
+- Follow [STYLE_GUIDE.md](STYLE_GUIDE.md) when building or editing frontend UI.
+  Reuse the documented typography and component styles. When requested styles
+  change, update their shared definitions, migrate every relevant use across
+  the site, and update the guide in the same change.
 - Media sections use `MediaColoredTitle` with `gap-2` between a title and its
   content and `gap-4` between the current/recent sections. Relative media dates
   come from `src/lib/utils/shared/dates.ts`; `formatExactDate` is used for the

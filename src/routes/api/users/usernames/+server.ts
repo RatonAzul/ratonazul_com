@@ -1,7 +1,15 @@
+import { dev } from '$app/environment';
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { inArray } from 'drizzle-orm';
+
+const demoNames = new Map([
+    ['demo-apex', 'demo apex'],
+    ['demo-senna', 'demo senna'],
+    ['demo-slipstream', 'demo slipstream'],
+    ['demo-chicane', 'demo chicane']
+]);
 
 export async function POST({ request }) {
     const { userIds }: { userIds: string[] } = await request.json();
@@ -14,6 +22,13 @@ export async function POST({ request }) {
     const usernameMap = Object.fromEntries(
         users.map(u => [u.id, u.username ?? u.name ?? 'user'])
     );
+
+    if (dev) {
+        for (const id of userIds) {
+            const demoName = demoNames.get(id);
+            if (demoName && !Object.hasOwn(usernameMap, id)) usernameMap[id] = demoName;
+        }
+    }
 
     return json(usernameMap);
 }

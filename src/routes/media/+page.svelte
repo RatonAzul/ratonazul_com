@@ -1,6 +1,7 @@
 <script lang="ts">
     import Body from "$lib/components/shared/Body.svelte";
     import CustomH1 from "$lib/components/shared/CustomH1.svelte";
+    import SectionSeparator from "$lib/components/shared/SectionSeparator.svelte";
     import CustomH2 from "$lib/components/shared/CustomH2.svelte";
     import BookSection from "$lib/components/media/books/BookSection.svelte";
     import {createCurrentlyReadingBooksQuery, createRecentlyReadBooksQuery} from "$lib/queries/mediaTracker/books.ts";
@@ -24,26 +25,26 @@
     <div class="grid lg:grid-cols-2 grid-cols-1 lg:gap-8 gap-y-8 w-full">
 
         <!-- BOOKS -->
-        <div class="flex flex-col col-span-1">
+        <div class="flex min-w-0 flex-col col-span-1">
             <CustomH2 class="mb-3">books</CustomH2>
             <BookSection {currentlyReadingBooks} {recentlyReadBooks}/>
         </div>
 
         <!-- ANIME -->
-        <div class="flex flex-col col-span-1">
+        <div class="flex min-w-0 flex-col col-span-1">
             <CustomH2 class="mb-3">anime</CustomH2>
             <AnimeSection {currentlyWatchingAnime} {recentlyWatchedAnime}/>
         </div>
 
-        <div class="bg-bg2 w-full h-0.5 lg:col-span-2 col-span-1"></div>
+        <SectionSeparator class="lg:col-span-2" />
 
         <!-- MANGA -->
-        <div class="flex flex-col col-span-1">
+        <div class="flex min-w-0 flex-col col-span-1">
             <CustomH2 class="mb-3">manga</CustomH2>
             <MangaSection {currentlyReadingManga} {recentlyReadManga}/>
         </div>
 
-        <div class="bg-bg2 w-full h-0.5 lg:col-span-2 col-span-1"></div>
+        <SectionSeparator class="lg:col-span-2" />
 
     </div>
 </Body>

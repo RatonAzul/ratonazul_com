@@ -12,9 +12,9 @@
 
 <div class="flex flex-col gap-2 w-full">
     <MediaColoredTitle title="currently watching" bgColor="bg-yellow" />
-    <div class="w-full grid grid-cols-1 gap-2">
+    <ul class="card-list" role="list">
         {#each currentlyWatchingAnime as anime}
-            <CurrentMediaMiniCard currentItem={miniCardItemFromBasicAnime(anime)} />
+            <li><CurrentMediaMiniCard currentItem={miniCardItemFromBasicAnime(anime)} /></li>
         {/each}
-    </div>
+    </ul>
 </div>
