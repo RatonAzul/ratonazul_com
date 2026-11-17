@@ -61,7 +61,7 @@
                 {/each}
             </div>
             {#if data.date <= data.today}
-                {#key JSON.stringify([data.game, data.date, editing, form?.values])}
+                {#key JSON.stringify([data.game, data.date, editing?.id])}
                     <GameResultEditor game={data.game} date={data.date} record={editing} {answer} defaultUserId={data.defaultUserId} players={data.players} values={form?.values ?? null} />
                 {/key}
             {/if}
