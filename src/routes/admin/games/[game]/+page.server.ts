@@ -4,7 +4,7 @@ import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/auth.schema';
 import { eq } from 'drizzle-orm';
 import { gamesRequest, listGames, GamesApiError } from '$lib/server/games-api';
-import { games, isGame, validDate, puzzleDay, isaacDay, parseIsaac, parseSpanishWordle, wordleResult, type GameRecord, type WordleInput, type Solution } from '$lib/utils/games';
+import { games, isGame, validDate, puzzleDay, isaacDay, parseIsaac, parseSpanishWordle, wordleResult, wordleBoardResult, normalizeWord, type GameRecord, type WordleInput, type Solution } from '$lib/utils/games';
 import type { Actions, PageServerLoad } from './$types';
 
 async function requireAdmin(request: Request) {
@@ -54,7 +54,7 @@ export const actions: Actions = {
         const config = gameConfig(params.game);
         const form = await request.formData();
         const value = (key: string) => String(form.get(key) ?? '');
-        const values = { id: value('id'), userId: value('userId'), date: value('date'), answer: value('answer'), words: Array.from({ length: 6 }, (_, i) => value(`guess${i}`)), share: value('share'), mode: value('mode') };
+        const values = { id: value('id'), userId: value('userId'), date: value('date'), answer: value('answer'), words: Array.from({ length: 6 }, (_, i) => value(`guess${i}`)), share: value('share'), mode: value('mode'), board: value('board') };
         let wrote = false;
         try {
             const id = values.id ? positiveInt(values.id, 'record id') : null;
@@ -69,12 +69,13 @@ export const actions: Actions = {
                 await gamesRequest(`${config.endpoint}${id ? `/${id}` : ''}`, actor, id ? 'PUT' : 'POST', { ...parsed, user_id: player.id });
             } else {
                 const day = puzzleDay(params.game as keyof typeof games, values.date);
-                if (values.mode && !['words', 'share'].includes(values.mode)) throw new Error('Choose a valid input method.');
-                const boardOnly = values.mode === 'share';
-                if (boardOnly && params.game !== 'la-palabra-del-dia') throw new Error('Share input is only supported for La Palabra del Día.');
-                const result = boardOnly ? parseSpanishWordle(values.share) : wordleResult(values.words, values.answer);
+                if (values.mode && !['words', 'share', 'board'].includes(values.mode)) throw new Error('Choose a valid input method.');
+                const boardOnly = values.mode === 'share' || values.mode === 'board';
+                if (values.mode === 'share' && params.game !== 'la-palabra-del-dia') throw new Error('Share input is only supported for La Palabra del Día.');
+                const result = values.mode === 'board' ? wordleBoardResult(values.board) : values.mode === 'share' ? parseSpanishWordle(values.share) : wordleResult(values.words, values.answer);
                 if ('day' in result && result.day !== day) throw new Error(`This date expects puzzle #${day}. The pasted puzzle is #${result.day}.`);
-                const answer = values.answer.trim().normalize('NFC').toLowerCase();
+                const saveAnswer = !boardOnly || (values.mode === 'board' && !!values.answer.trim());
+                const answer = saveAnswer ? normalizeWord(values.answer) : '';
                 const [solutions, sameDay, sameDate] = await Promise.all([
                     listGames<Solution>(config.solutions, actor, { day: String(day) }),
                     listGames<GameRecord>(config.endpoint, actor, { day: String(day) }),
@@ -83,7 +84,7 @@ export const actions: Actions = {
                 if (sameDay.some(record => record.id !== id && 'date' in record && record.date !== values.date) || sameDate.some(record => record.id !== id && record.day !== day)) throw new Error('The puzzle number and date conflict with an existing result.');
                 const solution = solutions[0];
                 const corrections: { id: number; input: WordleInput }[] = [];
-                if (!boardOnly && solution && solution.word !== answer) {
+                if (saveAnswer && solution && solution.word !== answer) {
                     for (const other of sameDay.filter(record => record.id !== id)) {
                         if (!('words' in other) || other.is_simple) throw new Error('The answer is shared by this puzzle. A board-only result cannot be recalculated; correct that result with its guesses first.');
                         try {
@@ -93,7 +94,7 @@ export const actions: Actions = {
                 }
                 await gamesRequest(`${config.endpoint}${id ? `/${id}` : ''}`, actor, id ? 'PUT' : 'POST', { day, date: values.date, user_id: player.id, ...result });
                 wrote = true;
-                if (!boardOnly && (!solution || solution.word !== answer)) {
+                if (saveAnswer && (!solution || solution.word !== answer)) {
                     await gamesRequest(`${config.solutions}${solution ? `/${solution.id}` : ''}`, actor, solution ? 'PUT' : 'POST', { day, word: answer });
                     for (const correction of corrections) await gamesRequest(`${config.endpoint}/${correction.id}`, actor, 'PUT', correction.input);
                 }

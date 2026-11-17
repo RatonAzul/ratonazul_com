@@ -76,6 +76,12 @@ export function wordleResult(rawWords: string[], rawAnswer: string) {
     if (!solved && words.length !== 6) throw new Error('An unsolved game needs all six guesses.');
     return { words, board: words.map(word => scoreGuess(word, answer)).join(''), score: solved ? words.length : 7, is_simple: false as const };
 }
+export function wordleBoardResult(board: string) {
+    if (!/^[xio]{30}$/.test(board)) throw new Error('Enter a board with six rows of five valid colors.');
+    const rows = board.match(/.{5}/g)!;
+    const solved = rows.indexOf('ooooo');
+    return { board: rows.slice(0, solved === -1 ? 6 : solved + 1).join(''), score: solved === -1 ? 7 : solved + 1, is_simple: true as const, words: [] as string[] };
+}
 export function parseIsaac(text: string): Omit<IsaacInput, 'user_id'> {
     const lines = text.trim().split(/\r?\n/).map(line => line.trim()).filter(Boolean);
     const header = /^Isaaconnect\s+#(\d+)$/i.exec(lines[0] ?? '');
