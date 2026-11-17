@@ -7,7 +7,6 @@
         SessionName,
         type TimeBet, type TimeBetDraft
     } from "$lib/types/motorsport";
-    import CustomH3 from "$lib/components/shared/CustomH3.svelte";
     import DriverBetCard from "$lib/components/pick-the-grid/DriverBetCard.svelte";
     import TimeBetCard from "$lib/components/pick-the-grid/TimeBetCard.svelte";
     import type {CreateQueryResult} from "@tanstack/svelte-query";
@@ -100,34 +99,34 @@
 {#if meeting}
     <section class="grid sm:grid-cols-2 grid-cols-1 gap-4 mb-8">
         {#if meeting.isSprint}
-            <div>
-                <CustomH3>sprint qualy</CustomH3>
+            <fieldset class="min-w-0">
+                <legend class="section-label field-group-label bg-purple">sprint qualy</legend>
                 <div class="flex flex-col gap-2">
                     {#each sprintQualyBets as _, i}
                         <DriverBetCard drivers={driverList} bind:bet={sprintQualyBets[i]} disabled={!isMeetingOpen}/>
                     {/each}
                 </div>
-            </div>
-            <div>
-                <CustomH3>sprint race</CustomH3>
+            </fieldset>
+            <fieldset class="min-w-0">
+                <legend class="section-label field-group-label bg-green">sprint race</legend>
                 <div class="flex flex-col gap-2">
                     {#each sprintRaceBets as _, i}
                         <DriverBetCard drivers={driverList} bind:bet={sprintRaceBets[i]} disabled={!isMeetingOpen} />
                     {/each}
                 </div>
-            </div>
+            </fieldset>
         {/if}
-        <div>
-            <CustomH3>qualy</CustomH3>
+        <fieldset class="min-w-0">
+            <legend class="section-label field-group-label bg-purple">qualy</legend>
             <div class="flex flex-col gap-2">
                 {#each qualyBets as _, i}
                     <DriverBetCard drivers={driverList} bind:bet={qualyBets[i]} disabled={!isMeetingOpen} />
                 {/each}
                 <TimeBetCard bind:bet={qualyTimeBet} disabled={!isMeetingOpen} />
             </div>
-        </div>
-        <div>
-            <CustomH3>race</CustomH3>
+        </fieldset>
+        <fieldset class="min-w-0">
+            <legend class="section-label field-group-label bg-green">race</legend>
             <div class="flex flex-col gap-2">
                 {#each raceBets as _, i}
                     <DriverBetCard
@@ -138,7 +137,7 @@
                     />
                 {/each}
             </div>
-        </div>
+        </fieldset>
         <div class="sm:col-span-2 col-span-1 w-full flex justify-center mt-4">
             {#if $session?.data?.user.id}
                 {#if showSuccessButton}
@@ -150,7 +149,7 @@
                         saving...
                     </DefaultButton>
                 {:else if sendButtonIsActive}
-                    <DefaultButton handleOnClick={() => submitBets.mutate()}>
+                    <DefaultButton status={ButtonStatus.success} handleOnClick={() => submitBets.mutate()}>
                         save
                     </DefaultButton>
                 {:else}
@@ -170,5 +169,5 @@
         </div>
     </section>
 {:else}
-    <section class="bg-bg1 animate-pulse sm:h-17 h-26 w-full mb-8"></section>
+    <section class="surface-card animate-pulse sm:h-17 h-26 w-full mb-8"></section>
 {/if}

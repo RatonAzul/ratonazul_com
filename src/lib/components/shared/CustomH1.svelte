@@ -1,6 +1,8 @@
 <script lang="ts">
-    let { children }: { children?: any } = $props();
+    import type { Snippet } from 'svelte';
+
+    let { children, class: className = '' }: { children: Snippet; class?: string } = $props();
 </script>
-<h1 class="text-blue text-3xl font-semibold mb-4 sm:text-4xl">
+<h1 class="mb-6 {className}">
     {@render children()}
 </h1>

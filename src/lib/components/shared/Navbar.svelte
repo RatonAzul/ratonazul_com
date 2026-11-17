@@ -17,33 +17,33 @@
 </nav>
 
 <DropdownMenu.Root>
-    <DropdownMenu.Trigger class="justify-center items-center md:hidden flex h-10 hover:cursor-pointer hover:text-gray-dark">
+    <DropdownMenu.Trigger class="button button-quiet px-2 md:hidden" aria-label="Main menu">
         <ListIcon class="sm:size-6 size-5"/>
     </DropdownMenu.Trigger>
     <DropdownMenu.Portal>
-        <DropdownMenu.Content sideOffset={8} alignOffset={-56} align="start" class="md:hidden bg-bg1 text-gray text-sm font-jetbrains p-1">
-            <DropdownMenu.Item class="cursor-pointer hover:bg-bg2 p-2 flex gap-2">
+        <DropdownMenu.Content sideOffset={8} alignOffset={-56} align="start" class="menu-panel md:hidden">
+            <DropdownMenu.Item class="menu-item">
                 <TelevisionSimpleIcon class="sm:size-6 size-5"/>
-                <a href="/media">media</a>
+                {@render link("/media", "media", "text-gray")}
             </DropdownMenu.Item>
-            <DropdownMenu.Item class="cursor-pointer hover:bg-bg2 p-2 flex gap-2">
+            <DropdownMenu.Item class="menu-item">
                 <CameraIcon class="sm:size-6 size-5"/>
-                <a href="/pics">pics</a>
+                {@render link("/pics", "pics", "text-gray")}
             </DropdownMenu.Item>
-            <DropdownMenu.Item class="cursor-pointer hover:bg-bg2 p-2 flex gap-2">
+            <DropdownMenu.Item class="menu-item">
                 <TireIcon class="sm:size-6 size-5"/>
-                <a href="/motorsport">motorsport</a>
+                {@render link("/motorsport", "motorsport", "text-gray")}
             </DropdownMenu.Item>
             {#if isAdmin}
-                <DropdownMenu.Item class="cursor-pointer hover:bg-bg2 p-2 flex gap-2">
+                <DropdownMenu.Item class="menu-item">
                     <ShieldIcon class="sm:size-6 size-5"/>
-                    <a class={currentPath === '/admin' || currentPath.startsWith('/admin/') ? 'text-fg0' : ''} href="/admin">admin</a>
+                    {@render link("/admin", "admin", "text-gray")}
                 </DropdownMenu.Item>
             {/if}
         </DropdownMenu.Content>
     </DropdownMenu.Portal>
 </DropdownMenu.Root>
 
-{#snippet link(endpoint, text)}
-    <a href={endpoint} class="{currentPath === endpoint || currentPath.startsWith(`${endpoint}/`) ? 'text-fg0' : ''}">[{text}]</a>
+{#snippet link(endpoint, text, inactiveColor = "")}
+    <a href={endpoint} class="{currentPath === endpoint || currentPath.startsWith(`${endpoint}/`) ? 'text-fg0' : inactiveColor}">[{text}]</a>
 {/snippet}

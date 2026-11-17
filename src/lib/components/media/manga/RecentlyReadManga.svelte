@@ -14,10 +14,10 @@
 </script>
 
 <div class="flex flex-col gap-2 w-full">
-    <MediaColoredTitle title="recent reads" bgColor="bg-green"/>
-    <div class="flex flex-col gap-2 w-full">
+    <MediaColoredTitle title="recent reads" bgColor="bg-green" />
+    <ul class="card-list" role="list">
         {#each recentlyReadManga.slice(0, listSize) as manga}
-            <RecentMediaMiniCard recentItem={miniCardItemFromBasicManga(manga)}/>
+            <li><RecentMediaMiniCard recentItem={miniCardItemFromBasicManga(manga)}/></li>
         {/each}
-    </div>
+    </ul>
 </div>

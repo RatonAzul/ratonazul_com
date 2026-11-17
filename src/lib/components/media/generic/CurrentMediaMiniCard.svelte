@@ -10,15 +10,15 @@
 
 </script>
 
-<div class="surface-card-hover flex min-h-20">
-    <img src="{currentItem.image}" class="h-20 w-14 object-cover" alt="{currentItem.title}">
-    <div class="flex flex-col w-full">
-        <div class="flex w-full flex-1 flex-col px-3 py-2 text-xs lg:text-sm">
-            <p class="text-fg0 lg:text-sm text-xs font-semibold">{currentItem.title}</p>
-            <p class="text-gray text-xs">{currentItem.subtitle}</p>
+<div class="surface-card flex min-h-20">
+    <img src="{currentItem.image}" class="h-20 w-14 shrink-0 object-cover" alt="{currentItem.title}">
+    <div class="flex min-w-0 flex-1 flex-col">
+        <div class="flex w-full flex-1 flex-col px-3 py-2 text-secondary">
+            <h4 class="compact-media-title" title={currentItem.title}>{currentItem.title}</h4>
+            <p class="compact-media-subtitle">{currentItem.subtitle}</p>
             <div class="mt-auto flex justify-between gap-2">
-                <p class="text-yellow lg:text-xs text-xxs">Episode {currentItem.progress}{currentItem.maxProgress == 0 ? '' : '/' + currentItem.maxProgress}</p>
-                <p class="text-gray lg:text-xs text-xxs mt-auto" title={formatExactDate(currentItem.lastActivityDate)}>Last {currentItem.dateVerb} {getShortTimeFromNow(currentItem.lastActivityDate)} ago</p>
+                <p class="text-yellow text-meta">Episode {currentItem.progress}{currentItem.maxProgress == 0 ? '' : '/' + currentItem.maxProgress}</p>
+                <p class="text-gray text-meta mt-auto" title={formatExactDate(currentItem.lastActivityDate)}>Last {currentItem.dateVerb} {getShortTimeFromNow(currentItem.lastActivityDate)} ago</p>
             </div>
         </div>
         <!-- Progress bar-->

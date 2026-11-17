@@ -88,8 +88,8 @@
 
 <div class="flex gap-2 h-10">
     <div class="flex justify-center items-center aspect-square bg-purple text-bg0">Q</div>
-    <div class="surface-card {disabled ? '' : 'hover:bg-bg2'} flex w-full justify-between items-center border-l-purple border-l-8 h-10">
-        <div class="flex items-center ps-4 gap-0.5 flex-1 text-sm">
+    <div class="surface-card {disabled ? '' : 'hover:bg-bg2'} flex w-full justify-between items-center border-l-purple border-l-4 h-10 focus-within:outline-2 focus-within:outline-purple">
+        <div class="flex items-center ps-4 gap-0.5 flex-1 text-secondary">
             {#if isEditing}
                 <input
                         {disabled}
@@ -131,13 +131,13 @@
             {:else}
                 <button
                         onclick={startEditing}
-                        class="text-gray-dark text-sm font-normal hover:cursor-text"
+                        class="text-gray-dark text-secondary font-normal hover:cursor-text"
                 >
                     {disabled ? 'Bet is closed' : 'Select the pole time'}
                 </button>
             {/if}
         </div>
-        <span class="text-bg0 {disabled && bet?.points === null || bet?.points === undefined ? 'bg-gray-dark' : getTimeBetPointsColor(bet?.points)} font-medium text-lg flex justify-center items-center aspect-square h-full">
+        <span class="text-bg0 {disabled && bet?.points === null || bet?.points === undefined ? 'bg-gray-dark' : getTimeBetPointsColor(bet?.points)} text-card-title flex justify-center items-center aspect-square h-full">
         {bet?.points !== undefined && bet?.points !== null ? '+' + bet?.points : '-'}
     </span>
     </div>

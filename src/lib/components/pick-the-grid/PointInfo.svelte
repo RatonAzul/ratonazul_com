@@ -13,7 +13,7 @@
 
 <div class="flex justify-start">
     <button
-        class="cursor-pointer flex items-center gap-1 text-xs text-gray hover:text-gray-dark mt-2 ps-2"
+        class="button button-quiet mt-2 px-2"
         type="button"
         aria-label="Show point system rules"
         aria-expanded={isOpen}
@@ -24,21 +24,21 @@
     </button>
 
     {#if isOpen}
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="presentation">
-            <div class="surface-card relative w-full max-w-xl p-4 text-sm" role="dialog" aria-modal="true" aria-label="Point system">
+        <div class="dialog-backdrop" role="presentation">
+            <div class="dialog-panel relative max-w-xl text-secondary" role="dialog" aria-modal="true" aria-labelledby="point-system-title">
                 <button
-                    class="absolute right-3 top-3 cursor-pointer text-gray hover:text-gray-dark"
+                    class="action-icon action-icon-danger absolute right-3 top-3"
                     type="button"
                     aria-label="Close point system"
                     onclick={() => isOpen = false}
                 >
                     <XIcon size={20} weight="bold" />
                 </button>
-                <h3 class="mb-4 pr-8 text-lg font-semibold text-blue">point system</h3>
+                <h2 id="point-system-title" class="mb-4 min-h-10 content-center pr-12 text-blue">point system</h2>
                 <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
                     <section>
-                        <h4 class="mb-3 font-semibold text-gray">qualifying time</h4>
-                        <div class="flex flex-col gap-2 text-xs">
+                        <h3 class="mb-3 text-green">qualifying time</h3>
+                        <div class="flex flex-col gap-2 text-meta">
                             {@render pointRow("exact time", "+20 pts", "bg-purple")}
                             {@render pointRow("within 0.500s", "+5 pts", "bg-green")}
                             {@render pointRow("within 1.000s", "+2 pts", "bg-yellow")}
@@ -47,8 +47,8 @@
                     </section>
 
                     <section>
-                        <h4 class="mb-3 font-semibold text-gray">driver guesses</h4>
-                        <div class="flex flex-col gap-2 text-xs">
+                        <h3 class="mb-3 text-green">driver guesses</h3>
+                        <div class="flex flex-col gap-2 text-meta">
                             {@render pointRow("exact position", "+5 pts", "bg-purple")}
                             {@render pointRow("within 1 position", "+3 pts", "bg-green")}
                             {@render pointRow("within 2 positions", "+1 pt", "bg-yellow")}

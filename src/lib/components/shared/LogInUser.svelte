@@ -1,6 +1,7 @@
 <script lang="ts">
     import { authClient } from "$lib/auth-client";
     import { page } from "$app/state";
+    import { goto } from "$app/navigation";
     import { UserIcon, SignOutIcon, SignInIcon, GoogleLogoIcon, PencilIcon } from "phosphor-svelte";
     import { DropdownMenu } from "bits-ui";
 
@@ -28,9 +29,8 @@
 </script>
 
 <DropdownMenu.Root>
-    <DropdownMenu.Trigger class="cursor-pointer text-gray hover:text-gray-dark flex items-center gap-2 h-10">
-        <span class="flex h-full items-center justify-center gap-2 px-3 text-bg1 font-medium sm:aspect-auto aspect-square
-                {$session.data ? 'bg-blue hover:bg-blue-dark' : 'bg-green hover:bg-green-dark'}">
+    <DropdownMenu.Trigger class="button h-10 px-3 {$session.data ? 'button-accent' : 'button-primary'}">
+        <span class="flex items-center gap-2">
             {#if $session.data}
                 <UserIcon weight="fill" class="sm:size-6 size-5" />
                 <span class="sm:block hidden">{displayName}</span>
@@ -40,10 +40,14 @@
         </span>
     </DropdownMenu.Trigger>
     <DropdownMenu.Portal>
-        <DropdownMenu.Content sideOffset={8} align="end" class="surface-card min-w-44 flex flex-col p-1 font-jetbrains">
+        <DropdownMenu.Content sideOffset={8} align="end" class="menu-panel min-w-44">
             {#if $session.data}
+                <DropdownMenu.Item class="menu-item" onSelect={() => goto(`/profile/${encodeURIComponent($session.data!.user.id)}`)}>
+                    <UserIcon weight="fill" class="sm:size-6 size-5" />
+                    go to profile
+                </DropdownMenu.Item>
                 <DropdownMenu.Item
-                        class="cursor-pointer hover:bg-bg2 text-sm text-fg0 p-2 flex items-center gap-2"
+                        class="menu-item"
                         onSelect={() => {
                         newName = $session.data?.user.username ?? "";
                         editingName = true;
@@ -53,7 +57,7 @@
                     change username
                 </DropdownMenu.Item>
                 <DropdownMenu.Item
-                        class="cursor-pointer hover:bg-bg2 text-sm text-red p-2 flex items-center gap-2"
+                        class="menu-item text-red"
                         onSelect={() => authClient.signOut()}
                 >
                     <SignOutIcon weight="fill" class="sm:size-6 size-5" />
@@ -61,7 +65,7 @@
                 </DropdownMenu.Item>
             {:else}
                 <DropdownMenu.Item
-                        class="cursor-pointer hover:bg-bg2 text-sm text-gray p-2 flex items-center gap-2"
+                        class="menu-item"
                         onSelect={() =>
                         authClient.signIn.social({
                             provider: "google",
@@ -77,13 +81,13 @@
 </DropdownMenu.Root>
 
 {#if editingName}
-    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="surface-card w-full max-w-sm mx-4 p-4 flex flex-col gap-3">
-            <label for="account-username" class="text-gray text-sm">{$session.data?.user.username ? 'edit username' : 'choose a username'}</label>
+    <div class="dialog-backdrop">
+        <div class="dialog-panel flex max-w-sm flex-col gap-3">
+            <label for="account-username" class="form-label">{$session.data?.user.username ? 'edit username' : 'choose a username'}</label>
             <input
                     id="account-username"
                     autocomplete="username"
-                    class="form-field text-sm"
+                    class="form-field"
                     maxlength="15"
                     bind:value={newName}
                     onkeydown={(e) => e.key === "Enter" && saveName()}
@@ -91,14 +95,14 @@
             <div class="flex gap-2 justify-end">
                 {#if $session.data?.user.username}
                     <button
-                            class="cursor-pointer text-gray text-sm hover:text-gray-dark"
+                            class="button button-danger"
                             onclick={() => (editingName = false)}
                     >
                         cancel
                     </button>
                 {/if}
                 <button
-                        class="cursor-pointer text-green text-sm hover:text-green-dark"
+                        class="button button-primary"
                         onclick={saveName}
                 >
                     save

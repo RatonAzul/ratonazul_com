@@ -14,7 +14,7 @@
 </script>
 
 <div class="w-49 min-w-49">
-    <div class="col-span-2 flex justify-around text-sm h-9 mb-4 gap-x-1">
+    <div class="col-span-2 flex justify-around text-secondary h-9 mb-4 gap-x-1">
         <div class="h-full w-9 flex justify-center items-center text-center font-semibold {position === 1 ? 'bg-red text-bg0' : 'bg-bg1'}">{position}</div>
         <div class="h-full flex-1 flex justify-start ps-4 items-center bg-bg1">{meetingBets.username}</div>
         <div class="h-full w-12 flex justify-center items-center bg-bg1 text-center font-semibold">{meetingBets.points}</div>

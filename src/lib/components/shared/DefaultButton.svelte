@@ -5,7 +5,8 @@
 </script>
 
 <button
-    class="{getButtonStyles(status)} {status === ButtonStatus.disabled ? 'cursor-not-allowed' : 'cursor-pointer'} px-8 h-10"
+    type="button"
+    class="button {getButtonStyles(status)}"
     onclick={handleOnClick}
     disabled={status === ButtonStatus.disabled}
 >

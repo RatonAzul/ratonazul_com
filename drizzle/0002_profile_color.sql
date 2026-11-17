@@ -1,0 +1,2 @@
+CREATE TYPE "public"."profile_color" AS ENUM('red', 'green', 'yellow', 'blue', 'purple', 'aqua', 'orange', 'gray');--> statement-breakpoint
+ALTER TABLE "user" ADD COLUMN "color" "profile_color" DEFAULT 'gray' NOT NULL;

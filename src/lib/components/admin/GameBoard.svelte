@@ -13,7 +13,7 @@
     {#each rows as row, index}
         <div class="flex gap-1" aria-hidden="true">
             {#each [...row] as cell, col}
-                <span class="size-7 sm:size-8 flex items-center justify-center uppercase text-sm font-semibold {color(cell)}">{words[index] ? [...words[index]][col] : ''}</span>
+                <span class="size-7 sm:size-8 flex items-center justify-center uppercase text-secondary font-semibold {color(cell)}">{words[index] ? [...words[index]][col] : ''}</span>
             {/each}
         </div>
     {/each}

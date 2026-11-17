@@ -1,10 +1,14 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { defaultProfileColor, profileColors } from "../../utils/profile-colors";
+
+export const profileColor = pgEnum("profile_color", profileColors);
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   username: text("username"),
+  color: profileColor("color").default(defaultProfileColor).notNull(),
   role: text("role").default("user"),
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),

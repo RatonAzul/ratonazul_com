@@ -18,7 +18,7 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 <QueryClientProvider client={data.queryClient}>
-	<div class="theme-{theme.current} w-full min-h-dvh bg-bg0 text-fg0 font-jetbrains {showCrt.current ? 'crt' : ''}">
+	<div class="theme-{theme.current} w-full min-h-dvh bg-bg0 text-fg0 {showCrt.current ? 'crt' : ''}">
 		<div class="min-h-dvh xl:max-w-[80%] mx-auto p-4 flex flex-col items-center relative">
 			<Header/>
 			{@render children()}
@@ -30,7 +30,7 @@
 	{/if}
 	<!-- load color classes so i can dinamically import them later -->
 	<div class="text-orange text-aqua border-red border-green border-blue border-yellow border-gray border-aqua border-purple border-orange"></div>
-	<div class="bg-red bg-green bg-blue bg-yellow bg-gray bg-aqua bg-purple bg-orange"/>
+	<div class="bg-red bg-green bg-blue bg-yellow bg-gray bg-aqua bg-purple bg-orange"></div>
 </QueryClientProvider>
 
 <style>

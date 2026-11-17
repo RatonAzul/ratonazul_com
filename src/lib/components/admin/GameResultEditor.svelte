@@ -51,10 +51,10 @@
 <section class="surface-card p-4 sm:p-6">
     <div class="flex justify-between items-start gap-3 mb-5">
         <div>
-            <h3 class="text-xl text-fg0 font-semibold">{games[game].name}</h3>
-            <p class="text-sm text-gray mt-1">{record ? `editing result #${record.id}` : 'new result'}</p>
+            <h3>{games[game].name}</h3>
+            <p class="subtitle mt-1">{record ? `editing result #${record.id}` : 'new result'}</p>
         </div>
-        {#if record}<a class="internal-link text-sm" href={`?year=${date.slice(0, 4)}&date=${date}`}>cancel edit</a>{/if}
+        {#if record}<a class="button button-danger" href={`?year=${date.slice(0, 4)}&date=${date}`}>cancel edit</a>{/if}
     </div>
     <form method="POST" action="?/save" class="flex flex-col gap-4" use:enhance={() => {
         pending = true;
@@ -70,7 +70,7 @@
     }}>
         <input type="hidden" name="id" value={record?.id ?? ''} />
         <input type="hidden" name="date" value={date} />
-        <label class="flex flex-col gap-2 text-sm">player
+        <label class="form-label">player
             <select name="userId" bind:value={userId} class={inputClass} required>
                 <option value="" disabled>choose a player</option>
                 {#if record && !players.some(player => player.id === record.user_id)}<option value={record.user_id} disabled>unknown player ({record.user_id})</option>{/if}
@@ -78,12 +78,12 @@
             </select>
         </label>
         {#if game === 'isaaconnect'}
-            <label class="flex flex-col gap-2 text-sm">share text
-                <textarea name="share" bind:value={share} rows="11" maxlength="20000" required class={`${inputClass} resize-y text-sm`} placeholder="Isaaconnect #855&#10;✅: 1/4 ❤️: 0/4&#10;🟦🟦🟥🟦&#10;Time: 06:10.549&#10;https://isaaconnect.com/"></textarea>
+            <label class="form-label">share text
+                <textarea name="share" bind:value={share} rows="11" maxlength="20000" required class={`${inputClass} resize-y`} placeholder="Isaaconnect #855&#10;✅: 1/4 ❤️: 0/4&#10;🟦🟦🟥🟦&#10;Time: 06:10.549&#10;https://isaaconnect.com/"></textarea>
             </label>
-            <p class="text-xs text-gray">Paste the full result. The API stores time in whole seconds; fractional seconds are rounded down.</p>
+            <p class="text-meta text-gray">Paste the full result. The API stores time in whole seconds; fractional seconds are rounded down.</p>
         {:else}
-                <label class="flex flex-col gap-2 text-sm">input method
+                <label class="form-label">input method
                     <select name="mode" bind:value={mode} class={inputClass}>
                         <option value="words">enter words</option>
                         <option value="board">enter board</option>
@@ -91,18 +91,18 @@
                     </select>
                 </label>
             {#if game === 'la-palabra-del-dia' && mode === 'share'}
-                <label class="flex flex-col gap-2 text-sm">share text
-                    <textarea name="share" bind:value={share} rows="10" maxlength="20000" required class={`${inputClass} resize-y text-sm`} placeholder="La palabra del día #1760 4/6"></textarea>
+                <label class="form-label">share text
+                    <textarea name="share" bind:value={share} rows="10" maxlength="20000" required class={`${inputClass} resize-y`} placeholder="La palabra del día #1760 4/6"></textarea>
                 </label>
-                <p class="text-xs text-gray">Paste the complete shared result to save its board and score.</p>
+                <p class="text-meta text-gray">Paste the complete shared result to save its board and score.</p>
             {:else if mode === 'board'}
-                <label class="flex flex-col gap-2 text-sm">answer
+                <label class="form-label">answer
                     <input class={`${inputClass} uppercase tracking-widest`} name="answer" bind:value={solution} autocomplete="off" />
                 </label>
-                <p class="text-xs text-gray">The answer is shared by all players for this puzzle. Leave it blank if unknown.</p>
+                <p class="text-meta text-gray">The answer is shared by all players for this puzzle. Leave it blank if unknown.</p>
                 <input type="hidden" name="board" value={board} />
                 <fieldset class="flex flex-col gap-1">
-                    <legend class="text-sm mb-2">board</legend>
+                    <legend class="text-secondary mb-2">board</legend>
                     {#each Array(6) as _, row}
                         <div class="flex gap-1">
                             {#each Array(5) as _, col}
@@ -114,17 +114,17 @@
                         </div>
                     {/each}
                 </fieldset>
-                <button type="button" class="internal-link text-sm self-start" onclick={() => { board = 'x'.repeat(30); }}>reset board</button>
-                <p class="text-xs text-gray">Squares start gray. The first all-green row ends the game; otherwise the result is X/6.</p>
+                <button type="button" class="button button-secondary self-start" onclick={() => { board = 'x'.repeat(30); }}>reset board</button>
+                <p class="text-meta text-gray">Squares start gray. The first all-green row ends the game; otherwise the result is X/6.</p>
             {:else}
-            <label class="flex flex-col gap-2 text-sm">answer
+            <label class="form-label">answer
                 <input class={`${inputClass} uppercase tracking-widest`} name="answer" bind:value={solution} autocomplete="off" required />
             </label>
-            <p class="text-xs text-gray">The answer is shared by all players for this puzzle. Changing it also recalculates other results when their guesses permit it.</p>
+            <p class="text-meta text-gray">The answer is shared by all players for this puzzle. Changing it also recalculates other results when their guesses permit it.</p>
             <fieldset class="grid grid-cols-2 gap-3">
-                <legend class="text-sm mb-2">guesses · leave unused attempts empty</legend>
+                <legend class="text-secondary mb-2">guesses · leave unused attempts empty</legend>
                 {#each guesses as _, index}
-                    <label class="flex flex-col gap-1 text-xs text-gray">guess {index + 1}
+                    <label class="form-label">guess {index + 1}
                         <input class={`${inputClass} uppercase tracking-widest`} name={`guess${index}`} bind:value={guesses[index]} autocomplete="off" aria-label={`Guess ${index + 1}`} />
                     </label>
                 {/each}
@@ -133,15 +133,15 @@
         {/if}
         {#if preview}
             <div class="border-t border-bg3 pt-4 flex flex-col gap-3" aria-live="polite">
-                {#if preview.error}<p class="text-sm text-yellow">{preview.error}</p>{:else}
+                {#if preview.error}<p class="text-secondary text-yellow">{preview.error}</p>{:else}
                     <div>
-                        <h3 class="font-semibold text-fg0">{playerName}</h3>
-                        <p class="text-xs text-gray mt-1">puzzle #{preview.kind === 'isaac' ? preview.result.day : puzzleDay(game, date)} · {record ? `result #${record.id}` : 'new result'}</p>
+                        <h3>{playerName}</h3>
+                        <p class="text-meta text-gray mt-1">puzzle #{preview.kind === 'isaac' ? preview.result.day : puzzleDay(game, date)} · {record ? `result #${record.id}` : 'new result'}</p>
                     </div>
                     {#if preview.kind === 'isaac'}
                         <div class="flex flex-wrap gap-5 items-start">
                             <GameBoard rows={preview.rows} isaac />
-                            <dl class="text-sm text-fg0 grid grid-cols-2 gap-x-4 gap-y-2">
+                            <dl class="text-secondary text-fg0 grid grid-cols-2 gap-x-4 gap-y-2">
                                 <dt class="text-gray">date</dt><dd><time datetime={date}>{date}</time></dd>
                                 <dt class="text-gray">points</dt><dd>{preview.result.points}/4</dd>
                                 <dt class="text-gray">lives</dt><dd>{preview.result.lifes}/4</dd>
@@ -152,17 +152,17 @@
                         <div class="flex flex-col gap-3">
                             <div class="flex flex-wrap gap-5 items-start">
                                 <GameBoard rows={preview.rows} words={preview.words} />
-                                <dl class="text-sm text-fg0 grid grid-cols-2 gap-x-4 gap-y-2">
+                                <dl class="text-secondary text-fg0 grid grid-cols-2 gap-x-4 gap-y-2">
                                     <dt class="text-gray">date</dt><dd><time datetime={date}>{date}</time></dd>
                                 </dl>
                             </div>
-                            <p class="text-sm text-fg0"><span class={preview.result.score === 7 ? 'text-red' : 'text-green'}>{preview.result.score === 7 ? 'X' : preview.result.score}/6</span> - {solution.trim().toLowerCase() || 'not recorded'}</p>
+                            <p class="text-secondary text-fg0"><span class={preview.result.score === 7 ? 'text-red' : 'text-green'}>{preview.result.score === 7 ? 'X' : preview.result.score}/6</span> - {solution.trim().toLowerCase() || 'not recorded'}</p>
                         </div>
                     {/if}
                 {/if}
             </div>
         {/if}
-        <button type="submit" disabled={pending || !players.length || !preview || !!preview.error} class="bg-purple text-bg0 hover:bg-purple-dark disabled:opacity-50 disabled:cursor-not-allowed px-4 py-3 cursor-pointer font-semibold">{pending ? 'saving…' : record ? 'save changes' : 'create result'}</button>
-        {#if !players.length}<p class="text-sm text-yellow">Create a website user before entering results.</p>{/if}
+        <button type="submit" disabled={pending || !players.length || !preview || !!preview.error} class="button button-primary">{pending ? 'saving…' : record ? 'save changes' : 'create result'}</button>
+        {#if !players.length}<p class="text-secondary text-yellow">Create a website user before entering results.</p>{/if}
     </form>
 </section>
