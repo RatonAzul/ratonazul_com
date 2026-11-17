@@ -1,6 +1,6 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
-    import { untrack } from 'svelte';
+    import { tick, untrack } from 'svelte';
     import { games, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, wordleResult, wordleBoardResult, normalizeWord, type Game, type GameRecord, type Player } from '$lib/utils/games';
     import GameBoard from './GameBoard.svelte';
 
@@ -58,7 +58,15 @@
     </div>
     <form method="POST" action="?/save" class="flex flex-col gap-4" use:enhance={() => {
         pending = true;
-        return async ({ update }) => { try { await update({ reset: false }); } finally { pending = false; } };
+        return async ({ result, update }) => {
+            try {
+                await update({ reset: false });
+                if (result.type === 'success') {
+                    await tick();
+                    board = 'x'.repeat(30);
+                }
+            } finally { pending = false; }
+        };
     }}>
         <input type="hidden" name="id" value={record?.id ?? ''} />
         <input type="hidden" name="date" value={date} />
@@ -106,6 +114,7 @@
                         </div>
                     {/each}
                 </fieldset>
+                <button type="button" class="internal-link text-sm self-start" onclick={() => { board = 'x'.repeat(30); }}>reset board</button>
                 <p class="text-xs text-gray">Squares start gray. The first all-green row ends the game; otherwise the result is X/6.</p>
             {:else}
             <label class="flex flex-col gap-2 text-sm">answer
