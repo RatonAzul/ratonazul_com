@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calendarMonths, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, playerCounts, recordDate, scoreGuess, validDate, wordleResult } from '../src/lib/utils/games.ts';
+import { calendarMonths, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, playerCounts, recordDate, scoreGuess, validDate, wordleResult, wordleBoardResult } from '../src/lib/utils/games.ts';
+
+test('board-only Wordle stops at the first green row or scores X/6', () => {
+    assert.deepEqual(wordleBoardResult('xixxx' + 'ooooo' + 'i'.repeat(20)), { board: 'xixxxooooo', score: 2, is_simple: true, words: [] });
+    assert.equal(wordleBoardResult('x'.repeat(30)).score, 7);
+    assert.equal(wordleBoardResult('x'.repeat(25) + 'ooooo').score, 6);
+    assert.throws(() => wordleBoardResult('x'.repeat(29) + 'z'), /board/);
+});
 
 test('Wordle and La Palabra puzzle numbers follow the November 14 2026 anchors across years', () => {
     for (const [game, anchor] of [['wordle', 1974], ['la-palabra-del-dia', 1773]] as const) {

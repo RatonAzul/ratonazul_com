@@ -229,3 +229,7 @@ preview and save enforce the selected date's puzzle number. Shared results use
 `is_simple: true` and `words: []`, without creating or changing daily solutions.
 Existing Spanish board-only records reopen in share mode. Selected-date headings
 include the derived puzzle number for all three games.
+
+Both Wordle games also accept a board-only result through a color-toggle grid.
+An optional answer is saved as the shared daily solution; changing an existing
+answer follows the same safeguards and recalculation rules as word entry.

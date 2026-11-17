@@ -1,22 +1,24 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import { untrack } from 'svelte';
-    import { games, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, wordleResult, type Game, type GameRecord, type Player } from '$lib/utils/games';
+    import { games, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, wordleResult, wordleBoardResult, normalizeWord, type Game, type GameRecord, type Player } from '$lib/utils/games';
     import GameBoard from './GameBoard.svelte';
 
-    type Values = { id: string; userId: string; date: string; answer: string; words: string[]; share: string; mode?: string };
+    type Values = { id: string; userId: string; date: string; answer: string; words: string[]; share: string; mode?: string; board?: string };
     let { game, date, record, answer, defaultUserId, players, values = null }: { game: Game; date: string; record?: GameRecord; answer: string; defaultUserId: string; players: Player[]; values?: Values | null } = $props();
     let userId = $state(untrack(() => values?.userId ?? record?.user_id ?? defaultUserId));
     let solution = $state('');
     let guesses = $state<string[]>(Array(6).fill(''));
     let share = $state('');
     let mode = $state('words');
+    let board = $state('x'.repeat(30));
     let pending = $state(false);
     $effect(() => {
         userId = values?.userId ?? record?.user_id ?? defaultUserId;
         solution = values?.answer ?? answer;
         guesses = values?.words ?? Array.from({ length: 6 }, (_, i) => record && 'words' in record ? record.words?.[i] ?? '' : '');
-        mode = values?.mode ?? (game === 'la-palabra-del-dia' && record && 'is_simple' in record && record.is_simple ? 'share' : 'words');
+        mode = values?.mode ?? (record && 'is_simple' in record && record.is_simple ? 'board' : 'words');
+        board = values?.board && /^[xio]{30}$/.test(values.board) ? values.board : record && 'is_simple' in record && record.is_simple ? record.board.padEnd(30, 'x') : 'x'.repeat(30);
         share = values?.share ?? (record && 'points' in record ? isaacShare(record) : game === 'la-palabra-del-dia' && record && 'score' in record ? spanishWordleShare(record) : '');
     });
     let preview = $derived.by(() => {
@@ -30,6 +32,11 @@
                 if (!share.trim()) return null;
                 const result = parseSpanishWordle(share);
                 return { kind: 'wordle' as const, result, rows: result.board.match(/.{5}/gu) ?? [], words: result.words, error: result.day !== puzzleDay(game, date) ? `This date expects puzzle #${puzzleDay(game, date)}.` : '' };
+            }
+            if (mode === 'board') {
+                if (solution.trim()) normalizeWord(solution);
+                const result = wordleBoardResult(board);
+                return { kind: 'wordle' as const, result, rows: result.board.match(/.{5}/gu) ?? [], words: result.words, error: '' };
             }
             if (!solution.trim() && guesses.every(word => !word.trim())) return null;
             const result = wordleResult(guesses, solution);
@@ -68,19 +75,38 @@
             </label>
             <p class="text-xs text-gray">Paste the full result. The API stores time in whole seconds; fractional seconds are rounded down.</p>
         {:else}
-            {#if game === 'la-palabra-del-dia'}
                 <label class="flex flex-col gap-2 text-sm">input method
                     <select name="mode" bind:value={mode} class={inputClass}>
                         <option value="words">enter words</option>
-                        <option value="share">paste shared result</option>
+                        <option value="board">enter board</option>
+                        {#if game === 'la-palabra-del-dia'}<option value="share">paste shared result</option>{/if}
                     </select>
                 </label>
-            {/if}
             {#if game === 'la-palabra-del-dia' && mode === 'share'}
                 <label class="flex flex-col gap-2 text-sm">share text
                     <textarea name="share" bind:value={share} rows="10" maxlength="20000" required class={`${inputClass} resize-y text-sm`} placeholder="La palabra del día #1760 4/6"></textarea>
                 </label>
                 <p class="text-xs text-gray">Paste the complete shared result to save its board and score.</p>
+            {:else if mode === 'board'}
+                <label class="flex flex-col gap-2 text-sm">answer
+                    <input class={`${inputClass} uppercase tracking-widest`} name="answer" bind:value={solution} autocomplete="off" />
+                </label>
+                <p class="text-xs text-gray">The answer is shared by all players for this puzzle. Leave it blank if unknown.</p>
+                <input type="hidden" name="board" value={board} />
+                <fieldset class="flex flex-col gap-1">
+                    <legend class="text-sm mb-2">board</legend>
+                    {#each Array(6) as _, row}
+                        <div class="flex gap-1">
+                            {#each Array(5) as _, col}
+                                {@const index = row * 5 + col}
+                                {@const cell = board[index]}
+                                {@const ignored = board.match(/.{5}/g)?.findIndex(line => line === 'ooooo') ?? -1}
+                                <button type="button" disabled={ignored >= 0 && row > ignored} aria-label={`Row ${row + 1}, column ${col + 1}: ${{ x: 'gray', i: 'yellow', o: 'green' }[cell]}. Change color`} class="size-10 border border-fg0/30 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed {cell === 'o' ? 'bg-green' : cell === 'i' ? 'bg-yellow' : 'bg-bg3'}" onclick={() => { board = board.slice(0, index) + ({ x: 'i', i: 'o', o: 'x' }[cell] ?? 'x') + board.slice(index + 1); }}></button>
+                            {/each}
+                        </div>
+                    {/each}
+                </fieldset>
+                <p class="text-xs text-gray">Squares start gray. The first all-green row ends the game; otherwise the result is X/6.</p>
             {:else}
             <label class="flex flex-col gap-2 text-sm">answer
                 <input class={`${inputClass} uppercase tracking-widest`} name="answer" bind:value={solution} autocomplete="off" required />
@@ -94,7 +120,6 @@
                     </label>
                 {/each}
             </fieldset>
-            {#if record && 'is_simple' in record && record.is_simple}<p class="text-xs text-yellow">This is a board-only result. Enter its guesses and answer to edit it.</p>{/if}
             {/if}
         {/if}
         {#if preview}
