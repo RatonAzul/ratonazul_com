@@ -3,8 +3,9 @@ import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/auth.schema';
 import { eq } from 'drizzle-orm';
+import { syncCalendarGameResults } from '$lib/server/calendar/game-results';
 import { gamesRequest, listGames, GamesApiError } from '$lib/server/games-api';
-import { games, isGame, validDate, puzzleDay, isaacDay, parseIsaac, parseSpanishWordle, wordleResult, wordleBoardResult, normalizeWord, type GameRecord, type WordleInput, type Solution } from '$lib/utils/games';
+import { games, isGame, validDate, recordDate, puzzleDay, isaacDay, parseIsaac, parseSpanishWordle, wordleResult, wordleBoardResult, normalizeWord, type GameRecord, type WordleInput, type Solution } from '$lib/utils/games';
 import type { Actions, PageServerLoad } from './$types';
 
 async function requireAdmin(request: Request) {
@@ -15,7 +16,7 @@ async function requireAdmin(request: Request) {
 }
 function gameConfig(slug: string) {
     if (!isGame(slug)) error(404, 'Unknown game');
-    return games[slug];
+    return { ...games[slug], game: slug };
 }
 function positiveInt(value: string, label: string) {
     if (!/^[1-9]\d*$/.test(value) || !Number.isSafeInteger(Number(value)) || Number(value) > 2_147_483_647) throw new Error(`Enter a valid ${label}.`);
@@ -56,13 +57,14 @@ export const actions: Actions = {
         const value = (key: string) => String(form.get(key) ?? '');
         const values = { id: value('id'), userId: value('userId'), date: value('date'), answer: value('answer'), words: Array.from({ length: 6 }, (_, i) => value(`guess${i}`)), share: value('share'), mode: value('mode'), board: value('board') };
         let wrote = false;
+        let syncingCalendar = false;
         try {
             const id = values.id ? positiveInt(values.id, 'record id') : null;
             if (!validDate(values.date) || Number(values.date.slice(0, 4)) < 2026 || Number(values.date.slice(0, 4)) > new Date().getFullYear()) throw new Error('Choose a date from 2026 to the current year.');
             if (values.date > new Date().toISOString().slice(0, 10)) throw new Error('Results cannot be entered for future dates.');
             const [player] = await db.select({ id: user.id }).from(user).where(eq(user.id, values.userId)).limit(1);
             if (!player) throw new Error('Choose a registered player.');
-            if (id) await gamesRequest<GameRecord>(`${config.endpoint}/${id}`, actor);
+            const previous = id ? await gamesRequest<GameRecord>(`${config.endpoint}/${id}`, actor) : null;
             if (!config.solutions) {
                 const parsed = parseIsaac(values.share);
                 if (parsed.day !== isaacDay(values.date)) throw new Error(`This date is Isaaconnect #${isaacDay(values.date)}. The pasted puzzle is #${parsed.day}.`);
@@ -99,23 +101,32 @@ export const actions: Actions = {
                     for (const correction of corrections) await gamesRequest(`${config.endpoint}/${correction.id}`, actor, 'PUT', correction.input);
                 }
             }
+            syncingCalendar = true;
+            await syncCalendarGameResults(config.game, previous ? [recordDate(previous), values.date] : [values.date], actor);
             return { success: true, message: 'Result saved.', values: null };
         } catch (cause) {
             const failure = report(cause);
-            return fail(failure.status, { success: false, message: `${failure.message}${wrote ? ' The result was saved, but synchronizing the shared answer failed. Reload and review this puzzle before retrying.' : ''}`, values });
+            const partial = syncingCalendar
+                ? ' The result was saved, but updating the calendar event failed. Reload and save the result again to retry.'
+                : wrote ? ' The result was saved, but synchronizing the shared answer failed. Reload and review this puzzle before retrying.' : '';
+            return fail(failure.status, { success: false, message: `${failure.message}${partial}`, values: syncingCalendar ? null : values });
         }
     },
     delete: async ({ request, params }) => {
         const actor = await requireAdmin(request);
         const config = gameConfig(params.game);
         const form = await request.formData();
+        let deleted = false;
         try {
             const id = positiveInt(String(form.get('id') ?? ''), 'record id');
+            const previous = await gamesRequest<GameRecord>(`${config.endpoint}/${id}`, actor);
             await gamesRequest(`${config.endpoint}/${id}`, actor, 'DELETE');
+            deleted = true;
+            await syncCalendarGameResults(config.game, [recordDate(previous)], actor);
             return { success: true, message: config.solutions ? 'Result deleted. The shared daily answer is retained.' : 'Result deleted.', values: null };
         } catch (cause) {
             const failure = report(cause);
-            return fail(failure.status, { success: false, message: failure.message, values: null });
+            return fail(failure.status, { success: false, message: deleted ? 'Result deleted, but updating the calendar event failed.' : failure.message, values: null });
         }
     }
 };

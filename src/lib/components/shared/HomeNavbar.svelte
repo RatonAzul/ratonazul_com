@@ -4,6 +4,7 @@
 
     const session = useSession();
     let isAdmin = $derived((($session.data?.user as { role?: string } | undefined)?.role) === "admin");
+    let canAccessCalendar = $derived(page.data.canAccessCalendar);
     let currentPath = $derived(page.url.pathname);
 </script>
 
@@ -11,6 +12,9 @@
     <a class={currentPath === '/media' || currentPath.startsWith('/media/') ? 'text-fg0' : ''} href="/media">[media]</a>
     <a class={currentPath === '/pics' || currentPath.startsWith('/pics/') ? 'text-fg0' : ''} href="/pics">[pics]</a>
     <a class={currentPath === '/motorsport' || currentPath.startsWith('/motorsport/') ? 'text-fg0' : ''} href="/motorsport">[motorsport]</a>
+    {#if canAccessCalendar}
+        <a class={currentPath === '/calendar' || currentPath.startsWith('/calendar/') ? 'text-fg0' : ''} href="/calendar">[calendar]</a>
+    {/if}
     {#if isAdmin}
         <a class={currentPath === '/admin' || currentPath.startsWith('/admin/') ? 'text-fg0' : ''} href="/admin">[admin]</a>
     {/if}

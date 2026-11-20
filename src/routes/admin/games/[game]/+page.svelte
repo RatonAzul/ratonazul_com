@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { formatCalendarDate } from '$lib/utils/shared/calendar';
     import { PencilIcon, TrashIcon } from 'phosphor-svelte';
     import { page } from '$app/state';
     import { enhance } from '$app/forms';
@@ -28,7 +29,7 @@
         <GameCalendar year={data.year} currentYear={data.currentYear} {counts} date={data.date} today={data.today} />
         <SectionSeparator class="my-6" />
         <div class="mb-4 flex flex-col items-start gap-1" id="daily-results">
-            <div><p class="section-label mb-1">selected day</p><h2>{data.date} · #{puzzleDay(data.game, data.date)}</h2></div>
+            <div><p class="section-label mb-1">selected day</p><h2><time datetime={data.date}>{formatCalendarDate(data.date)}</time> · #{puzzleDay(data.game, data.date)}</h2></div>
             <span class="text-secondary text-gray">{counts[data.date] ?? 0} / 2 players · {data.daily.length} results</span>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] gap-5 items-start mb-8">
@@ -40,7 +41,7 @@
                             <div class="flex gap-2 items-center text-secondary">
                                 <a class="action-icon" href={`?year=${data.year}&date=${data.date}&edit=${record.id}#daily-results`} aria-label={`Edit ${playerName(record.user_id)}’s result`} title="Edit result"><PencilIcon size={18} aria-hidden="true" /></a>
                                 <form method="POST" action="?/delete" use:enhance={({ cancel }) => {
-                                    if (!confirm(`Delete ${playerName(record.user_id)}’s result for ${data.date}?`)) { cancel(); return; }
+                                    if (!confirm(`Delete ${playerName(record.user_id)}’s result for ${formatCalendarDate(data.date)}?`)) { cancel(); return; }
                                     deleting = record.id;
                                     return async ({ update }) => { try { await update(); } finally { deleting = null; } };
                                 }}>

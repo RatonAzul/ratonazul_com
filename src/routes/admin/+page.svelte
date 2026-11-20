@@ -11,7 +11,7 @@
     <div class="grid sm:grid-cols-2 grid-cols-1 gap-4">
         <a href="/admin/calendar" class="card-link border-yellow">
             <span class="text-yellow text-card-title">calendar</span>
-            <span class="subtitle">manage calendar access</span>
+            <span class="subtitle">manage calendar access, event types and events</span>
         </a>
         <a href="/admin/games" class="card-link border-green">
             <span class="text-green text-card-title">games</span>

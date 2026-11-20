@@ -1,0 +1,163 @@
+<script lang="ts">
+    import type { Snippet } from 'svelte';
+    import { onMount, tick } from 'svelte';
+    import CustomH2 from '$lib/components/shared/CustomH2.svelte';
+    import { calendarMonths, formatCalendarDate } from '$lib/utils/shared/calendar';
+
+    let {
+        date, firstDate, lastYear = 9999, id = 'calendar-months',
+        label = 'Calendar date picker', children, dayHref = (day) => `?date=${day}`,
+        yearHref, dayStatus, currentMonthDate
+    }: {
+        date: string;
+        firstDate: string;
+        lastYear?: number;
+        id?: string;
+        label?: string;
+        children?: Snippet;
+        dayHref?: (day: string) => string;
+        yearHref?: (year: number) => string;
+        currentMonthDate?: string;
+        dayStatus?: (day: string) => { className: string; label: string; backgroundColor?: string } | undefined;
+    } = $props();
+    const weekdayFormat = new Intl.DateTimeFormat('en-GB', { weekday: 'long', timeZone: 'UTC' });
+    const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    let year = $derived(Number(date.slice(0, 4)));
+    let firstYear = $derived(Number(firstDate.slice(0, 4)));
+    let firstMonth = $derived(year === firstYear ? Number(firstDate.slice(5, 7)) - 1 : 0);
+    let months = $derived(calendarMonths(year).slice(firstMonth));
+    let selectedMonth = $derived(Number(date.slice(5, 7)) - 1 - firstMonth);
+
+    let viewport: HTMLDivElement;
+    let visibleMonths = $state(1);
+    let start = $state(0);
+    let lastStart = $derived(Math.max(0, months.length - visibleMonths));
+    let lastVisible = $derived(Math.min(start + visibleMonths - 1, months.length - 1));
+    let range = $derived(start === lastVisible ? months[start]?.name : `${months[start]?.name} – ${months[lastVisible]?.name}`);
+
+    function hrefForYear(target: number) {
+        return yearHref?.(target) ?? dayHref(target === firstYear ? firstDate : `${target}-01-01`);
+    }
+
+    function monthWidth() {
+        return (viewport.firstElementChild?.getBoundingClientRect().width ?? 0) +
+            parseFloat(getComputedStyle(viewport).columnGap);
+    }
+
+    function moveTo(index: number, smooth = true) {
+        const target = Math.max(0, Math.min(lastStart, index));
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        viewport.scrollTo({ left: target * monthWidth(), behavior: smooth && !reduceMotion ? 'smooth' : 'instant' });
+        if (!smooth || reduceMotion) start = target;
+    }
+
+    function trackScroll() {
+        const width = monthWidth();
+        if (width) start = Math.max(0, Math.min(lastStart, Math.round(viewport.scrollLeft / width)));
+    }
+
+    onMount(() => {
+        const observer = new ResizeObserver(() => {
+            const size = Number(getComputedStyle(viewport).getPropertyValue('--visible-months'));
+            if (size !== visibleMonths) {
+                visibleMonths = size;
+                moveTo(start, false);
+            }
+        });
+        observer.observe(viewport);
+        return () => observer.disconnect();
+    });
+
+    $effect(() => {
+        const index = selectedMonth;
+        const selectedYear = year;
+        void tick().then(() => {
+            if (year !== selectedYear) return;
+            const visibleStart = start;
+            if (index < visibleStart || index >= visibleStart + visibleMonths) moveTo(index, false);
+        });
+    });
+</script>
+
+<section class="min-w-0" aria-label={label}>
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <CustomH2>{year}</CustomH2>
+        <nav class="flex flex-wrap gap-4 text-secondary" aria-label="Calendar years">
+            {#if year > firstYear}
+                <a class="internal-link" href={hrefForYear(year - 1)}>[← {year - 1}]</a>
+            {/if}
+            {#if year < lastYear}
+                <a class="internal-link" href={hrefForYear(year + 1)}>[{year + 1} →]</a>
+            {/if}
+        </nav>
+    </div>
+    {@render children?.()}
+    <div class="mb-3 flex items-center justify-between gap-4">
+        <p class="text-secondary" aria-live="polite" aria-atomic="true">{range}</p>
+        <div class="flex gap-2">
+            <button type="button" class="action-icon" aria-label="Previous months" aria-controls={id}
+                disabled={start === 0} onclick={() => moveTo(start - visibleMonths)}><span aria-hidden="true">←</span></button>
+            <button type="button" class="action-icon" aria-label="Next months" aria-controls={id}
+                disabled={start >= lastStart} onclick={() => moveTo(start + visibleMonths)}><span aria-hidden="true">→</span></button>
+        </div>
+    </div>
+
+    <div {id} class="months" bind:this={viewport} onscroll={trackScroll}>
+        {#each months as month (month.dates[0])}
+            <div class="min-w-0 snap-start" role="group" aria-label={`${month.name} ${year}`}>
+                <h3 class="section-label mb-2 {month.dates[0]?.slice(0, 7) === (currentMonthDate ?? date).slice(0, 7)
+                    ? 'bg-purple text-bg0' : 'bg-bg1 text-fg0'}">{month.name}</h3>
+                <div class="surface-card grid grid-cols-7 gap-1 p-2">
+                    {#each weekdays as weekday}
+                        <span class="pb-1 text-center text-meta text-gray" title={weekday} aria-hidden="true">{weekday.slice(0, 1)}</span>
+                    {/each}
+                    {#each Array(month.offset) as _}<span></span>{/each}
+                    {#each month.dates as day}
+                        {@const status = dayStatus?.(day)}
+                        {@const surface = status?.className ?? 'bg-bg2 hover:bg-bg3'}
+                        {@const dayLabel = `${weekdayFormat.format(new Date(day))} ${formatCalendarDate(day)}`}
+                        <a href={dayHref(day)} data-sveltekit-noscroll
+                            class="flex aspect-square min-h-6 items-center justify-center text-meta tabular-nums {day === date
+                                ? (status?.backgroundColor ? `${surface} ring-2 ring-inset ring-purple font-semibold` : 'bg-purple text-bg0 font-semibold')
+                                : surface}"
+                            style:background-color={status?.backgroundColor}
+                            aria-current={day === date ? 'date' : undefined}
+                            aria-label={status?.label ? `${dayLabel}: ${status.label}` : dayLabel}
+                            title={status?.label || undefined}
+                        >
+                            {Number(day.slice(-2))}
+                        </a>
+                    {/each}
+                </div>
+            </div>
+        {/each}
+    </div>
+</section>
+
+<style>
+    .months {
+        --visible-months: 1;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 100%;
+        gap: 1rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+    }
+    .months::-webkit-scrollbar { display: none; }
+    @media (min-width: 640px) {
+        .months {
+            --visible-months: 2;
+            grid-auto-columns: calc((100% - 1rem) / 2);
+        }
+    }
+    @media (min-width: 1024px) {
+        .months {
+            --visible-months: 4;
+            grid-auto-columns: calc((100% - 3rem) / 4);
+        }
+    }
+</style>

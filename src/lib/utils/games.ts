@@ -1,3 +1,6 @@
+import { validDate } from './shared/calendar.ts';
+export { calendarMonths, validDate } from './shared/calendar.ts';
+
 export const games = {
     wordle: { name: 'wordle', endpoint: 'wordles', solutions: 'wordle-solutions' },
     'la-palabra-del-dia': { name: 'la palabra del día', endpoint: 'spanish-wordles', solutions: 'spanish-wordle-solutions' },
@@ -14,9 +17,6 @@ const DAY = 86_400_000;
 const PUZZLE_ANCHOR = Date.UTC(2026, 10, 14);
 const PUZZLE_NUMBERS: Record<Game, number> = { wordle: 1974, 'la-palabra-del-dia': 1773, isaaconnect: 856 };
 
-export function validDate(value: string): boolean {
-    return /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
-}
 export function puzzleDay(game: Game, date: string): number {
     if (!validDate(date)) throw new Error('Choose a valid date.');
     return PUZZLE_NUMBERS[game] + Math.round((Date.parse(date) - PUZZLE_ANCHOR) / DAY);
@@ -26,13 +26,6 @@ export function isaacDay(date: string): number {
 }
 export function recordDate(record: GameRecord): string {
     return 'date' in record ? record.date : new Date(PUZZLE_ANCHOR + (record.day - PUZZLE_NUMBERS.isaaconnect) * DAY).toISOString().slice(0, 10);
-}
-export function calendarMonths(year: number) {
-    return Array.from({ length: 12 }, (_, month) => ({
-        name: new Intl.DateTimeFormat('en', { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(year, month, 1))),
-        offset: (new Date(Date.UTC(year, month, 1)).getUTCDay() + 6) % 7,
-        dates: Array.from({ length: new Date(Date.UTC(year, month + 1, 0)).getUTCDate() }, (_, day) => `${year}-${String(month + 1).padStart(2, '0')}-${String(day + 1).padStart(2, '0')}`)
-    }));
 }
 export function playerCounts(records: GameRecord[]): Record<string, number> {
     const byDate = new Map<string, Set<string>>();
