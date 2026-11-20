@@ -1,7 +1,7 @@
 <script lang="ts">
     import {formatExactDate, getShortTimeFromNow, getTimeFromNow} from "$lib/utils/shared/dates.ts";
     import Score from "$lib/components/media/generic/Score.svelte";
-    import MediaColoredTitle from "$lib/components/media/generic/MediaColoredTitle.svelte";
+    import ColoredSectionTitle from "$lib/components/shared/ColoredSectionTitle.svelte";
 
     let { recentlyReadBooks }: {
         recentlyReadBooks: RecentlyReadBook[];
@@ -9,7 +9,7 @@
 </script>
 
 <div class="flex flex-col gap-2 w-full">
-    <MediaColoredTitle title="recent reads" bgColor="bg-green" />
+    <ColoredSectionTitle title="recent reads" bgColor="bg-green" />
     <ul class="card-list" role="list">
         {#each recentlyReadBooks as book}
             <li class="surface-card flex min-h-20 w-full">

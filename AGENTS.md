@@ -24,9 +24,19 @@ page also attempts to prefetch in its universal load function.
 - `src/routes/pick-the-grid/`: game page and prefetch load function.
 - `src/routes/pics/+page.svelte`: placeholder page.
 - `src/routes/admin/`: admin landing page and initial user administration.
-- `src/routes/admin/calendar/`: admin-only calendar membership management; membership
-  is stored in `calendar_member` with cascading user deletion. Calendar pages and
+- `src/routes/admin/calendar/`: admin-only hub linking to the `access`, `types`,
+  `events`, and `game-results` subpages. Calendar access lives in `calendar_member` with cascading
+  user deletion. Each subpage requires an admin for its load and actions. Calendar pages and
   actions must call `requireCalendarMember` in `src/lib/server/calendar/access.ts`.
+- `src/routes/calendar/`: member-only calendar starting in August 2026. The month
+  picker shows up to four months on desktop, two on tablets, and one on mobile.
+  The selected date lives in the `date` query parameter and drives the day panel.
+  The day panel reads and posts comments through `ratonazul_com_api`. Each member
+  can post one comment per date. The editor and comment cards use `UserAvatar`
+  and resolve current profile details from the website database. Members can also
+  add typed daily events. The first type in the admin priority order supplies
+  the cell color when a day has multiple events. The root layout
+  exposes membership to all navbars.
 - `src/routes/profile/[userId]/`: owner-only profile editing and account deletion
   using Better Auth. The header links to the current user's profile.
 - `src/routes/admin/games/`: game cards and per-game calendar/result management
@@ -35,7 +45,7 @@ page also attempts to prefetch in its universal load function.
   yearly calendar, accessible colored board and result editor. Result cards use
   two columns on large screens, labeled edit/delete icon buttons, and Wordle
   score/answer summaries below each board.
-  The calendar pages through six month cards on desktop, three on tablets, and one on mobile,
+  The calendar uses the shared `MonthPicker` for four months on desktop, two on tablets, and one on mobile,
   with arrows and native horizontal swipe/scroll snapping. It opens at the
   selected date's month and retains separate year navigation.
 - `src/lib/server/games-api.ts`: server-only JWT client for `ratonazul_com_api`;
@@ -138,7 +148,7 @@ local Motorsport demo player IDs without adding auth accounts.
   Reuse the documented typography and component styles. When requested styles
   change, update their shared definitions, migrate every relevant use across
   the site, and update the guide in the same change.
-- Media sections use `MediaColoredTitle` with `gap-2` between a title and its
+- Media sections use `ColoredSectionTitle` with `gap-2` between a title and its
   content and `gap-4` between the current/recent sections. Relative media dates
   come from `src/lib/utils/shared/dates.ts`; `formatExactDate` is used for the
   hover tooltip and strict relative formatting floors elapsed units.

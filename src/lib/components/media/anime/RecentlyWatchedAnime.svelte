@@ -2,7 +2,7 @@
     import RecentMediaMiniCard from "$lib/components/media/generic/RecentMediaMiniCard.svelte";
     import {miniCardItemFromBasicAnime} from "$lib/types/mediaTracker/generic.ts";
     import {getRecentlyWatchedListSize} from "$lib/utils/mediaTracker/utils.ts";
-    import MediaColoredTitle from "$lib/components/media/generic/MediaColoredTitle.svelte";
+    import ColoredSectionTitle from "$lib/components/shared/ColoredSectionTitle.svelte";
 
     let { recentlyWatchedAnime, currentlyWatchingSize }: {
         recentlyWatchedAnime: BasicAnime[],
@@ -13,7 +13,7 @@
 </script>
 
 <div class="flex flex-col gap-2 w-full">
-    <MediaColoredTitle title="recently watched" bgColor="bg-green" />
+    <ColoredSectionTitle title="recently watched" bgColor="bg-green" />
     <ul class="card-list" role="list">
         {#each recentlyWatchedAnime.slice(0, listSize) as anime}
             <li><RecentMediaMiniCard recentItem={miniCardItemFromBasicAnime(anime)} /></li>

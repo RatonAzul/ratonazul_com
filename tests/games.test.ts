@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calendarMonths, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, playerCounts, recordDate, scoreGuess, validDate, wordleResult, wordleBoardResult } from '../src/lib/utils/games.ts';
+import { gameResultSummary } from '../src/lib/utils/game-result-summary.ts';
+import { calendarMonths, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, playerCounts, recordDate, scoreGuess, validDate, wordleResult, wordleBoardResult, type GameRecord } from '../src/lib/utils/games.ts';
 
 test('board-only Wordle stops at the first green row or scores X/6', () => {
     assert.deepEqual(wordleBoardResult('xixxx' + 'ooooo' + 'i'.repeat(20)), { board: 'xixxxooooo', score: 2, is_simple: true, words: [] });
@@ -111,4 +112,31 @@ test('Spanish share validates score, board rows, completion and puzzle number', 
     assert.equal(parseSpanishWordle(failed).score, 7);
     assert.equal(parseSpanishWordle(failed).board.length, 30);
     assert.throws(() => parseSpanishWordle(failed.replace('X/6', '6/6')));
+});
+
+test('calendar summarizes Wordle wins, ties, and shared failures in Spanish', () => {
+    const play = (user_id: string, score: number): GameRecord => ({
+        id: score, day: 1974, date: '2026-11-14', user_id, score, board: '', is_simple: true, words: []
+    });
+    const name = (id: string) => id === 'c' ? 'Celia' : 'Diego';
+    assert.equal(gameResultSummary('wordle', [play('c', 3)], name), '');
+    assert.equal(gameResultSummary('wordle', [play('d', 5), play('c', 3)], name), 'Celia ganó 3/6 vs 5/6 a Diego en el wordle');
+    assert.equal(gameResultSummary('wordle', [play('d', 7), play('c', 3)], name), 'Celia ganó 3/6 vs X/6 a Diego en el wordle');
+    assert.equal(gameResultSummary('wordle', [play('d', 5), play('c', 5)], name), 'Celia y Diego empataron con 5/6 en el wordle');
+    assert.equal(gameResultSummary('wordle', [play('d', 7), play('c', 7)], name), 'Celia y Diego fallaron el wordle (X/6)');
+    assert.equal(gameResultSummary('la-palabra-del-dia', [play('d', 5), play('c', 5)], name), 'Celia y Diego empataron con 5/6 en La Palabra del Día');
+});
+
+test('calendar ranks Isaaconnect by points, lives and time using each player’s best attempt', () => {
+    const play = (user_id: string, points: number, lifes: number, time: number): GameRecord => ({
+        id: time, day: 856, user_id, points, lifes, time, board: []
+    });
+    const name = (id: string) => id === 'c' ? 'Celia' : 'Diego';
+    const celia = play('c', 4, 3, 60);
+    assert.equal(gameResultSummary('isaaconnect', [celia, play('c', 3, 4, 30)], name), '');
+    assert.equal(gameResultSummary('isaaconnect', [celia, play('d', 3, 4, 30)], name), 'Celia ganó');
+    assert.equal(gameResultSummary('isaaconnect', [celia, play('d', 4, 2, 30)], name), 'Celia ganó');
+    assert.equal(gameResultSummary('isaaconnect', [celia, play('d', 4, 3, 30)], name), 'Diego ganó');
+    assert.equal(gameResultSummary('isaaconnect', [celia, play('d', 4, 3, 60), play('c', 3, 3, 30)], name), 'Celia y Diego empataron');
+    assert.equal(gameResultSummary('isaaconnect', [play('c', 3, 3, 30), play('d', 2, 1, 60)], name), 'Celia y Diego perdieron');
 });

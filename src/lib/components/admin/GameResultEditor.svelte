@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { formatCalendarDate } from '$lib/utils/shared/calendar';
     import { enhance } from '$app/forms';
     import { tick, untrack } from 'svelte';
     import { games, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, wordleResult, wordleBoardResult, normalizeWord, type Game, type GameRecord, type Player } from '$lib/utils/games';
@@ -142,7 +143,7 @@
                         <div class="flex flex-wrap gap-5 items-start">
                             <GameBoard rows={preview.rows} isaac />
                             <dl class="text-secondary text-fg0 grid grid-cols-2 gap-x-4 gap-y-2">
-                                <dt class="text-gray">date</dt><dd><time datetime={date}>{date}</time></dd>
+                                <dt class="text-gray">date</dt><dd><time datetime={date}>{formatCalendarDate(date)}</time></dd>
                                 <dt class="text-gray">points</dt><dd>{preview.result.points}/4</dd>
                                 <dt class="text-gray">lives</dt><dd>{preview.result.lifes}/4</dd>
                                 <dt class="text-gray">time</dt><dd>{Math.floor(preview.result.time / 60)}:{String(preview.result.time % 60).padStart(2, '0')}</dd>
@@ -153,7 +154,7 @@
                             <div class="flex flex-wrap gap-5 items-start">
                                 <GameBoard rows={preview.rows} words={preview.words} />
                                 <dl class="text-secondary text-fg0 grid grid-cols-2 gap-x-4 gap-y-2">
-                                    <dt class="text-gray">date</dt><dd><time datetime={date}>{date}</time></dd>
+                                    <dt class="text-gray">date</dt><dd><time datetime={date}>{formatCalendarDate(date)}</time></dd>
                                 </dl>
                             </div>
                             <p class="text-secondary text-fg0"><span class={preview.result.score === 7 ? 'text-red' : 'text-green'}>{preview.result.score === 7 ? 'X' : preview.result.score}/6</span> - {solution.trim().toLowerCase() || 'not recorded'}</p>

@@ -1,8 +1,9 @@
 <script>
-    import { ListIcon, CameraIcon, TelevisionSimpleIcon, TireIcon, ShieldIcon } from "phosphor-svelte";
+    import { ListIcon, CameraIcon, TelevisionSimpleIcon, TireIcon, CalendarIcon, ShieldIcon } from "phosphor-svelte";
     import {DropdownMenu} from "bits-ui";
     import {page} from "$app/state";
     import {useSession} from "$lib/auth-client.ts";
+    let canAccessCalendar = $derived(page.data.canAccessCalendar);
     let currentPath = $derived(page.url.pathname)
 
     const session = useSession()
@@ -13,6 +14,7 @@
     {@render link("/media", "media")}
     {@render link("/pics", "pics")}
     {@render link("/motorsport", "motorsport")}
+    {#if canAccessCalendar}{@render link("/calendar", "calendar")}{/if}
     {#if isAdmin}{@render link("/admin", "admin")}{/if}
 </nav>
 
@@ -34,6 +36,12 @@
                 <TireIcon class="sm:size-6 size-5"/>
                 {@render link("/motorsport", "motorsport", "text-gray")}
             </DropdownMenu.Item>
+            {#if canAccessCalendar}
+                <DropdownMenu.Item class="menu-item">
+                    <CalendarIcon class="sm:size-6 size-5"/>
+                    {@render link("/calendar", "calendar", "text-gray")}
+                </DropdownMenu.Item>
+            {/if}
             {#if isAdmin}
                 <DropdownMenu.Item class="menu-item">
                     <ShieldIcon class="sm:size-6 size-5"/>

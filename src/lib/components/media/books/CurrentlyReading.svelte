@@ -1,6 +1,6 @@
 <script lang="ts">
     import {formatExactDate, getShortTimeFromNow, getTimeFromNow} from "$lib/utils/shared/dates.ts";
-    import MediaColoredTitle from "$lib/components/media/generic/MediaColoredTitle.svelte";
+    import ColoredSectionTitle from "$lib/components/shared/ColoredSectionTitle.svelte";
 
     let { currentlyReadingBooks}: {
         currentlyReadingBooks: CurrentlyReadingBook[]
@@ -10,7 +10,7 @@
 </script>
 
 <div class="flex flex-col gap-2 w-full">
-    <MediaColoredTitle title="currently reading" bgColor="bg-yellow" />
+    <ColoredSectionTitle title="currently reading" bgColor="bg-yellow" />
     <div class="surface-card flex min-h-40 w-full">
         {#if currentlyReadingBooks.length === 1}
             <img src="{mostRecentBook?.coverImage}" alt="{mostRecentBook?.title}" class="h-40 w-28 shrink-0 object-cover">
