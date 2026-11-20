@@ -75,7 +75,7 @@
                                 <EventTypeIcon icon={event.icon} />
                                 <span class="truncate">{event.type_name}</span>
                             </span>
-                            <span class="min-w-0 truncate">{event.content}</span>
+                            <span class="min-w-0 {event.auto_game ? 'wrap-anywhere' : 'truncate'}">{event.content}</span>
                         </li>
                     {/each}
                 </ul>

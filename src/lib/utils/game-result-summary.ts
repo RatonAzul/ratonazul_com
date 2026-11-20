@@ -20,7 +20,7 @@ export function gameResultSummary(game: Game, records: GameRecord[], playerName:
 
     if ('points' in first && 'points' in second) {
         if (first.points < 4 && second.points < 4) return `${pair} perdieron`;
-        return compareIsaac(first, second) === 0 ? `${pair} empataron` : `${firstName} ganó`;
+        return compareIsaac(first, second) === 0 ? `${pair} empataron` : `${firstName} ganó en el Isaaconnect`;
     }
     if ('score' in first && 'score' in second) {
         const gameName = game === 'wordle' ? 'el wordle' : 'La Palabra del Día';
