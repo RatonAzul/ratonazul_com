@@ -30,11 +30,11 @@ function report(cause: unknown) {
 export const load: PageServerLoad = async ({ request, params, url }) => {
     const actor = await requireAdmin(request);
     const config = gameConfig(params.game);
-    const currentYear = new Date().getFullYear();
+    const today = new Intl.DateTimeFormat('sv-SE', { dateStyle: 'short', timeZone: 'Europe/Madrid' }).format(new Date());
+    const currentYear = Number(today.slice(0, 4));
     const rawYear = url.searchParams.get('year') ?? String(currentYear);
     const year = Number(rawYear);
     if (!/^\d{4}$/.test(rawYear) || year < 2026 || year > currentYear) error(400, 'Choose a year from 2026 to the current year.');
-    const today = new Date().toISOString().slice(0, 10);
     const date = url.searchParams.get('date') ?? (year === currentYear ? today : `${year}-01-01`);
     if (!validDate(date) || Number(date.slice(0, 4)) !== year) error(400, 'Choose a valid date within the selected year.');
     const players = await db.select({ id: user.id, name: user.name, username: user.username }).from(user).orderBy(user.name);

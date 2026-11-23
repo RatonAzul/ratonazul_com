@@ -37,7 +37,7 @@
                 <h2 id="point-system-title" class="mb-4 min-h-10 content-center pr-12 text-blue">point system</h2>
                 <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
                     <section>
-                        <h3 class="mb-3 text-green">qualifying time</h3>
+                        <h3 class="mb-3 bg-green">qualifying time</h3>
                         <div class="flex flex-col gap-2 text-meta">
                             {@render pointRow("exact time", "+20 pts", "bg-purple")}
                             {@render pointRow("within 0.500s", "+5 pts", "bg-green")}
@@ -47,7 +47,7 @@
                     </section>
 
                     <section>
-                        <h3 class="mb-3 text-green">driver guesses</h3>
+                        <h3 class="mb-3 bg-green">driver guesses</h3>
                         <div class="flex flex-col gap-2 text-meta">
                             {@render pointRow("exact position", "+5 pts", "bg-purple")}
                             {@render pointRow("within 1 position", "+3 pts", "bg-green")}

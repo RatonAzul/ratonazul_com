@@ -137,6 +137,6 @@ test('calendar ranks Isaaconnect by points, lives and time using each player’s
     assert.equal(gameResultSummary('isaaconnect', [celia, play('d', 3, 4, 30)], name), 'Celia ganó en el Isaaconnect');
     assert.equal(gameResultSummary('isaaconnect', [celia, play('d', 4, 2, 30)], name), 'Celia ganó en el Isaaconnect');
     assert.equal(gameResultSummary('isaaconnect', [celia, play('d', 4, 3, 30)], name), 'Diego ganó en el Isaaconnect');
-    assert.equal(gameResultSummary('isaaconnect', [celia, play('d', 4, 3, 60), play('c', 3, 3, 30)], name), 'Celia y Diego empataron');
-    assert.equal(gameResultSummary('isaaconnect', [play('c', 3, 3, 30), play('d', 2, 1, 60)], name), 'Celia y Diego perdieron');
+    assert.equal(gameResultSummary('isaaconnect', [celia, play('d', 4, 3, 60), play('c', 3, 3, 30)], name), 'Celia y Diego empataron en el Isaaconnect');
+    assert.equal(gameResultSummary('isaaconnect', [play('c', 3, 3, 30), play('d', 2, 1, 60)], name), 'Celia y Diego perdieron en el Isaaconnect');
 });

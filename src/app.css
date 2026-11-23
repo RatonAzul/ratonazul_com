@@ -35,8 +35,16 @@
     @apply text-section-title text-green;
   }
 
-  h3, h4, h5, h6 {
+  h4, h5, h6 {
     @apply text-card-title;
+  }
+
+  h3 {
+    @apply bg-aqua text-bg0;
+  }
+
+  h3, .section-label {
+    @apply flex min-h-8 items-center px-2 text-secondary font-semibold;
   }
 
   a:focus-visible, button:focus-visible, [role="button"]:focus-visible {
@@ -45,6 +53,10 @@
 }
 
 @layer components {
+  .plain-h3 {
+    @apply block min-h-0 bg-transparent p-0 text-card-title text-aqua;
+  }
+
   .surface-card, .surface-card-hover, .card-link, .list-row, .menu-panel {
     @apply bg-bg1;
   }
@@ -71,10 +83,6 @@
 
   .subtitle {
     @apply text-secondary font-normal text-gray;
-  }
-
-  .section-label {
-    @apply flex min-h-8 items-center px-2 text-secondary font-semibold;
   }
 
   .field-group-label {

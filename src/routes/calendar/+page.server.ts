@@ -26,18 +26,21 @@ export const load: PageServerLoad = async ({ request, url }) => {
     const viewer = await requireCalendarMember(request);
     const today = madridDate.format(new Date());
     const date = requestedMemberDate(url, today);
-    const [daily, yearly, eventTypes, events, eventColors] = await Promise.allSettled([
+    const year = date.slice(0, 4);
+    const [daily, yearly, eventTypes, events, eventColors, automatedDates] = await Promise.allSettled([
         gamesRequest<CalendarComment[]>(`calendar-comments/date/${date}`, viewer.id),
-        gamesRequest<string[]>(`calendar-comments/dates/${date.slice(0, 4)}`, viewer.id),
+        gamesRequest<string[]>(`calendar-comments/dates/${year}`, viewer.id),
         calendarEventsRequest<CalendarEventType[]>('/types', viewer.id),
         calendarEventsRequest<CalendarEvent[]>(`/date/${date}`, viewer.id),
-        calendarEventsRequest<Record<string, (typeof profileColors)[number] | null>>(`/colors/${date.slice(0, 4)}?include_unhighlighted=true`, viewer.id)
+        calendarEventsRequest<Record<string, (typeof profileColors)[number] | null>>(`/colors/${year}?include_unhighlighted=true`, viewer.id),
+        calendarEventsRequest<string[]>(`/automated-dates/${year}`, viewer.id)
     ]);
     const commentDates = yearly.status === 'fulfilled' ? yearly.value : [];
     const eventData = {
         eventTypes: eventTypes.status === 'fulfilled' ? eventTypes.value : [],
         events: events.status === 'fulfilled' ? events.value : [],
         eventColors: eventColors.status === 'fulfilled' ? eventColors.value : {},
+        automatedDates: automatedDates.status === 'fulfilled' ? automatedDates.value : [],
         eventsError: events.status === 'rejected' ? 'Unable to load events for this day.' : '',
         eventTypesError: eventTypes.status === 'rejected' ? 'Unable to load event types.' : '',
         maxEventLength,

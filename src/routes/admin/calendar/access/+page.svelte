@@ -15,7 +15,7 @@
     <H1WithBreadCrumb items={[{ label: 'admin', href: '/admin' }, { label: 'calendar', href: '/admin/calendar' }, { label: 'access' }]}>calendar access</H1WithBreadCrumb>
     {#if form?.message}<p class="form-feedback mb-4" role="status">{form.message}</p>{/if}
 
-    <div class="flex flex-col gap-6">
+    <div class="flex flex-col">
         {@render accessList('with access', withAccess, true)}
         <SectionSeparator />
         {@render accessList('without access', withoutAccess, false)}
