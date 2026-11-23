@@ -57,7 +57,7 @@
     <CustomH2 class="mb-3" headingClass="text-card-title" subtitle={picksSubtitle}>your picks</CustomH2>
     <BetComponent meeting={selectedMeeting} {drivers} {positionBets} {timeBets}/>
     <MeetingBetsComponent {meetingBets} {drivers} />
-    <SectionSeparator class="mb-6" />
+    <SectionSeparator />
     <section>
         <CustomH2 class="mb-3" headingClass="text-card-title" subtitle={standingsSubtitle}>standings</CustomH2>
         <StandingsTable {standings} {meetings} bind:comparisonInfo />

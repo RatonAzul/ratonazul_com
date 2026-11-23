@@ -27,7 +27,7 @@
         <div class="surface-card p-6 border-l-4 border-red" role="alert"><p class="text-red">{data.loadError}</p><a class="internal-link inline-block mt-3" href={page.url.pathname + page.url.search}>[retry loading results]</a></div>
     {:else}
         <GameCalendar year={data.year} currentYear={data.currentYear} {counts} date={data.date} today={data.today} />
-        <SectionSeparator class="my-6" />
+        <SectionSeparator />
         <div class="mb-4 flex flex-col items-start gap-1" id="daily-results">
             <div><p class="section-label mb-1">selected day</p><h2><time datetime={data.date}>{formatCalendarDate(data.date)}</time> · #{puzzleDay(data.game, data.date)}</h2></div>
             <span class="text-secondary text-gray">{counts[data.date] ?? 0} / 2 players · {data.daily.length} results</span>
@@ -37,7 +37,7 @@
                 {#each data.daily as record (record.id)}
                     <article class="surface-card min-w-0 p-4 sm:p-5 {record.id === editing?.id ? 'ring-1 ring-purple' : ''}">
                         <div class="flex flex-wrap gap-3 justify-between items-start mb-4">
-                            <div><h3>{playerName(record.user_id)}</h3><p class="text-meta text-gray mt-1">puzzle #{record.day} · result #{record.id}</p></div>
+                            <div><h3 class="plain-h3">{playerName(record.user_id)}</h3><p class="text-meta text-gray mt-1">puzzle #{record.day} · result #{record.id}</p></div>
                             <div class="flex gap-2 items-center text-secondary">
                                 <a class="action-icon" href={`?year=${data.year}&date=${data.date}&edit=${record.id}#daily-results`} aria-label={`Edit ${playerName(record.user_id)}’s result`} title="Edit result"><PencilIcon size={18} aria-hidden="true" /></a>
                                 <form method="POST" action="?/delete" use:enhance={({ cancel }) => {
@@ -60,7 +60,7 @@
                         {/if}
                     </article>
                 {:else}
-                    <div class="surface-card p-6 border-l-4 border-bg3 xl:col-span-2"><h3 class="mb-2">no results yet</h3><p class="text-secondary text-gray">{data.date > data.today ? 'This day is still ahead. You can enter results once it arrives.' : 'Choose a player and add their daily result.'}</p></div>
+                    <div class="surface-card p-6 border-l-4 border-bg3 xl:col-span-2"><h3 class="plain-h3 mb-2">no results yet</h3><p class="text-secondary text-gray">{data.date > data.today ? 'This day is still ahead. You can enter results once it arrives.' : 'Choose a player and add their daily result.'}</p></div>
                 {/each}
             </div>
             {#if data.date <= data.today}

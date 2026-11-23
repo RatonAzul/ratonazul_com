@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { GearIcon, PlusIcon } from 'phosphor-svelte';
+    import { GearIcon, PaperPlaneRightIcon, PlusIcon } from 'phosphor-svelte';
     import EventTypeIcon from '$lib/components/shared/EventTypeIcon.svelte';
     import CalendarDateField from '$lib/components/shared/CalendarDateField.svelte';
     import { formatCalendarDate } from '$lib/utils/shared/calendar';
@@ -18,42 +18,46 @@
 
     let eventStartDate = $derived(eventForm?.startDate ?? data.date);
     const commentedDates = $derived(new Set(data.commentDates));
+    const automatedDates = $derived(new Set(data.automatedDates));
+    const regularEvents = $derived(data.events.filter((event) => !event.auto_game));
+    const gameEvents = $derived(data.events.filter((event) => event.auto_game));
 
     function dayStatus(day: string) {
-        const isToday = day === data.today;
         const hasComments = commentedDates.has(day);
         const eventColor = data.eventColors[day];
         const hasEvents = Object.hasOwn(data.eventColors, day);
         const hasActivity = hasComments || hasEvents;
-        const hasSolidEventColor = eventColor && eventColor !== 'purple';
-        const surface = hasActivity ? 'bg-bg2 hover:bg-bg3' : 'bg-bg0 hover:bg-bg2 focus-visible:bg-bg2';
-        const text = hasSolidEventColor ? 'text-bg0 font-semibold'
+        const hasAutomatedEvent = automatedDates.has(day);
+        const surface = hasAutomatedEvent ? 'bg-bg2 hover:bg-bg3' : 'bg-bg0 hover:bg-bg2 focus-visible:bg-bg2';
+        const text = eventColor ? 'font-semibold'
             : hasActivity ? 'text-fg0' : 'text-gray hover:text-fg0 focus-visible:text-fg0';
-        const label = [isToday ? 'today' : '', hasComments ? 'has comments' : '', hasEvents ? 'has events' : ''].filter(Boolean).join(', ');
+        const label = [hasComments ? 'has comments' : '', hasEvents ? 'has events' : ''].filter(Boolean).join(', ');
         return {
             className: `${surface} ${text}`,
             label,
-            backgroundColor: eventColor === 'purple'
-                ? 'color-mix(in srgb, var(--purple) 25%, var(--bg2))'
-                : eventColor ? `var(--${eventColor})` : undefined
+            hasComments,
+            color: eventColor ? `var(--${eventColor})` : undefined,
+            backgroundColor: eventColor
+                ? `color-mix(in srgb, var(--${eventColor}) ${eventColor === 'red' ? 15 : 25}%, transparent)`
+                : undefined
         };
     }
 </script>
 
 <Body>
     <CustomH1>calendar</CustomH1>
-    <MonthPicker date={data.date} firstDate={data.firstDate} {dayStatus} currentMonthDate={data.today} />
-    <SectionSeparator class="my-6" />
-    <section class="flex flex-col gap-4" aria-labelledby="calendar-day-title">
-        <h2 id="calendar-day-title" aria-live="polite">
+    <MonthPicker date={data.date} firstDate={data.firstDate} {dayStatus} today={data.today} />
+    <SectionSeparator />
+    <section aria-labelledby="calendar-day-title">
+        <h2 id="calendar-day-title" class="mb-4" aria-live="polite">
             <time datetime={data.date}>{formatCalendarDate(data.date)}</time>
         </h2>
 
         <section class="flex flex-col gap-4" aria-labelledby="calendar-events-title">
-            <div class="relative">
-                <ColoredSectionTitle id="calendar-events-title" title="events" bgColor="bg-yellow" class={data.isAdmin ? 'pr-10' : ''} />
+            <div class="flex gap-2">
+                <ColoredSectionTitle id="calendar-events-title" title="events" bgColor="bg-yellow" class="min-w-0 flex-1 text-base" />
                 {#if data.isAdmin}
-                    <a class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-bg0 hover:bg-yellow-dark focus-visible:-outline-offset-2"
+                    <a class="action-icon h-auto min-h-8 w-12"
                         href={`/admin/calendar/events?date=${data.date}`} aria-label="Manage events" title="Manage events">
                         <GearIcon size={18} aria-hidden="true" />
                     </a>
@@ -67,24 +71,28 @@
                 <p class="form-feedback text-red" role="alert">{eventForm.message}</p>
             {/if}
 
-            {#if data.events.length}
-                <ul class="flex min-w-0 flex-col gap-2 text-secondary" role="list">
-                    {#each data.events as event, index (event.id)}
-                        <li class="flex min-w-0 items-center gap-2" class:mt-2={index > 0 && data.events[index - 1].type_id !== event.type_id} title={`${event.type_name} · ${event.content}`}>
-                            <span class="flex max-w-[45%] min-w-0 shrink-0 items-center gap-1.5 font-semibold" style:color={`var(--${event.color})`}>
-                                <EventTypeIcon icon={event.icon} />
-                                <span class="truncate">{event.type_name}</span>
-                            </span>
-                            <span class="min-w-0 {event.auto_game ? 'wrap-anywhere' : 'truncate'}">{event.content}</span>
-                        </li>
-                    {/each}
-                </ul>
-            {/if}
+            {#each [regularEvents, gameEvents] as events}
+                {#if events.length}
+                    <ul class="flex min-w-0 flex-col gap-2 text-secondary max-sm:text-xs" role="list">
+                        {#each events as event (event.id)}
+                            <li class="flex min-w-0 items-start gap-2"
+                                title={`${event.type_name} · ${event.content}`}>
+                                <span class="flex max-w-[45%] min-w-0 shrink-0 items-center gap-1.5 font-semibold" style:color={`var(--${event.color})`}>
+                                    <EventTypeIcon icon={event.icon} />
+                                    <span class="truncate">{event.type_name}</span>
+                                    <span class="shrink-0" aria-hidden="true">·</span>
+                                </span>
+                                <span class="min-w-0 {event.auto_game ? 'wrap-anywhere' : 'truncate'}">{event.content}</span>
+                            </li>
+                        {/each}
+                    </ul>
+                {/if}
+            {/each}
 
             {#if data.eventTypes.length}
                 {#key data.date}
-                    <details class="group" class:mt-2={data.events.length > 0} open={!!eventForm}>
-                        <summary class="internal-link flex w-fit cursor-pointer list-none items-center gap-2 text-secondary [&::-webkit-details-marker]:hidden">
+                    <details class="group" open={!!eventForm}>
+                        <summary class="internal-link flex w-fit cursor-pointer list-none items-center gap-2 text-secondary max-sm:text-xs [&::-webkit-details-marker]:hidden">
                             <PlusIcon size={16} class="group-open:rotate-45" aria-hidden="true" />
                             add event
                         </summary>
@@ -120,27 +128,26 @@
         <SectionSeparator />
 
         <section class="flex flex-col gap-4" aria-labelledby="calendar-comments-title">
-            <ColoredSectionTitle id="calendar-comments-title" title="comments" bgColor="bg-green" />
+            <ColoredSectionTitle id="calendar-comments-title" title="comments" bgColor="bg-green" class="text-base" />
             {#if data.loadError}
-                <p class="form-feedback text-red" role="alert">{data.loadError}</p>
+                <p class="form-feedback text-red max-sm:text-xs" role="alert">{data.loadError}</p>
             {:else}
                 {#if commentForm?.message}
-                    <p class="form-feedback text-red" role="alert">{commentForm.message}</p>
+                    <p class="form-feedback text-red max-sm:text-xs" role="alert">{commentForm.message}</p>
                 {/if}
 
                 {#if data.viewer && !data.ownComment}
                     {#key data.date}
                         <form method="POST" action={`?/comment&date=${data.date}`}
-                            class="surface-card flex min-h-14 items-start gap-3 border-r-4 p-3 sm:items-center"
-                            style:border-right-color={`var(--${data.viewer.color})`}>
-                            <UserAvatar image={data.viewer.image} name={data.viewer.name} class="size-12 aspect-square" />
-                            <div class="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-                                <label class="sr-only" for="calendar-comment">your comment</label>
-                                <textarea id="calendar-comment" class="form-field min-w-0 resize-y" name="content" rows="2"
-                                    placeholder="your comment" maxlength={data.maxCommentLength}
-                                    value={commentForm?.content ?? ''} required></textarea>
-                                <button type="submit" class="button button-primary self-start sm:self-center">send</button>
-                            </div>
+                            class="surface-card flex min-h-14 items-center gap-2 p-3 sm:gap-3">
+                            <UserAvatar image={data.viewer.image} name={data.viewer.name} class="size-12 aspect-square max-sm:text-xs" />
+                            <label class="sr-only" for="calendar-comment">your comment</label>
+                            <textarea id="calendar-comment" class="form-field min-w-0 flex-1 resize-y max-sm:text-xs" name="content" rows="2"
+                                placeholder="your comment" maxlength={data.maxCommentLength}
+                                value={commentForm?.content ?? ''} required></textarea>
+                            <button type="submit" class="button button-primary size-12 p-0" aria-label="Send comment" title="Send comment">
+                                <PaperPlaneRightIcon size={20} aria-hidden="true" />
+                            </button>
                         </form>
                     {/key}
                 {/if}
@@ -149,11 +156,11 @@
                     <ul class="card-list" role="list">
                         {#each data.comments as comment (comment.id)}
                             <li class="surface-card flex min-h-14 gap-3 border-r-4 p-3" style:--author-color={`var(--${comment.author.color})`} style:border-right-color="var(--author-color)">
-                                <UserAvatar image={comment.author.image} name={comment.author.name} class="size-12 aspect-square self-start" />
-                                <div class="min-w-0 flex-1 self-center text-secondary">
+                                <UserAvatar image={comment.author.image} name={comment.author.name} class="size-12 aspect-square self-start max-sm:text-xs" />
+                                <div class="min-w-0 flex-1 self-center text-secondary max-sm:text-xs">
                                     <div class="flex flex-wrap items-baseline gap-x-2">
-                                        <p class="text-card-title wrap-anywhere" style:color="var(--author-color)">{comment.author.name}</p>
-                                        <time class="text-meta text-gray" datetime={comment.created_at}>
+                                        <p class="text-card-title wrap-anywhere max-sm:text-sm" style:color="var(--author-color)">{comment.author.name}</p>
+                                        <time class="text-meta text-gray max-sm:text-[11px]" datetime={comment.created_at}>
                                             {postedAtFormat.format(new Date(comment.created_at))}
                                         </time>
                                     </div>

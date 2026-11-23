@@ -5,7 +5,8 @@
     import EventTypeHighlightToggle from '$lib/components/admin/EventTypeHighlightToggle.svelte';
     import EventTypeColorSelect from '$lib/components/admin/EventTypeColorSelect.svelte';
     import { ArrowDownIcon, ArrowUpIcon, DotsSixVerticalIcon, TrashIcon } from 'phosphor-svelte';
-    import { calendarEventIcons, type CalendarEventIcon } from '$lib/utils/calendar-event-icons';
+    import type { CalendarEventIcon } from '$lib/utils/calendar-event-icons';
+    import EventTypeIconSelect from '$lib/components/admin/EventTypeIconSelect.svelte';
     import EventTypeIcon from '$lib/components/shared/EventTypeIcon.svelte';
     import Body from '$lib/components/shared/Body.svelte';
     import H1WithBreadCrumb from '$lib/components/shared/H1WithBreadCrumb.svelte';
@@ -95,7 +96,7 @@
         </form>
 
         {#if order.length}
-            <SectionSeparator class="my-6" />
+            <SectionSeparator />
             <h2>priority order</h2>
             <p class="subtitle mb-3">Drag to reorder, then save. The first type has the highest priority.</p>
 
@@ -154,14 +155,6 @@
         <input id={`type-name-${key}`} class="form-field" name="name" value={name} maxlength={data.maxEventTypeName} required />
     </label>
     <EventTypeColorSelect {color} />
-    <label class="form-label" for={`type-icon-${key}`}>
-        icon
-        <select id={`type-icon-${key}`} class="form-field" name="icon" value={icon}>
-            <option value="">none</option>
-            {#each Object.entries(calendarEventIcons) as [value, label] (value)}
-                <option {value}>{label}</option>
-            {/each}
-        </select>
-    </label>
+    <EventTypeIconSelect {icon} />
     <EventTypeHighlightToggle {highlighted} />
 {/snippet}

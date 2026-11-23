@@ -22,18 +22,20 @@
 
 <Body>
     <CustomH1>media</CustomH1>
-    <div class="grid lg:grid-cols-2 grid-cols-1 lg:gap-8 gap-y-8 w-full">
+    <div class="grid w-full grid-cols-1 lg:grid-cols-2 lg:gap-x-8">
 
-        <!-- BOOKS -->
-        <div class="flex min-w-0 flex-col col-span-1">
-            <CustomH2 class="mb-3">books</CustomH2>
-            <BookSection {currentlyReadingBooks} {recentlyReadBooks}/>
-        </div>
+        <div class="grid grid-cols-1 gap-8 lg:col-span-2 lg:grid-cols-2">
+            <!-- BOOKS -->
+            <div class="flex min-w-0 flex-col col-span-1">
+                <CustomH2 class="mb-3">books</CustomH2>
+                <BookSection {currentlyReadingBooks} {recentlyReadBooks}/>
+            </div>
 
-        <!-- ANIME -->
-        <div class="flex min-w-0 flex-col col-span-1">
-            <CustomH2 class="mb-3">anime</CustomH2>
-            <AnimeSection {currentlyWatchingAnime} {recentlyWatchedAnime}/>
+            <!-- ANIME -->
+            <div class="flex min-w-0 flex-col col-span-1">
+                <CustomH2 class="mb-3">anime</CustomH2>
+                <AnimeSection {currentlyWatchingAnime} {recentlyWatchedAnime}/>
+            </div>
         </div>
 
         <SectionSeparator class="lg:col-span-2" />

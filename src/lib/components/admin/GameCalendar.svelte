@@ -21,6 +21,8 @@
 
 <MonthPicker
     {date}
+    {today}
+    plainRange
     firstDate="2026-01-01"
     lastYear={currentYear}
     id="game-calendar-months"

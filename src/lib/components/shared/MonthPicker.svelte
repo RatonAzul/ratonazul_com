@@ -2,12 +2,13 @@
     import type { Snippet } from 'svelte';
     import { onMount, tick } from 'svelte';
     import CustomH2 from '$lib/components/shared/CustomH2.svelte';
+    import ColoredSectionTitle from '$lib/components/shared/ColoredSectionTitle.svelte';
     import { calendarMonths, formatCalendarDate } from '$lib/utils/shared/calendar';
 
     let {
         date, firstDate, lastYear = 9999, id = 'calendar-months',
         label = 'Calendar date picker', children, dayHref = (day) => `?date=${day}`,
-        yearHref, dayStatus, currentMonthDate
+        yearHref, dayStatus, today, plainRange = false
     }: {
         date: string;
         firstDate: string;
@@ -17,8 +18,9 @@
         children?: Snippet;
         dayHref?: (day: string) => string;
         yearHref?: (year: number) => string;
-        currentMonthDate?: string;
-        dayStatus?: (day: string) => { className: string; label: string; backgroundColor?: string } | undefined;
+        today: string;
+        plainRange?: boolean;
+        dayStatus?: (day: string) => { className: string; label: string; backgroundColor?: string; color?: string; hasComments?: boolean } | undefined;
     } = $props();
     const weekdayFormat = new Intl.DateTimeFormat('en-GB', { weekday: 'long', timeZone: 'UTC' });
     const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -93,12 +95,18 @@
         </nav>
     </div>
     {@render children?.()}
-    <div class="mb-3 flex items-center justify-between gap-4">
-        <p class="text-secondary" aria-live="polite" aria-atomic="true">{range}</p>
+    <div class="mb-3 flex gap-2">
+        <div class="min-w-0 flex-1" aria-live="polite" aria-atomic="true">
+            {#if plainRange}
+                <h3 class="plain-h3 flex h-full items-center">{range}</h3>
+            {:else}
+                <ColoredSectionTitle title={range ?? ''} class="h-full" />
+            {/if}
+        </div>
         <div class="flex gap-2">
-            <button type="button" class="action-icon" aria-label="Previous months" aria-controls={id}
+            <button type="button" class="action-icon h-auto min-h-8 w-12" aria-label="Previous months" aria-controls={id}
                 disabled={start === 0} onclick={() => moveTo(start - visibleMonths)}><span aria-hidden="true">←</span></button>
-            <button type="button" class="action-icon" aria-label="Next months" aria-controls={id}
+            <button type="button" class="action-icon h-auto min-h-8 w-12" aria-label="Next months" aria-controls={id}
                 disabled={start >= lastStart} onclick={() => moveTo(start + visibleMonths)}><span aria-hidden="true">→</span></button>
         </div>
     </div>
@@ -106,8 +114,8 @@
     <div {id} class="months" bind:this={viewport} onscroll={trackScroll}>
         {#each months as month (month.dates[0])}
             <div class="min-w-0 snap-start" role="group" aria-label={`${month.name} ${year}`}>
-                <h3 class="section-label mb-2 {month.dates[0]?.slice(0, 7) === (currentMonthDate ?? date).slice(0, 7)
-                    ? 'bg-purple text-bg0' : 'bg-bg1 text-fg0'}">{month.name}</h3>
+                <p class="section-label mb-2 {month.dates[0]?.slice(0, 7) === today.slice(0, 7)
+                    ? 'bg-purple text-bg0' : 'bg-bg1 text-fg0'}">{month.name}</p>
                 <div class="surface-card grid grid-cols-7 gap-1 p-2">
                     {#each weekdays as weekday}
                         <span class="pb-1 text-center text-meta text-gray" title={weekday} aria-hidden="true">{weekday.slice(0, 1)}</span>
@@ -117,16 +125,27 @@
                         {@const status = dayStatus?.(day)}
                         {@const surface = status?.className ?? 'bg-bg2 hover:bg-bg3'}
                         {@const dayLabel = `${weekdayFormat.format(new Date(day))} ${formatCalendarDate(day)}`}
+                        {@const selected = day === date}
+                        {@const isToday = day === today}
+                        {@const details = [isToday ? 'today' : '', status?.label].filter(Boolean).join(', ')}
                         <a href={dayHref(day)} data-sveltekit-noscroll
-                            class="flex aspect-square min-h-6 items-center justify-center text-meta tabular-nums {day === date
-                                ? (status?.backgroundColor ? `${surface} ring-2 ring-inset ring-purple font-semibold` : 'bg-purple text-bg0 font-semibold')
-                                : surface}"
+                            class="relative flex aspect-square min-h-7 items-center justify-center text-meta tabular-nums {surface}
+                                {selected ? 'ring-2 ring-inset ring-fg0 font-semibold' : isToday ? 'ring-2 ring-inset ring-purple' : ''}"
                             style:background-color={status?.backgroundColor}
-                            aria-current={day === date ? 'date' : undefined}
-                            aria-label={status?.label ? `${dayLabel}: ${status.label}` : dayLabel}
-                            title={status?.label || undefined}
+                            style:color={status?.color}
+                            aria-current={selected ? 'date' : undefined}
+                            aria-label={details ? `${dayLabel}: ${details}` : dayLabel}
+                            title={details || undefined}
                         >
-                            {Number(day.slice(-2))}
+                            {#if selected && isToday}
+                                <span class="pointer-events-none absolute inset-0.5 border border-purple" aria-hidden="true"></span>
+                            {/if}
+                            <span class="flex flex-col items-center gap-0.5 leading-none">
+                                {Number(day.slice(-2))}
+                                {#if status?.hasComments}
+                                    <span class="size-1.5 rounded-full bg-current" aria-hidden="true"></span>
+                                {/if}
+                            </span>
                         </a>
                     {/each}
                 </div>
@@ -158,6 +177,12 @@
         .months {
             --visible-months: 4;
             grid-auto-columns: calc((100% - 3rem) / 4);
+        }
+    }
+    @media (min-width: 1920px) {
+        .months {
+            --visible-months: 6;
+            grid-auto-columns: calc((100% - 5rem) / 6);
         }
     }
 </style>

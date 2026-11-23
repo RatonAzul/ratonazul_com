@@ -1,7 +1,7 @@
 <script lang="ts">
     import {
-        AirplaneIcon, CalendarIcon, CameraIcon, FlagIcon, ForkKnifeIcon,
-        GiftIcon, HeartIcon, MapPinIcon, MusicNoteIcon, StarIcon, UserIcon
+        AirplaneIcon, CalendarIcon, CameraIcon, CheersIcon, CheeseIcon, DogIcon, FlagIcon,
+        ForkKnifeIcon, GiftIcon, HeartIcon, JoystickIcon, MapPinIcon, MusicNoteIcon, PiggyBankIcon, StarIcon, UserIcon
     } from 'phosphor-svelte';
     import type { CalendarEventIcon } from '$lib/utils/calendar-event-icons';
 
@@ -17,7 +17,12 @@
         music: MusicNoteIcon,
         camera: CameraIcon,
         flag: FlagIcon,
-        user: UserIcon
+        user: UserIcon,
+        dog: DogIcon,
+        'piggy-bank': PiggyBankIcon,
+        cheese: CheeseIcon,
+        cheers: CheersIcon,
+        joystick: JoystickIcon
     } satisfies Record<CalendarEventIcon, typeof CalendarIcon>;
     let Icon = $derived(icon ? icons[icon] : undefined);
 </script>

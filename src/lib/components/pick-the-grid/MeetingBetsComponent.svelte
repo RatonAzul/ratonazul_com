@@ -15,8 +15,8 @@
 </script>
 
 {#if meetingBets.isLoading || meetingBets.isLoadingError || (meetingBets.isSuccess && !!count)}
-    <SectionSeparator class="mb-6" />
-    <section class="mb-8">
+    <SectionSeparator />
+    <section>
         <CustomH2 class="mb-3" headingClass="text-card-title" {subtitle}>results</CustomH2>
         {#if meetingBets.isSuccess}
             <div class="flex gap-8 overflow-x-scroll">

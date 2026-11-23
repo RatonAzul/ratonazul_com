@@ -52,7 +52,7 @@
 <section class="surface-card p-4 sm:p-6">
     <div class="flex justify-between items-start gap-3 mb-5">
         <div>
-            <h3>{games[game].name}</h3>
+            <h3 class="plain-h3">{games[game].name}</h3>
             <p class="subtitle mt-1">{record ? `editing result #${record.id}` : 'new result'}</p>
         </div>
         {#if record}<a class="button button-danger" href={`?year=${date.slice(0, 4)}&date=${date}`}>cancel edit</a>{/if}
@@ -136,7 +136,7 @@
             <div class="border-t border-bg3 pt-4 flex flex-col gap-3" aria-live="polite">
                 {#if preview.error}<p class="text-secondary text-yellow">{preview.error}</p>{:else}
                     <div>
-                        <h3>{playerName}</h3>
+                        <h3 class="plain-h3">{playerName}</h3>
                         <p class="text-meta text-gray mt-1">puzzle #{preview.kind === 'isaac' ? preview.result.day : puzzleDay(game, date)} · {record ? `result #${record.id}` : 'new result'}</p>
                     </div>
                     {#if preview.kind === 'isaac'}

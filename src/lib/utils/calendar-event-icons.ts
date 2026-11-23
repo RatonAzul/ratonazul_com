@@ -9,7 +9,12 @@ export const calendarEventIcons = {
     music: 'music',
     camera: 'camera',
     flag: 'flag',
-    user: 'person'
+    user: 'person',
+    dog: 'dog',
+    'piggy-bank': 'piggy bank',
+    cheese: 'cheese',
+    cheers: 'cheers',
+    joystick: 'joystick'
 } as const;
 
 export type CalendarEventIcon = keyof typeof calendarEventIcons;
