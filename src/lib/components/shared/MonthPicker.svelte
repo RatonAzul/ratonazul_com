@@ -114,7 +114,7 @@
     <div {id} class="months" bind:this={viewport} onscroll={trackScroll}>
         {#each months as month (month.dates[0])}
             <div class="min-w-0 snap-start" role="group" aria-label={`${month.name} ${year}`}>
-                <p class="section-label mb-2 {month.dates[0]?.slice(0, 7) === today.slice(0, 7)
+                <p class="section-label mb-2 max-sm:hidden {month.dates[0]?.slice(0, 7) === today.slice(0, 7)
                     ? 'bg-purple text-bg0' : 'bg-bg1 text-fg0'}">{month.name}</p>
                 <div class="surface-card grid grid-cols-7 gap-1 p-2">
                     {#each weekdays as weekday}

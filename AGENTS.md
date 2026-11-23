@@ -113,7 +113,7 @@ page also attempts to prefetch in its universal load function.
 
 ## Game behavior
 
-The game selects a meeting from the current season, loads active drivers,
+The game selects a meeting from the current season, loads all season drivers for saved picks, filters the driver picker to active drivers,
 personal predictions, public meeting predictions, and season standings.
 Standard weekends have qualifying winner, qualifying pole time (milliseconds),
 and five race positions; sprint weekends add sprint qualifying/race winners.

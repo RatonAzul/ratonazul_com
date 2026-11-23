@@ -24,6 +24,7 @@ export type Driver = {
     acronym: string;
     driverNumber: number;
     driverOrder: number;
+    active: boolean;
     teamName: string;
     teamColor: string;
 }
