@@ -18,6 +18,7 @@ export const load: PageServerLoad = async ({ params, request }) => {
 export const actions: Actions = {
 	save: async ({ params, request }) => {
 		const formData = await request.formData();
+		const name = String(formData.get('name') ?? '').trim();
 		const username = String(formData.get('username') ?? '').trim();
 		const image = String(formData.get('image') ?? '').trim();
 		const role = String(formData.get('role') ?? 'user');
@@ -25,11 +26,15 @@ export const actions: Actions = {
 		if (!['admin', 'user'].includes(role)) {
 			return fail(400, { message: 'Invalid role' });
 		}
+		if (!name || name.length > 100 || name.includes('\0')) {
+			return fail(400, { message: 'Enter a display name of up to 100 characters.' });
+		}
 
 		await auth.api.adminUpdateUser({
 			body: {
 				userId: params.id,
 				data: {
+					name,
 					username: username || null,
 					image: image || null,
 				},

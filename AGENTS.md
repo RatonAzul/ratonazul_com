@@ -32,7 +32,9 @@ page also attempts to prefetch in its universal load function.
   picker shows up to four months on desktop, two on tablets, and one on mobile.
   The selected date lives in the `date` query parameter and drives the day panel.
   The day panel reads and posts comments through `ratonazul_com_api`. Each member
-  can post one comment per date. The editor and comment cards use `UserAvatar`
+  can post and edit their own comment per date. Edited comments display the
+  last edit time. The Add event type picker shows each type's icon and color.
+  The editor and comment cards use `UserAvatar`
   and resolve current profile details from the website database. Members can also
   add typed daily events. The first type in the admin priority order supplies
   the cell color when a day has multiple events. The root layout
@@ -100,7 +102,7 @@ page also attempts to prefetch in its universal load function.
   complete admin subtree. Signed-in admin users then reach
   `/admin/users/+page.server.ts`, which lists the newest 100 users through
   Better Auth with 20-user pagination. Each row links to
-  `/admin/users/[id]`, where an admin can edit username, image URL and role.
+  `/admin/users/[id]`, where an admin can edit display name, username, image URL and role.
   The list and detail pages use Better Auth's `setRole`, `adminUpdateUser`, and
   `removeUser` server endpoints for role changes and account deletion.
   `/admin/+page.server.ts` remains an empty data load because the dashboard
