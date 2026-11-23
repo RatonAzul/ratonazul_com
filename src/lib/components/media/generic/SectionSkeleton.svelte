@@ -10,7 +10,7 @@
 <div class="flex flex-col gap-4 w-full">
     <div class="flex flex-col gap-2 w-full">
         <ColoredSectionTitle title={titleInProgress} bgColor="bg-yellow" />
-        <div class="surface-card h-40 w-full animate-pulse"></div>
+        <div class="surface-card h-42 w-full animate-pulse"></div>
     </div>
     <div class="flex flex-col gap-2 w-full">
         <ColoredSectionTitle title={titleCompleted} bgColor="bg-green" />

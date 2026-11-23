@@ -22,7 +22,7 @@
     let comparisonInfo = $state({ selectedUsers: 0, sharedRounds: 0 });
 
     const meetings = createMeetingsBySeasonQuery(CURRENT_YEAR);
-    const drivers = createDriversBySeasonQuery(CURRENT_YEAR, true);
+    const drivers = createDriversBySeasonQuery(CURRENT_YEAR);
     const standings = createStandingsBySeasonQuery(CURRENT_YEAR);
 
     let selectedMeetingIndex = $derived(getCurrentMeetingIndex(meetings.data))

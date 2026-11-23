@@ -11,9 +11,9 @@
 
 <div class="flex flex-col gap-2 w-full">
     <ColoredSectionTitle title="currently reading" bgColor="bg-yellow" />
-    <div class="surface-card flex min-h-40 w-full">
+    <div class="surface-card flex min-h-42 w-full">
         {#if currentlyReadingBooks.length === 1}
-            <img src="{mostRecentBook?.coverImage}" alt="{mostRecentBook?.title}" class="h-40 w-28 shrink-0 object-cover">
+            <img src="{mostRecentBook?.coverImage}" alt="{mostRecentBook?.title}" class="h-42 w-28 shrink-0 object-cover">
             <div class="flex min-w-0 flex-1 flex-col">
                 <div class="flex flex-col p-3 text-secondary">
                     <h4>{mostRecentBook?.title}</h4>

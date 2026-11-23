@@ -31,6 +31,10 @@
             <input class="form-field" value={data.user.email} disabled />
         </label>
         <label class="form-label">
+            display name
+            <input class="form-field" name="name" value={data.user.name} maxlength="100" required />
+        </label>
+        <label class="form-label">
             username
             <input class="form-field" name="username" bind:value={username} maxlength="30" />
         </label>

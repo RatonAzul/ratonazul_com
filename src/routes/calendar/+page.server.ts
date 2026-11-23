@@ -16,6 +16,7 @@ type CalendarComment = {
     user_id: string;
     content: string;
     created_at: string;
+    updated_at?: string;
 };
 
 function requestedMemberDate(url: URL, today = madridDate.format(new Date())) {
@@ -73,6 +74,7 @@ export const load: PageServerLoad = async ({ request, url }) => {
             author: profiles.get(comment.user_id) ?? { name: 'unknown user', image: null, color: defaultProfileColor }
         })),
         viewer: profiles.get(viewer.id) ?? { name: viewer.name, image: viewer.image, color: defaultProfileColor },
+        viewerId: viewer.id,
         ownComment: comments.some((comment) => comment.user_id === viewer.id),
         loadError: ''
     };
@@ -98,23 +100,33 @@ export const actions: Actions = {
         }
         redirect(303, `/calendar?date=${input.date}`);
     },
-    comment: async ({ request, url }) => {
+    comment: saveComment('POST'),
+    editComment: saveComment('PUT')
+};
+
+function saveComment(method: 'POST' | 'PUT'): Actions[string] {
+    const editing = method === 'PUT';
+    const kind = editing ? 'edit-comment' as const : 'comment' as const;
+    return async ({ request, url }) => {
         const viewer = await requireCalendarMember(request);
         const date = requestedMemberDate(url);
         const value = (await request.formData()).get('content');
         const content = typeof value === 'string' ? value.trim() : '';
         if (!content || content.length > maxCommentLength || content.includes('\0')) {
-            return fail(400, { kind: 'comment' as const, date, content, message: `Enter a comment of up to ${maxCommentLength} characters.` });
+            return fail(400, { kind, date, content, message: `Enter a comment of up to ${maxCommentLength} characters.` });
         }
 
         try {
-            await gamesRequest(`calendar-comments/date/${date}`, viewer.id, 'POST', { content });
+            await gamesRequest(`calendar-comments/date/${date}`, viewer.id, method, { content });
         } catch (cause) {
-            if (cause instanceof GamesApiError && cause.status === 409) {
-                return fail(409, { kind: 'comment' as const, date, content, message: 'You’ve already commented on this day.' });
+            if (!editing && cause instanceof GamesApiError && cause.status === 409) {
+                return fail(409, { kind, date, content, message: 'You’ve already commented on this day.' });
             }
-            return fail(503, { kind: 'comment' as const, date, content, message: 'Unable to post your comment. Try again.' });
+            if (editing && cause instanceof GamesApiError && cause.status === 404) {
+                return fail(404, { kind, date, content, message: 'Your comment no longer exists.' });
+            }
+            return fail(503, { kind, date, content, message: editing ? 'Unable to save your edit. Try again.' : 'Unable to post your comment. Try again.' });
         }
         redirect(303, `/calendar?date=${date}`);
-    }
-};
+    };
+}

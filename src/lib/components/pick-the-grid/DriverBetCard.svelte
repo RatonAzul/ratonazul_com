@@ -13,6 +13,7 @@
     } = $props();
 
     let selectedDriver = $derived(searchDriverById(drivers, bet.guessedDriverId));
+    let activeDrivers = $derived(drivers.filter((driver) => driver.active));
     let selectedDriverId = $derived(bet?.guessedDriverId?.toString() || undefined);
 
     function onValueChange(value: string | undefined) {
@@ -39,7 +40,7 @@
             <Select.Portal>
                 <Select.Content style="width: var(--bits-select-anchor-width)" sideOffset={8} align="start" class="menu-panel max-h-50 overflow-y-auto">
                     <Select.Viewport>
-                        {#each drivers as driver}
+                        {#each activeDrivers as driver (driver.id)}
                             <Select.Item
                                     value={driver.id.toString()}
                                     class="menu-item flex-col items-start justify-center gap-0 border-l-4 border-{driver.teamColor}">
