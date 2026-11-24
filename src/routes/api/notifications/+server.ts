@@ -1,5 +1,5 @@
 import { error, json } from '@sveltejs/kit';
-import { getInbox, markNotificationsRead, pushConfig, setNotificationGroupPreference, setNotificationPreference, validatePushSubscription } from '$lib/server/notifications';
+import { getInbox, markNotificationsRead, pushConfig, removePushSubscription, setNotificationGroupPreference, setNotificationPreference, validatePushSubscription } from '$lib/server/notifications';
 import { isNotificationGroup } from '$lib/utils/notification-groups';
 import type { RequestHandler } from './$types';
 
@@ -26,6 +26,8 @@ export const POST: RequestHandler = async ({ locals, request, url }) => {
             error(400, 'This browser subscription could not be registered.');
         }
         await setNotificationPreference(locals.user.id, input.enabled, subscription);
+    } else if (typeof input.removeEndpoint === 'string' && input.removeEndpoint.length <= 2048) {
+        await removePushSubscription(locals.user.id, input.removeEndpoint);
     } else if (isNotificationGroup(input.group) && typeof input.receive === 'boolean') {
         if (!await setNotificationGroupPreference(locals.user.id, input.group, input.receive)) {
             error(403, 'This notification category is unavailable.');

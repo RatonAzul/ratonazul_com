@@ -1,8 +1,9 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+    import { untrack, onMount } from 'svelte';
     import { Popover } from 'bits-ui';
     import { BellIcon } from 'phosphor-svelte';
     import { useSession } from '$lib/auth-client';
+    import { showOpenPageAlerts } from '$lib/utils/browser-notifications';
     import { notificationInbox } from '$lib/queries/notifications';
     import MarkAllNotificationsRead from './MarkAllNotificationsRead.svelte';
     import NotificationList from './NotificationList.svelte';
@@ -13,6 +14,28 @@
     let open = $state(false);
     let readTab = $state(false);
     let unread = $derived(inbox.data?.items.some((item) => !item.read) ?? false);
+    let observedUser: string | undefined;
+    let highestId: number | undefined;
+
+    $effect(() => {
+        const items = inbox.data?.items;
+        const enabled = inbox.data?.enabled;
+        const available = inbox.data?.available;
+        const viewer = userId;
+        untrack(() => {
+            if (observedUser !== viewer || !enabled) {
+                observedUser = viewer;
+                highestId = undefined;
+            }
+            if (!viewer || !enabled || !available || !items) return;
+            const previous = highestId;
+            highestId = Math.max(previous ?? 0, items[0]?.id ?? 0);
+            if (previous === undefined) return;
+            void showOpenPageAlerts(viewer, items.filter(item => !item.read && item.id > previous))
+                .catch(() => { /* alerts remain in the inbox if the browser cannot show them */ });
+        });
+    });
+
     onMount(() => {
         if (!('serviceWorker' in navigator)) return;
         const refresh = (event: MessageEvent) => {
