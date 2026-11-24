@@ -1,5 +1,6 @@
 <script lang="ts">
 	import './layout.css';
+	import { IconContext } from 'phosphor-svelte';
 	import favicon from '$lib/assets/favicon.svg';
 	import "../app.css";
 	import Header from "$lib/components/shared/Header.svelte";
@@ -16,15 +17,17 @@
 	})
 </script>
 
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<svelte:head><link rel="icon" href={favicon} /><link rel="manifest" href="/site.webmanifest" /></svelte:head>
 <QueryClientProvider client={data.queryClient}>
-	<div class="theme-{theme.current} w-full min-h-dvh bg-bg0 text-fg0 {showCrt.current ? 'crt' : ''}">
-		<div class="min-h-dvh xl:max-w-[80%] mx-auto p-4 flex flex-col items-center relative">
-			<Header/>
-			{@render children()}
-			<Footer/>
+	<IconContext values={{ weight: 'bold' }}>
+		<div class="theme-{theme.current} w-full min-h-dvh bg-bg0 text-fg0 {showCrt.current ? 'crt' : ''}">
+			<div class="min-h-dvh xl:max-w-[80%] mx-auto p-4 flex flex-col items-center relative">
+				<Header/>
+				{@render children()}
+				<Footer/>
+			</div>
 		</div>
-	</div>
+	</IconContext>
 	{#if PUBLIC_ENVIRONMENT !== "prod" }
 		<SvelteQueryDevtools buttonPosition="bottom-right"/>
 	{/if}

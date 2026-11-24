@@ -29,6 +29,7 @@
 		"@tailwindcss/vite": "^4.1.18",
 		"@types/jsonwebtoken": "^9.0.10",
 		"@types/node": "^24",
+		"@types/web-push": "^3.6.4",
 		"better-auth": "^1.4.18",
 		"drizzle-kit": "^0.31.8",
 		"phosphor-svelte": "^3.1.0",
@@ -48,6 +49,7 @@
 		"drizzle-orm": "^0.45.1",
 		"jsonwebtoken": "^9.0.3",
 		"postgres": "^3.4.8",
-		"runed": "^0.37.1"
+		"runed": "^0.37.1",
+		"web-push": "^4.0.0"
 	}
 }

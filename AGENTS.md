@@ -91,9 +91,10 @@ page also attempts to prefetch in its universal load function.
 - `src/hooks.server.ts` resolves the session into `event.locals.user/session`
   and delegates auth requests to Better Auth's SvelteKit handler.
 - `src/app.d.ts` declares locals; currently uses base Better Auth types.
-- `src/lib/auth-client.ts` exports an `authClient` with `adminClient()`, a
-  sign-out helper, and `useSession` from a second, unconfigured client.
-- `shared/LogInUser.svelte` owns sign-in/out and username editing/prompting.
+- `src/lib/auth-client.ts` exports the shared `authClient` and `useSession`
+  with the admin plugin and inferred profile fields.
+- `shared/LogInUser.svelte` shows the account popup, signs users in and out,
+  and supports inline editing of the username and display name.
 - `server/db/auth.schema.ts` defines user, session, account, verification,
   including role and ban fields. `schema.ts` re-exports it and contains a
   scaffold `task` table. Root `auth-schema.ts` is another schema artifact;
@@ -118,7 +119,7 @@ personal predictions, public meeting predictions, and season standings.
 Standard weekends have qualifying winner, qualifying pole time (milliseconds),
 and five race positions; sprint weekends add sprint qualifying/race winners.
 UI editing opens on Monday of the meeting week and closes at meeting start,
-using browser-local dates. `BetComponent.svelte` builds drafts and posts the
+using Europe/Madrid for the Monday opening. `BetComponent.svelte` builds drafts and posts the
 combined payload; the server derives the user ID from the authenticated session
 and forwards position/time writes concurrently. Points and standings come from
 the external service; local helpers only format/display them.
@@ -223,9 +224,7 @@ These are observations, not instructions to fix unrelated code automatically:
   visitors are redirected to `/` because there is no login route, while signed-in
   users without the exact `admin` role receive 403. Keep new admin subpages
   beneath this route so they inherit the guard.
-- The exported `useSession` comes from a client without the admin plugin;
-  username inference is also missing. Existing role/username accesses have
-  typing gaps; locals do not include inferred custom/plugin user fields.
+- Server locals use base Better Auth types, without inferred custom/plugin fields.
 - Current auth schema includes admin role/ban columns, but the initial SQL
   migration lacks them (and session impersonation support is not in the
   current schema). Actual database migration status was not inspected.
@@ -250,3 +249,15 @@ include the derived puzzle number for all three games.
 Both Wordle games also accept a board-only result through a color-toggle grid.
 An optional answer is saved as the shared daily solution; changing an existing
 answer follows the same safeguards and recalculation rules as word entry.
+
+## Notifications
+
+`/admin/notifications` publishes site-wide or group alerts from an admin-only
+action. Admins manage group membership from the user editor. Calendar and
+admin audiences also require their corresponding access permissions.
+The Games and Calendar API stores alerts. Website PostgreSQL stores the
+opt-in, bulk read position, individual reads and browser subscriptions as
+account data. The bell and
+profile share a session-scoped query to `/api/notifications`. Theme and CRT
+settings keep using the existing browser preferences. See DEVELOPMENT.md
+for the migrations, Pick the Grid scheduler, and optional VAPID configuration.

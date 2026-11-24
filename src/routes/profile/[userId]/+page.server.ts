@@ -4,6 +4,7 @@ import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { isProfileColor } from '$lib/utils/profile-colors';
+import { pushConfig } from '$lib/server/notifications';
 import type { Actions, PageServerLoad } from './$types';
 
 async function requireOwner(request: Request, userId: string) {
@@ -17,7 +18,7 @@ export const load: PageServerLoad = async ({ request, params }) => {
     await requireOwner(request, params.userId);
     const [profile] = await db.select({ name: user.name, username: user.username, image: user.image, email: user.email, color: user.color }).from(user).where(eq(user.id, params.userId)).limit(1);
     if (!profile) error(404, 'User not found');
-    return { profile };
+    return { profile, userId: params.userId, pushPublicKey: pushConfig()?.publicKey ?? null };
 };
 
 export const actions: Actions = {

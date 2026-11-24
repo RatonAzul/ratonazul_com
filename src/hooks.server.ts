@@ -1,6 +1,12 @@
 import { auth } from "$lib/server/auth";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { building } from "$app/environment";
+import { env } from '$env/dynamic/private';
+import { startPickTheGridReminders } from '$lib/server/motorsport/reminders';
+
+export function init() {
+	if (!building && env.PICK_THE_GRID_REMINDERS !== 'false') startPickTheGridReminders();
+}
 
 export async function handle({ event, resolve }) {
 	// Fetch current session from Better Auth

@@ -4,8 +4,10 @@ import {
     PRIVATE_MEDIA_TRACKER_API_JWT_SECRET, PRIVATE_MOTORSPORT_API_JWT_SECRET
 } from "$env/static/private";
 
-function generateToken(userId: string, secret: string): string {
-    return jwt.sign({ userId }, secret, { algorithm: 'HS256', expiresIn: '1h' });
+type RequestOptions = { claims?: Record<string, boolean>; signal?: AbortSignal };
+
+function generateToken(userId: string, secret: string, claims?: Record<string, boolean>): string {
+    return jwt.sign({ ...claims, userId }, secret, { algorithm: 'HS256', expiresIn: '1h' });
 }
 
 async function makeRequest<T>(
@@ -15,13 +17,14 @@ async function makeRequest<T>(
     method: string,
     body?: unknown,
     params: Record<string, string> = {},
-    userId: string = ""
+    userId: string = "",
+    options?: RequestOptions
 ): Promise<T> {
     const url = new URL(`${baseUrl}${endpoint}`);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
     const headers: Record<string, string> = {
-        Authorization: `Bearer ${generateToken(userId, secret)}`,
+        Authorization: `Bearer ${generateToken(userId, secret, options?.claims)}`,
     };
     if (body) {
         headers['Content-Type'] = 'application/json';
@@ -29,6 +32,7 @@ async function makeRequest<T>(
 
     const res = await fetch(url.toString(), {
         method,
+        signal: options?.signal,
         headers,
         body: body ? JSON.stringify(body) : undefined,
     });
@@ -45,8 +49,8 @@ async function makeRequest<T>(
 
 export function createApiClient(baseUrl: string, secret: string) {
     return {
-        get: <T>(endpoint: string, params?: Record<string, string>, userId = "") =>
-            makeRequest<T>(baseUrl, secret, endpoint, 'GET', undefined, params, userId),
+        get: <T>(endpoint: string, params?: Record<string, string>, userId = "", options?: RequestOptions) =>
+            makeRequest<T>(baseUrl, secret, endpoint, 'GET', undefined, params, userId, options),
         post: <T>(endpoint: string, body: unknown, userId = "") =>
             makeRequest<T>(baseUrl, secret, endpoint, 'POST', body, undefined, userId),
         put: <T>(endpoint: string, body: unknown, userId = "") =>

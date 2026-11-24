@@ -3,7 +3,7 @@
     import { flip } from 'svelte/animate';
     import { MediaQuery } from 'svelte/reactivity';
     import EventTypeHighlightToggle from '$lib/components/admin/EventTypeHighlightToggle.svelte';
-    import EventTypeColorSelect from '$lib/components/admin/EventTypeColorSelect.svelte';
+    import ThemeColorSelect from '$lib/components/shared/ThemeColorSelect.svelte';
     import { ArrowDownIcon, ArrowUpIcon, DotsSixVerticalIcon, TrashIcon } from 'phosphor-svelte';
     import type { CalendarEventIcon } from '$lib/utils/calendar-event-icons';
     import EventTypeIconSelect from '$lib/components/admin/EventTypeIconSelect.svelte';
@@ -11,7 +11,7 @@
     import Body from '$lib/components/shared/Body.svelte';
     import H1WithBreadCrumb from '$lib/components/shared/H1WithBreadCrumb.svelte';
     import SectionSeparator from '$lib/components/shared/SectionSeparator.svelte';
-    import { defaultProfileColor, type profileColors } from '$lib/utils/profile-colors';
+    import { defaultProfileColor, profileColors } from '$lib/utils/profile-colors';
     import type { ActionData, PageData } from './$types';
 
     let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -154,7 +154,7 @@
         name
         <input id={`type-name-${key}`} class="form-field" name="name" value={name} maxlength={data.maxEventTypeName} required />
     </label>
-    <EventTypeColorSelect {color} />
+    <ThemeColorSelect {color} options={profileColors.filter((option) => option !== 'purple')} />
     <EventTypeIconSelect {icon} />
     <EventTypeHighlightToggle {highlighted} />
 {/snippet}

@@ -3,6 +3,7 @@
     import { enhance } from '$app/forms';
     import { tick, untrack } from 'svelte';
     import { games, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, wordleResult, wordleBoardResult, normalizeWord, type Game, type GameRecord, type Player } from '$lib/utils/games';
+    import FormSelect from '$lib/components/shared/FormSelect.svelte';
     import GameBoard from './GameBoard.svelte';
 
     type Values = { id: string; userId: string; date: string; answer: string; words: string[]; share: string; mode?: string; board?: string };
@@ -46,6 +47,16 @@
     });
     let selectedPlayer = $derived(players.find(player => player.id === userId));
     let playerName = $derived(selectedPlayer?.username || selectedPlayer?.name || userId || 'choose a player');
+    let playerOptions = $derived([
+        ...(record && !players.some(player => player.id === record.user_id)
+            ? [{ value: record.user_id, label: 'unknown player (' + record.user_id + ')', disabled: true }] : []),
+        ...players.map(player => ({ value: player.id, label: (player.username || player.name) + ' · ' + player.id.slice(0, 8) }))
+    ]);
+    let modeOptions = $derived([
+        { value: 'words', label: 'enter words' },
+        { value: 'board', label: 'enter board' },
+        ...(game === 'la-palabra-del-dia' ? [{ value: 'share', label: 'paste shared result' }] : [])
+    ]);
     const inputClass = 'form-field';
 </script>
 
@@ -71,26 +82,14 @@
     }}>
         <input type="hidden" name="id" value={record?.id ?? ''} />
         <input type="hidden" name="date" value={date} />
-        <label class="form-label">player
-            <select name="userId" bind:value={userId} class={inputClass} required>
-                <option value="" disabled>choose a player</option>
-                {#if record && !players.some(player => player.id === record.user_id)}<option value={record.user_id} disabled>unknown player ({record.user_id})</option>{/if}
-                {#each players as player}<option value={player.id}>{player.username || player.name} · {player.id.slice(0, 8)}</option>{/each}
-            </select>
-        </label>
+        <FormSelect label="player" name="userId" options={playerOptions} bind:value={userId} placeholder="choose a player" required />
         {#if game === 'isaaconnect'}
             <label class="form-label">share text
                 <textarea name="share" bind:value={share} rows="11" maxlength="20000" required class={`${inputClass} resize-y`} placeholder="Isaaconnect #855&#10;✅: 1/4 ❤️: 0/4&#10;🟦🟦🟥🟦&#10;Time: 06:10.549&#10;https://isaaconnect.com/"></textarea>
             </label>
             <p class="text-meta text-gray">Paste the full result. The API stores time in whole seconds; fractional seconds are rounded down.</p>
         {:else}
-                <label class="form-label">input method
-                    <select name="mode" bind:value={mode} class={inputClass}>
-                        <option value="words">enter words</option>
-                        <option value="board">enter board</option>
-                        {#if game === 'la-palabra-del-dia'}<option value="share">paste shared result</option>{/if}
-                    </select>
-                </label>
+            <FormSelect label="input method" name="mode" options={modeOptions} bind:value={mode} />
             {#if game === 'la-palabra-del-dia' && mode === 'share'}
                 <label class="form-label">share text
                     <textarea name="share" bind:value={share} rows="10" maxlength="20000" required class={`${inputClass} resize-y`} placeholder="La palabra del día #1760 4/6"></textarea>

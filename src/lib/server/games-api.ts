@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 export class GamesApiError extends Error {
     constructor(public status: number, message: string) { super(message); }
 }
-export async function gamesRequest<T>(endpoint: string, actor: string, method = 'GET', body?: unknown): Promise<T> {
+export async function gamesRequest<T>(endpoint: string, actor: string, method = 'GET', body?: unknown, claims = {}): Promise<T> {
     const base = env.RATONAZUL_COM_API_URL;
     const secret = env.PRIVATE_RATONAZUL_COM_API_JWT_SECRET;
     if (!base || !secret) throw new GamesApiError(503, 'Games API is not configured. Set RATONAZUL_COM_API_URL and PRIVATE_RATONAZUL_COM_API_JWT_SECRET.');
@@ -12,7 +12,7 @@ export async function gamesRequest<T>(endpoint: string, actor: string, method = 
     try {
         response = await fetch(`${base.replace(/\/$/, '')}/v1/${endpoint}`, {
             method,
-            headers: { Authorization: `Bearer ${jwt.sign({ userId: actor }, secret, { algorithm: 'HS256', expiresIn: '5m' })}`, 'Content-Type': 'application/json' },
+            headers: { Authorization: `Bearer ${jwt.sign({ ...claims, userId: actor }, secret, { algorithm: 'HS256', expiresIn: '5m' })}`, 'Content-Type': 'application/json' },
             body: body === undefined ? undefined : JSON.stringify(body),
             signal: AbortSignal.timeout(10_000)
         });
