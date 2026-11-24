@@ -89,3 +89,54 @@ Tailwind's language server explicitly uses `src/app.css` for `src/**`, including
 custom colors declared in `@theme inline`. Reopen the project after changing
 these settings externally. If the flake is updated, select the new paths from
 `nix develop -c sh -c 'command -v node; command -v pnpm'` under JavaScript Runtime.
+
+## Notifications
+
+Apply the website migration with `pnpm db:migrate` and the
+`ratonazul_com_api` migration with `make migrate-up` before testing the
+notification inbox. Sign in, open your profile and enable notifications.
+In **Admin → Users**, open a user and assign any of the games, calendar,
+motorsport, or admin notification groups. In **Admin → Notifications**, choose
+site-wide or one group when publishing. Group assignment does not grant
+access to restricted pages. Calendar alerts also require calendar membership,
+and admin alerts also require the admin role. The same checks apply to the
+inbox and browser delivery. Existing alerts remain site-wide.
+
+The bell and profile Notifications tab show the latest 50 eligible alerts.
+Opening an alert marks it as read for that account. Both views have unread
+and read tabs and can mark all listed alerts as read.
+
+New calendar comments and manually added events publish to the Calendar group
+and exclude the author. The titles are “{display name} wrote a comment” and
+“{display name} added an event”. Alerts contain the comment or event text and
+link to the selected date or the event’s start date. Edits do not generate
+another alert. Long text stays complete in the inbox and is shortened in
+the browser push preview.
+
+New Wordle, La Palabra del Día, and Isaaconnect results publish to the Games
+group. Alerts use the recorded player’s display name and exclude that player.
+The description reconstructs the game’s share text from the saved result,
+including the emoji board and omitting the external link. Updating an existing
+result does not generate another alert.
+
+Pick the Grid sends reminders to opted-in Motorsport subscribers on Monday
+at midnight in Europe/Madrid, 24 hours before the meeting starts, and one
+hour before it starts. The website checks for any saved position or time bet
+before sending. The Node server checks every 30 seconds and catches up for
+up to ten minutes after a scheduled time. Each checkpoint is stored once
+per meeting. Set `PICK_THE_GRID_REMINDERS=false` to disable scheduling in a
+website process. In Vite development the scheduler starts on the first request.
+
+In the profile’s notification settings, users can opt out of individual
+categories. Pick the Grid and Games switches are visible to everyone.
+Calendar and Admin switches require their corresponding page access.
+Category switches preserve admin-managed group assignments.
+
+For browser delivery, generate a VAPID key pair with
+`pnpm exec web-push generate-vapid-keys`. Set `VAPID_PUBLIC_KEY`,
+`VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` in the website's private environment.
+Use a contact URI such as `mailto:admin@example.com` for the subject. Keep the
+key pair stable for existing subscriptions. Browser alerts require a secure
+origin, permission on each device and, on iPhone and iPad, opening the site
+from the Home Screen. Localhost can be used for desktop testing. The in-site
+inbox works without VAPID configuration.

@@ -19,7 +19,7 @@
         aria-expanded={isOpen}
         onclick={() => isOpen = !isOpen}
     >
-        <QuestionIcon size={14} weight="bold" />
+        <QuestionIcon size={14} />
         point system
     </button>
 
@@ -32,7 +32,7 @@
                     aria-label="Close point system"
                     onclick={() => isOpen = false}
                 >
-                    <XIcon size={20} weight="bold" />
+                    <XIcon size={20} />
                 </button>
                 <h2 id="point-system-title" class="mb-4 min-h-10 content-center pr-12 text-blue">point system</h2>
                 <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">

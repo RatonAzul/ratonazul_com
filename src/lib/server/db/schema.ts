@@ -1,4 +1,5 @@
-import { pgTable, serial, integer, text } from 'drizzle-orm/pg-core';
+import { boolean, pgEnum, pgTable, primaryKey, serial, integer, text } from 'drizzle-orm/pg-core';
+import { notificationGroups } from '../../utils/notification-groups';
 import { user } from './auth.schema';
 
 export const task = pgTable('task', {
@@ -12,3 +13,33 @@ export const calendarMember = pgTable('calendar_member', {
 });
 
 export *  from './auth.schema';
+
+export const notificationPreference = pgTable('notification_preference', {
+	userId: text('user_id').primaryKey().references(() => user.id, { onDelete: 'cascade' }),
+	enabled: boolean('enabled').notNull().default(false),
+	lastSeenId: integer('last_seen_id').notNull().default(0)
+});
+
+export const pushSubscription = pgTable('push_subscription', {
+	endpoint: text('endpoint').primaryKey(),
+	userId: text('user_id').notNull().references(() => notificationPreference.userId, { onDelete: 'cascade' }),
+	p256dh: text('p256dh').notNull(),
+	auth: text('auth').notNull()
+});
+
+export const notificationRead = pgTable('notification_read', {
+	userId: text('user_id').notNull().references(() => notificationPreference.userId, { onDelete: 'cascade' }),
+	notificationId: integer('notification_id').notNull()
+}, (table) => [primaryKey({ columns: [table.userId, table.notificationId] })]);
+
+export const notificationGroup = pgEnum('notification_group', notificationGroups);
+
+export const notificationGroupMember = pgTable('notification_group_member', {
+    userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+    group: notificationGroup('group_name').notNull()
+}, (table) => [primaryKey({ columns: [table.userId, table.group] })]);
+
+export const notificationGroupMute = pgTable('notification_group_mute', {
+    userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+    group: notificationGroup('group_name').notNull()
+}, (table) => [primaryKey({ columns: [table.userId, table.group] })]);

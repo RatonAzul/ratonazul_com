@@ -1,5 +1,7 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { auth } from '$lib/server/auth';
+import { getNotificationGroups, setNotificationGroups } from '$lib/server/notifications';
+import { isNotificationGroup } from '$lib/utils/notification-groups';
 import type { Actions, PageServerLoad } from './$types';
 
 type AdminUser = Awaited<ReturnType<typeof auth.api.getUser>> & {
@@ -12,10 +14,20 @@ export const load: PageServerLoad = async ({ params, request }) => {
 		headers: request.headers,
 	});
 
-	return { user: user as AdminUser };
+	return { user: user as AdminUser, groups: await getNotificationGroups(params.id) };
 };
 
 export const actions: Actions = {
+    saveNotificationGroups: async ({ params, request }) => {
+        const session = await auth.api.getSession({ headers: request.headers });
+        if (session?.user.role !== 'admin') error(403, 'Forbidden');
+        const values = [...new Set((await request.formData()).getAll('groups'))];
+        if (!values.every(isNotificationGroup)) return fail(400, { message: 'Invalid notification group.' });
+
+        await auth.api.getUser({ query: { id: params.id }, headers: request.headers });
+        await setNotificationGroups(params.id, values);
+        redirect(303, `/admin/users/${params.id}`);
+    },
 	save: async ({ params, request }) => {
 		const formData = await request.formData();
 		const name = String(formData.get('name') ?? '').trim();

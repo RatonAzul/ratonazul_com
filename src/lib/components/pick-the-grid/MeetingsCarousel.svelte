@@ -33,7 +33,7 @@
         {:else}
             <button type="button" aria-label="Previous meeting" class="button button-quiet p-2 sm:flex-row flex-col-reverse sm:items-center items-start sm:justify-start justify-end" onclick={decreaseSelectedMeeting}>
                 <span class="flex justify-center items-center sm:me-0 me-auto h-full">
-                    <CaretLeftIcon class="sm:size-6 size-6" weight="bold" />
+                    <CaretLeftIcon class="sm:size-6 size-6" />
                     {#if previousMeeting.country.image && previousMeeting.country.image.length !== 0}
                         <div class="inline-block sm:size-8 size-6 mx-1">
                             {@html previousMeeting.country.image}
@@ -85,7 +85,7 @@
                         {@html nextMeeting.country.image}
                     </div>
                 {/if}
-                <CaretRightIcon class="size-6" weight="bold" />
+                <CaretRightIcon class="size-6" />
             </span>
             </button>
         {/if}

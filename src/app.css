@@ -113,6 +113,18 @@
     @apply text-purple underline hover:text-purple-dark;
   }
 
+  .tab-nav {
+    @apply flex border-b border-bg3;
+  }
+
+  .tab-link {
+    @apply -mb-px inline-flex min-h-10 items-center whitespace-nowrap border-b-4 border-transparent px-3 text-secondary text-gray hover:text-fg0;
+  }
+
+  .tab-link[aria-current="page"], .tab-link[aria-pressed="true"] {
+    @apply border-blue font-bold text-fg0;
+  }
+
   .button, .action-icon {
     @apply inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 text-secondary font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
   }

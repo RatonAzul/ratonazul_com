@@ -3,6 +3,8 @@ import { inArray } from 'drizzle-orm';
 import { requireCalendarMember } from '$lib/server/calendar/access';
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
+import { deliverNotification } from '$lib/server/notifications';
+import type { SiteNotification } from '$lib/types/notifications';
 import { GamesApiError, gamesRequest } from '$lib/server/games-api';
 import { calendarEventFailure, calendarEventsRequest, firstCalendarDate, maxEventLength, readEvent, requestedCalendarDate, type CalendarEvent, type CalendarEventType } from '$lib/server/calendar/events';
 import { defaultProfileColor, profileColors } from '$lib/utils/profile-colors';
@@ -80,6 +82,10 @@ export const load: PageServerLoad = async ({ request, url }) => {
     };
 };
 
+function notificationAuthor(name: string) {
+    return { display_name: name.trim() || 'unknown user' };
+}
+
 export const actions: Actions = {
     event: async ({ request, url }) => {
         const viewer = await requireCalendarMember(request);
@@ -92,12 +98,20 @@ export const actions: Actions = {
                 ? `Choose a start date and type, and enter up to ${maxEventLength} characters.`
                 : 'Choose an end date on or after the start date.' });
         }
+        let notification: SiteNotification | undefined;
         try {
-            await calendarEventsRequest('', viewer.id, 'POST', { type_id: input.typeID, date: input.date, end_date: input.endDate || null, content: input.content });
+            notification = await calendarEventsRequest<SiteNotification | undefined>('', viewer.id, 'POST', {
+                type_id: input.typeID,
+                date: input.date,
+                end_date: input.endDate || null,
+                content: input.content,
+                notification: notificationAuthor(viewer.name)
+            });
         } catch (cause) {
             const failure = calendarEventFailure(cause, 'This event type no longer exists.');
             return fail(failure.status, { ...details, message: failure.data.message });
         }
+        if (notification) await deliverNotification(notification, viewer.id);
         redirect(303, `/calendar?date=${input.date}`);
     },
     comment: saveComment('POST'),
@@ -116,8 +130,12 @@ function saveComment(method: 'POST' | 'PUT'): Actions[string] {
             return fail(400, { kind, date, content, message: `Enter a comment of up to ${maxCommentLength} characters.` });
         }
 
+        let notification: SiteNotification | undefined;
         try {
-            await gamesRequest(`calendar-comments/date/${date}`, viewer.id, method, { content });
+            const profile = editing ? undefined : notificationAuthor(viewer.name);
+            const saved = await gamesRequest<CalendarComment & { notification?: SiteNotification }>(
+                `calendar-comments/date/${date}`, viewer.id, method, { content, notification: profile });
+            notification = saved.notification;
         } catch (cause) {
             if (!editing && cause instanceof GamesApiError && cause.status === 409) {
                 return fail(409, { kind, date, content, message: 'You’ve already commented on this day.' });
@@ -127,6 +145,7 @@ function saveComment(method: 'POST' | 'PUT'): Actions[string] {
             }
             return fail(503, { kind, date, content, message: editing ? 'Unable to save your edit. Try again.' : 'Unable to post your comment. Try again.' });
         }
+        if (notification) await deliverNotification(notification, viewer.id);
         redirect(303, `/calendar?date=${date}`);
     };
 }

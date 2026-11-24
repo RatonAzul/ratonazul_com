@@ -3,9 +3,10 @@
         AirplaneIcon, CalendarIcon, CameraIcon, CheersIcon, CheeseIcon, DogIcon, FlagIcon,
         ForkKnifeIcon, GiftIcon, HeartIcon, JoystickIcon, MapPinIcon, MusicNoteIcon, PiggyBankIcon, StarIcon, UserIcon
     } from 'phosphor-svelte';
+    import FilledSectionIcon from './FilledSectionIcon.svelte';
     import type { CalendarEventIcon } from '$lib/utils/calendar-event-icons';
 
-    let { icon }: { icon?: CalendarEventIcon | '' } = $props();
+    let { icon, color }: { icon?: CalendarEventIcon | ''; color?: string } = $props();
     const icons = {
         calendar: CalendarIcon,
         gift: GiftIcon,
@@ -27,4 +28,10 @@
     let Icon = $derived(icon ? icons[icon] : undefined);
 </script>
 
-{#if Icon}<Icon size={16} class="shrink-0" aria-hidden="true" />{/if}
+{#if Icon}
+    {#if color}
+        <FilledSectionIcon icon={Icon} {color} />
+    {:else}
+        <Icon size={16} class="shrink-0" aria-hidden="true" />
+    {/if}
+{/if}

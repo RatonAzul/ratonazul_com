@@ -22,6 +22,34 @@
       "when": 1794952481971,
       "tag": "0002_profile_color",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795542404946,
+      "tag": "0003_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795546363040,
+      "tag": "0004_notification_reads",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795548681372,
+      "tag": "0005_notification_groups",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795556907675,
+      "tag": "0006_notification_group_mutes",
+      "breakpoints": true
     }
   ]
 }

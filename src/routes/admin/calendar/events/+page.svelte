@@ -1,5 +1,6 @@
 <script lang="ts">
     import { TrashIcon } from 'phosphor-svelte';
+    import CalendarEventTypeSelect from '$lib/components/shared/CalendarEventTypeSelect.svelte';
     import CalendarDateField from '$lib/components/shared/CalendarDateField.svelte';
     import Body from '$lib/components/shared/Body.svelte';
     import H1WithBreadCrumb from '$lib/components/shared/H1WithBreadCrumb.svelte';
@@ -37,14 +38,7 @@
                                 <CalendarDateField label="start date" name="eventDate" value={draft?.date ?? event.date} min={data.firstCalendarDate} required />
                                 <CalendarDateField label="end date (optional)" name="eventEndDate" value={draft?.endDate ?? event.end_date ?? ''}
                                     min={data.firstCalendarDate} />
-                                <label class="form-label">
-                                    event type
-                                    <select class="form-field" name="typeId" value={draft?.typeID ?? event.type_id} required>
-                                        {#each data.types as type (type.id)}
-                                            <option value={type.id}>{type.name}</option>
-                                        {/each}
-                                    </select>
-                                </label>
+                                <CalendarEventTypeSelect types={data.types} value={draft?.typeID ?? event.type_id} />
                             </div>
                             <label class="form-label">
                                 event text

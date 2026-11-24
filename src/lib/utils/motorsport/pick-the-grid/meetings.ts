@@ -1,4 +1,5 @@
 import type {Meeting} from "$lib/types/motorsport";
+import { raceWeekStart } from "./reminder-schedule";
 
 export function getCurrentMeetingIndex(meetings?: Meeting[]): number {
     if (!meetings) return 0;
@@ -33,22 +34,13 @@ export function getMeetingStatus(meeting?: Meeting): MeetingStatus {
     }
 
     // RAWE CEEK
-    const raceWeekStart = getMondayOf(start);
-    if (now >= raceWeekStart) {
+    const opening = raceWeekStart(start);
+    if (now >= opening) {
         return { type: 'open', label: formatTimeUntil(now, start) };
     }
 
     // meeting is yet to come
-    return { type: 'opens_in', label: formatTimeUntil(now, raceWeekStart) };
-}
-
-function getMondayOf(date: Date): Date {
-    const monday = new Date(date);
-    const day = date.getDay(); // 0=Sun, 1=Mon ... 6=Sat
-    const diff = day === 0 ? -6 : 1 - day;
-    monday.setDate(date.getDate() + diff);
-    monday.setHours(0, 0, 0, 0);
-    return monday;
+    return { type: 'opens_in', label: formatTimeUntil(now, opening) };
 }
 
 function formatTimeUntil(now: Date, target: Date): string {

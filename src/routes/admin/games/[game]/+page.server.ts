@@ -4,8 +4,10 @@ import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/auth.schema';
 import { eq } from 'drizzle-orm';
 import { syncCalendarGameResults } from '$lib/server/calendar/game-results';
+import { deliverNotification } from '$lib/server/notifications';
+import type { SiteNotification } from '$lib/types/notifications';
 import { gamesRequest, listGames, GamesApiError } from '$lib/server/games-api';
-import { games, isGame, validDate, recordDate, puzzleDay, isaacDay, parseIsaac, parseSpanishWordle, wordleResult, wordleBoardResult, normalizeWord, type GameRecord, type WordleInput, type Solution } from '$lib/utils/games';
+import { games, isGame, validDate, recordDate, puzzleDay, isaacDay, parseIsaac, parseSpanishWordle, wordleResult, wordleBoardResult, normalizeWord, type GameRecord, type IsaacInput, type WordleInput, type Solution } from '$lib/utils/games';
 import type { Actions, PageServerLoad } from './$types';
 
 async function requireAdmin(request: Request) {
@@ -25,6 +27,20 @@ function positiveInt(value: string, label: string) {
 function report(cause: unknown) {
     if (cause instanceof GamesApiError) return { status: [400, 404, 409].includes(cause.status) ? cause.status : 503, message: cause.message };
     return { status: 400, message: cause instanceof Error ? cause.message : 'Unable to save this result.' };
+}
+
+async function saveGameResult(
+    endpoint: string, actor: string, id: number | null, input: WordleInput | IsaacInput, playerName: string
+) {
+    if (id !== null) {
+        await gamesRequest(`${endpoint}/${id}`, actor, 'PUT', input);
+        return;
+    }
+
+    const result = await gamesRequest<GameRecord & { notification?: SiteNotification }>(endpoint, actor, 'POST', {
+        ...input, notification: { display_name: playerName.trim() || 'unknown player' }
+    });
+    if (result.notification) await deliverNotification(result.notification, input.user_id);
 }
 
 export const load: PageServerLoad = async ({ request, params, url }) => {
@@ -62,13 +78,13 @@ export const actions: Actions = {
             const id = values.id ? positiveInt(values.id, 'record id') : null;
             if (!validDate(values.date) || Number(values.date.slice(0, 4)) < 2026 || Number(values.date.slice(0, 4)) > new Date().getFullYear()) throw new Error('Choose a date from 2026 to the current year.');
             if (values.date > new Date().toISOString().slice(0, 10)) throw new Error('Results cannot be entered for future dates.');
-            const [player] = await db.select({ id: user.id }).from(user).where(eq(user.id, values.userId)).limit(1);
+            const [player] = await db.select({ id: user.id, name: user.name }).from(user).where(eq(user.id, values.userId)).limit(1);
             if (!player) throw new Error('Choose a registered player.');
             const previous = id ? await gamesRequest<GameRecord>(`${config.endpoint}/${id}`, actor) : null;
             if (!config.solutions) {
                 const parsed = parseIsaac(values.share);
                 if (parsed.day !== isaacDay(values.date)) throw new Error(`This date is Isaaconnect #${isaacDay(values.date)}. The pasted puzzle is #${parsed.day}.`);
-                await gamesRequest(`${config.endpoint}${id ? `/${id}` : ''}`, actor, id ? 'PUT' : 'POST', { ...parsed, user_id: player.id });
+                await saveGameResult(config.endpoint, actor, id, { ...parsed, user_id: player.id }, player.name);
             } else {
                 const day = puzzleDay(params.game as keyof typeof games, values.date);
                 if (values.mode && !['words', 'share', 'board'].includes(values.mode)) throw new Error('Choose a valid input method.');
@@ -94,7 +110,7 @@ export const actions: Actions = {
                         } catch { throw new Error('Changing this shared answer would invalidate another player’s guesses. Correct or remove that result first.'); }
                     }
                 }
-                await gamesRequest(`${config.endpoint}${id ? `/${id}` : ''}`, actor, id ? 'PUT' : 'POST', { day, date: values.date, user_id: player.id, ...result });
+                await saveGameResult(config.endpoint, actor, id, { day, date: values.date, user_id: player.id, ...result }, player.name);
                 wrote = true;
                 if (saveAnswer && (!solution || solution.word !== answer)) {
                     await gamesRequest(`${config.solutions}${solution ? `/${solution.id}` : ''}`, actor, solution ? 'PUT' : 'POST', { day, word: answer });

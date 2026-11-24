@@ -1,8 +1,10 @@
+import { inferAdditionalFields } from 'better-auth/client/plugins';
+import type { auth } from '$lib/server/auth';
 import { createAuthClient } from "better-auth/svelte";
 import {adminClient} from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
-    plugins: [adminClient()]
+    plugins: [adminClient(), inferAdditionalFields<typeof auth>()]
 });
 
 export const signOut = async () => {
@@ -10,4 +12,4 @@ export const signOut = async () => {
     return data;
 }
 
-export const { useSession } = createAuthClient();
+export const { useSession } = authClient;

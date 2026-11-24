@@ -26,7 +26,7 @@
                         <p class="text-card-title truncate flex items-center gap-1">
                             {user.username || user.name || 'unnamed user'}
                             {#if $session.data?.user.id === user.id}
-                                <StarIcon class="text-yellow shrink-0" size={14} weight="fill" aria-label="current user" />
+                                <StarIcon class="text-yellow shrink-0" size={14} aria-label="current user" />
                             {/if}
                         </p>
                         <p class="subtitle truncate">{user.email}</p>
