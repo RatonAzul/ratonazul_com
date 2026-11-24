@@ -8,6 +8,7 @@ export function notificationInbox(userId: () => string | undefined) {
         queryKey: ['notification-inbox', userId()],
         enabled: browser && Boolean(userId()),
         refetchInterval: 30_000,
+        refetchIntervalInBackground: true,
         staleTime: 15_000,
         queryFn: async ({ signal }) => {
             const response = await fetch('/api/notifications', { signal });
@@ -17,7 +18,7 @@ export function notificationInbox(userId: () => string | undefined) {
     }));
 }
 
-export async function updateNotifications(input: { enabled: boolean; subscription?: PushSubscriptionJSON } | { group: NotificationGroup; receive: boolean } | { read: number; all?: true }) {
+export async function updateNotifications(input: { enabled: boolean; subscription?: PushSubscriptionJSON } | { removeEndpoint: string } | { group: NotificationGroup; receive: boolean } | { read: number; all?: true }) {
     const response = await fetch('/api/notifications', {
         method: 'POST',
         keepalive: 'read' in input,

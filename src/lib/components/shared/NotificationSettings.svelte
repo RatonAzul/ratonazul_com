@@ -3,14 +3,14 @@
     import { pageColors } from '$lib/utils/page-colors';
     import type { NotificationGroup } from '$lib/utils/notification-groups';
     import { onMount } from 'svelte';
-    import { dev } from '$app/environment';
+    import { getDeviceAlerts, notificationWorker, setDeviceAlerts, supportsDeviceAlerts } from '$lib/utils/browser-notifications';
     import { notificationInbox, updateNotifications } from '$lib/queries/notifications';
 
     let { userId, publicKey }: { userId: string; publicKey: string | null } = $props();
     const inbox = notificationInbox(() => userId);
-    let registration = $state<ServiceWorkerRegistration>();
     let permission = $state<NotificationPermission>();
     let supported = $state<boolean>();
+    let device = $state<ReturnType<typeof getDeviceAlerts>>(null);
     let busy = $state(false);
     let feedback = $state('');
     let failed = $state(false);
@@ -39,50 +39,61 @@
     }
 
     onMount(() => {
-        supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
-        if (!publicKey || !supported) return;
-        permission = Notification.permission;
-        void navigator.serviceWorker.register('/service-worker.js', { type: dev ? 'module' : 'classic' })
-            .then(() => navigator.serviceWorker.ready)
-            .then((worker) => registration = worker)
-            .catch(() => {
-                failed = true;
-                feedback = 'browser alerts could not start on this device.';
-            });
+        supported = supportsDeviceAlerts();
+        if (supported) permission = Notification.permission;
+        const refresh = () => {
+            device = getDeviceAlerts(userId);
+            if (supported) permission = Notification.permission;
+        };
+        refresh();
+        window.addEventListener('focus', refresh);
+        window.addEventListener('storage', refresh);
+        return () => {
+            window.removeEventListener('focus', refresh);
+            window.removeEventListener('storage', refresh);
+        };
     });
 
-    async function changePreference(enabled: boolean, browserAlerts = false) {
+    async function changePreference(action: 'device' | 'inbox' | 'off-device' | 'off-all') {
         if (busy) return;
         busy = true;
         feedback = '';
         failed = false;
         try {
-            let subscription: PushSubscription | undefined;
-            if (browserAlerts && registration && publicKey) {
-                try {
-                    permission = await Notification.requestPermission();
-                    if (permission === 'granted') {
-                        subscription = await registration.pushManager.subscribe({
-                            userVisibleOnly: true, applicationServerKey: publicKey
-                        });
+            if (action === 'device') {
+                permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    feedback = 'allow notifications in your browser settings to enable alerts on this device.';
+                    return;
+                }
+                const worker = await notificationWorker();
+                let subscription: PushSubscription | undefined;
+                if (publicKey && 'PushManager' in window) {
+                    try {
+                        subscription = await worker.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: publicKey });
+                        await updateNotifications({ enabled: true, subscription: subscription.toJSON() });
+                    } catch {
+                        subscription = undefined;
                     }
-                } catch {
-                    // The inbox is available even when the browser cannot subscribe.
                 }
-            }
-            if (subscription) {
-                try {
-                    await updateNotifications({ enabled, subscription: subscription.toJSON() });
-                    feedback = 'browser alerts enabled on this device.';
-                } catch {
-                    await updateNotifications({ enabled });
-                }
+                if (!subscription) await updateNotifications({ enabled: true });
+                device = subscription ? { mode: 'push', endpoint: subscription.endpoint } : { mode: 'page' };
+                setDeviceAlerts(userId, device);
+                feedback = subscription ? 'browser alerts enabled on this device.' : 'browser alerts enabled while the site is open.';
+            } else if (action === 'off-device') {
+                if (device?.mode === 'push') await updateNotifications({ removeEndpoint: device.endpoint });
+                setDeviceAlerts(userId, null);
+                device = null;
+                feedback = 'browser alerts disabled on this device.';
             } else {
+                const enabled = action === 'inbox';
                 await updateNotifications({ enabled });
+                if (!enabled) {
+                    setDeviceAlerts(userId, null);
+                    device = null;
+                }
+                feedback = enabled ? 'inbox enabled.' : 'notifications disabled on all devices.';
             }
-            feedback ||= browserAlerts
-                ? 'notifications enabled in your inbox. browser alerts could not be enabled on this device.'
-                : enabled ? 'notifications enabled.' : 'notifications disabled on all devices.';
             await inbox.refetch();
         } catch {
             failed = true;
@@ -99,18 +110,18 @@
 {:else if inbox.data}
     <p class="subtitle">receive site alerts in your inbox and on devices where you allow browser alerts.</p>
     <div class="flex flex-wrap gap-2">
-        {#if inbox.data.enabled}
-            <button class="button button-secondary" type="button" disabled={busy} onclick={() => changePreference(false)}>disable notifications</button>
-        {:else}
-            <button class="button button-primary" type="button" disabled={busy} onclick={() => changePreference(true, Boolean(registration) && permission !== 'denied')}>enable notifications</button>
+        {#if inbox.data.enabled && device && permission === 'granted'}
+            <button class="button button-secondary" type="button" disabled={busy} onclick={() => changePreference('off-device')}>disable notifications on this device</button>
+        {:else if supported && permission !== 'denied'}
+            <button class="button button-primary" type="button" disabled={busy} onclick={() => changePreference('device')}>enable notifications on this device</button>
         {/if}
-        {#if inbox.data.enabled && registration && permission !== 'denied'}
-            <button class="button button-secondary" type="button" disabled={busy} onclick={() => changePreference(true, true)}>enable browser alerts on this device</button>
+        {#if inbox.data.enabled}
+            <button class="button button-secondary" type="button" disabled={busy} onclick={() => changePreference('off-all')}>disable notifications on all devices</button>
+        {:else}
+            <button class="button button-secondary" type="button" disabled={busy} onclick={() => changePreference('inbox')}>enable inbox only</button>
         {/if}
     </div>
-    {#if !publicKey}
-        <p class="subtitle">browser alerts are unavailable on this server.</p>
-    {:else if permission === 'denied'}
+    {#if permission === 'denied'}
         <p class="subtitle">allow notifications in your browser or device settings to receive browser alerts.</p>
     {:else if supported === false}
         <p class="subtitle">browser alerts are unavailable here. on iphone or ipad, open the site from your home screen.</p>

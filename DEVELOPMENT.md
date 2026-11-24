@@ -132,7 +132,12 @@ categories. Pick the Grid and Games switches are visible to everyone.
 Calendar and Admin switches require their corresponding page access.
 Category switches preserve admin-managed group assignments.
 
-For browser delivery, generate a VAPID key pair with
+Choose **enable notifications on this device** in the profile to open the
+browser permission prompt. Without Web Push configuration, an open site tab
+shows browser alerts for new unread items as it refreshes the inbox. Device
+settings can be changed separately from the account’s inbox setting.
+
+For delivery even when the site is closed, generate a VAPID key pair with
 `pnpm exec web-push generate-vapid-keys`. Set `VAPID_PUBLIC_KEY`,
 `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` in the website's private environment.
 Use a contact URI such as `mailto:admin@example.com` for the subject. Keep the

@@ -145,6 +145,10 @@ export async function setNotificationPreference(
     });
 }
 
+export async function removePushSubscription(userId: string, endpoint: string) {
+    await db.delete(pushSubscription).where(and(eq(pushSubscription.userId, userId), eq(pushSubscription.endpoint, endpoint)));
+}
+
 export async function markNotificationsRead(userId: string, id: number, all: boolean) {
     const visible = await visibleNotifications(userId);
     const ids = visible.filter((item) => all ? item.id <= id : item.id === id).map((item) => item.id);
