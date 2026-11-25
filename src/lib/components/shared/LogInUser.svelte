@@ -5,12 +5,18 @@
     import { SignOutIcon, SignInIcon, GoogleLogoIcon, PencilIcon } from 'phosphor-svelte';
     import { Dialog, Popover } from 'bits-ui';
     import { defaultProfileColor, isProfileColor } from '$lib/utils/profile-colors';
+    import MobileMenu from './MobileMenu.svelte';
     import UserAvatar from './UserAvatar.svelte';
     import VisualSettings from './VisualSettings.svelte';
 
+    let { mobile }: { mobile: boolean } = $props();
     const session = authClient.useSession();
     let user = $derived($session.data?.user);
     let profileColor = $derived(isProfileColor(user?.color) ? user.color : defaultProfileColor);
+    let triggerClass = $derived('button h-10 ' + (user
+        ? 'gap-1 bg-bg1 px-0 py-0 text-fg0 hover:bg-bg2 sm:border-r-4'
+        : 'button-primary px-3'));
+    let triggerLabel = $derived(user ? 'account menu' : 'sign in and settings');
     let open = $state(false);
     let editing = $state(false);
     let promptedUser = $state('');
@@ -63,57 +69,70 @@
     }
 </script>
 
-<Popover.Root bind:open>
-    <Popover.Trigger class="button h-10 {user ? 'gap-1 bg-bg1 px-0 py-0 text-fg0 hover:bg-bg2 sm:border-r-4' : 'button-primary px-3'}"
-        style={user ? 'border-right-color: var(--' + profileColor + ')' : undefined}
-        aria-label={user ? 'account menu' : 'sign in and settings'}>
-        {#if user}
-            <UserAvatar image={user.image} name={user.name} class="size-10 bg-transparent! text-inherit!" />
-            <span class="hidden max-w-36 truncate px-3 sm:block" style:color={'var(--' + profileColor + ')'}>{user.username || user.name}</span>
-        {:else}
-            <SignInIcon class="size-5" />
-        {/if}
-    </Popover.Trigger>
-    <Popover.Portal>
-        <Popover.Content align="end" sideOffset={8} class="menu-panel w-64 max-w-[calc(100vw-2rem)] p-3">
-            {#if user}
-                {@const current = user}
-                <div class="flex items-center gap-3">
-                    <UserAvatar image={user.image} name={user.name} class="size-12" />
-                    <div class="min-w-0 flex-1 break-words border-r-4 pe-2" style:border-right-color={'var(--' + profileColor + ')'}>
-                        <div class="flex items-center gap-2">
-                            <a href={'/profile/' + encodeURIComponent(user.id)}
-                                class="min-w-0 text-card-title hover:underline" style:color={'var(--' + profileColor + ')'}
-                                onclick={() => open = false}>
-                                {user.username || 'no username'}
-                            </a>
-                            <button type="button" class="relative inline-flex size-3 shrink-0 cursor-pointer items-center text-fg0 after:absolute after:inset-s-0 after:-inset-e-6 after:-inset-y-3 hover:text-gray"
-                                aria-label="edit username and display name" onclick={() => { open = false; editNames(current); }}>
-                                <PencilIcon class="size-3" />
-                            </button>
-                        </div>
-                        <p class="text-secondary text-fg0">{user.name}</p>
-                    </div>
+{#snippet accountTrigger()}
+    {#if user}
+        <UserAvatar image={user.image} name={user.name} class="size-10 bg-transparent! text-inherit!" />
+        <span class="hidden max-w-36 truncate px-3 sm:block" style:color={'var(--' + profileColor + ')'}>{user.username || user.name}</span>
+    {:else}
+        <SignInIcon class="size-5" />
+    {/if}
+{/snippet}
+
+{#snippet accountContent()}
+    {#if user}
+        {@const current = user}
+        <div class="surface-card-hover relative flex items-center gap-3 p-2">
+            <UserAvatar image={user.image} name={user.name} class="size-12" />
+            <div class="min-w-0 flex-1 break-words border-r-4 pe-2" style:border-right-color={'var(--' + profileColor + ')'}>
+                <div class="flex items-center gap-2">
+                    <a href={'/profile/' + encodeURIComponent(user.id)}
+                        class="min-w-0 text-card-title after:absolute after:inset-0" style:color={'var(--' + profileColor + ')'}
+                        onclick={() => open = false}>
+                        {user.username || 'no username'}
+                    </a>
+                    <button type="button" class="relative z-10 inline-flex size-3 shrink-0 cursor-pointer items-center after:absolute after:inset-s-0 after:-inset-e-6 after:-inset-y-3 hover:opacity-80"
+                        style:color={'var(--' + profileColor + ')'}
+                        aria-label="edit username and display name" onclick={() => { open = false; editNames(current); }}>
+                        <PencilIcon class="size-3" />
+                    </button>
                 </div>
-            {:else}
-                <button type="button" class="button button-primary"
-                    onclick={() => authClient.signIn.social({ provider: 'google', callbackURL: page.url.href })}>
-                    <GoogleLogoIcon class="size-4" /> log in with google
-                </button>
-            {/if}
-            <div class="my-3 border-y border-bg4 py-3">
-                <p class="mb-2 text-card-title text-green">visuals</p>
-                <VisualSettings />
+                <p class="text-secondary text-fg0">{user.name}</p>
             </div>
-            {#if user}
-                <button type="button" class="button button-danger min-h-8 px-3 py-1 text-meta" onclick={logout}>
-                    <SignOutIcon class="size-4" /> log out
-                </button>
-                {#if logoutFailed}<p class="form-feedback mt-2 text-red" role="alert">unable to log out. please try again.</p>{/if}
-            {/if}
-        </Popover.Content>
-    </Popover.Portal>
-</Popover.Root>
+        </div>
+    {:else}
+        <button type="button" class="button button-primary"
+            onclick={() => authClient.signIn.social({ provider: 'google', callbackURL: page.url.href })}>
+            <GoogleLogoIcon class="size-4" /> log in with google
+        </button>
+    {/if}
+    <div class="border-y {mobile ? 'my-4 border-bg3 py-4' : 'my-3 border-bg4 py-3'}">
+        <VisualSettings />
+    </div>
+    {#if user}
+        <button type="button" class="button button-danger min-h-8 px-3 py-1 text-meta" onclick={logout}>
+            <SignOutIcon class="size-4" /> log out
+        </button>
+        {#if logoutFailed}<p class="form-feedback mt-2 text-red" role="alert">unable to log out. please try again.</p>{/if}
+    {/if}
+{/snippet}
+
+{#if mobile}
+    <MobileMenu bind:open title="account" label={triggerLabel} {triggerClass} trigger={accountTrigger}>
+        {@render accountContent()}
+    </MobileMenu>
+{:else}
+    <Popover.Root bind:open>
+        <Popover.Trigger class={triggerClass} aria-label={triggerLabel}
+            style={user ? 'border-right-color: var(--' + profileColor + ')' : undefined}>
+            {@render accountTrigger()}
+        </Popover.Trigger>
+        <Popover.Portal>
+            <Popover.Content align="end" sideOffset={8} class="menu-panel w-64 max-w-[calc(100vw-2rem)] p-3">
+                {@render accountContent()}
+            </Popover.Content>
+        </Popover.Portal>
+    </Popover.Root>
+{/if}
 
 <Dialog.Root bind:open={editing}>
     <Dialog.Portal>

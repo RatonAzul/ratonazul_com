@@ -1,24 +1,32 @@
 <script lang="ts">
-    import { EyeIcon, EyeSlashIcon } from 'phosphor-svelte';
-    import { showCrt, theme, toggleShowCrt } from '$lib/stores/globalSettings';
+    import { CheckIcon } from 'phosphor-svelte';
+    import { showCrt, theme } from '$lib/stores/globalSettings';
+    import SettingsSwitch from './SettingsSwitch.svelte';
     import ColorPalette from './ColorPalette.svelte';
+
     let { compact = true }: { compact?: boolean } = $props();
     const themes = ['ratonazul', 'gruvbox'];
 </script>
 
-<div class="flex flex-col items-start">
-    <div class="flex items-center gap-2 {compact ? 'text-secondary' : 'text-body'}" role="group" aria-label="color palette">
-        {#each themes as option, index (option)}
-            {#if index > 0}<span class="text-gray" aria-hidden="true">·</span>{/if}
-            <button type="button" class="{compact ? 'min-h-7' : 'min-h-10'} cursor-pointer hover:underline {theme.current === option ? 'text-purple underline' : 'text-fg0'}"
-                aria-pressed={theme.current === option} onclick={() => theme.current = option}>{option}</button>
-        {/each}
+<div class="flex min-w-0 flex-col items-start {compact ? 'gap-2' : 'gap-5'}">
+    <div class="flex min-w-0 max-w-full flex-col items-start gap-2">
+        {#if !compact}<h3 class="plain-h3">color palette</h3>{/if}
+        <div class="flex w-fit max-w-full flex-col items-stretch gap-1 text-secondary" role="group" aria-label="color palette">
+            {#each themes as option (option)}
+                <button type="button" class="theme-{option} grid min-w-0 cursor-pointer grid-cols-[minmax(0,1fr)_9ch_1rem] items-center gap-2 bg-bg2 px-2 py-1 text-left text-fg0 hover:bg-bg3
+                    {compact ? 'min-h-7' : 'min-h-10'}"
+                    aria-pressed={theme.current === option} onclick={() => theme.current = option}>
+                    <span class="min-w-0" aria-hidden="true">
+                        <ColorPalette size={compact ? 'small' : 'medium'} />
+                    </span>
+                    <span class="shrink-0">{option}</span>
+                    <span class="flex size-4 items-center justify-center" aria-hidden="true">
+                        {#if theme.current === option}<CheckIcon class="size-4" />{/if}
+                    </span>
+                </button>
+            {/each}
+        </div>
     </div>
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-0">
-        <ColorPalette size={compact ? 'small' : 'big'} />
-        <button type="button" class="inline-flex cursor-pointer items-center gap-1 text-gray hover:text-fg0 {compact ? 'min-h-8 text-meta' : 'min-h-10 text-body'}"
-            aria-label="crt effect" aria-pressed={showCrt.current} onclick={toggleShowCrt}>
-            {#if showCrt.current}<EyeIcon class={compact ? 'size-4' : 'size-5'} />{:else}<EyeSlashIcon class={compact ? 'size-4' : 'size-5'} />{/if} crt
-        </button>
-    </div>
+    <SettingsSwitch checked={showCrt.current} onChange={(checked) => showCrt.current = checked}
+        label={showCrt.current ? 'hide crt effect' : 'show crt effect'} accessibleLabel="crt effect" />
 </div>

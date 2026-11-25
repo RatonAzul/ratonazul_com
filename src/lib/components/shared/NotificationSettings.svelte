@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { Switch } from 'bits-ui';
-    import { pageColors } from '$lib/utils/page-colors';
+    import SettingsSwitch from './SettingsSwitch.svelte';
     import type { NotificationGroup } from '$lib/utils/notification-groups';
     import { onMount } from 'svelte';
     import { getDeviceAlerts, notificationWorker, setDeviceAlerts, supportsDeviceAlerts } from '$lib/utils/browser-notifications';
@@ -15,6 +14,7 @@
     let feedback = $state('');
     let failed = $state(false);
     let savingGroup = $state<NotificationGroup>();
+    const mobileButton = 'max-sm:min-h-8 max-sm:px-3 max-sm:py-1 max-sm:text-meta';
     const groupLabels: Record<NotificationGroup, string> = {
         motorsport: 'Receive Pick the Grid notifications',
         calendar: 'Receive Calendar notifications',
@@ -111,14 +111,14 @@
     <p class="subtitle">receive site alerts in your inbox and on devices where you allow browser alerts.</p>
     <div class="flex flex-wrap gap-2">
         {#if inbox.data.enabled && device && permission === 'granted'}
-            <button class="button button-secondary" type="button" disabled={busy} onclick={() => changePreference('off-device')}>disable notifications on this device</button>
+            <button class="button button-secondary {mobileButton}" type="button" disabled={busy} onclick={() => changePreference('off-device')}>disable notifications on this device</button>
         {:else if supported && permission !== 'denied'}
-            <button class="button button-primary" type="button" disabled={busy} onclick={() => changePreference('device')}>enable notifications on this device</button>
+            <button class="button button-primary {mobileButton}" type="button" disabled={busy} onclick={() => changePreference('device')}>enable notifications on this device</button>
         {/if}
         {#if inbox.data.enabled}
-            <button class="button button-secondary" type="button" disabled={busy} onclick={() => changePreference('off-all')}>disable notifications on all devices</button>
+            <button class="button button-secondary {mobileButton}" type="button" disabled={busy} onclick={() => changePreference('off-all')}>disable notifications on all devices</button>
         {:else}
-            <button class="button button-secondary" type="button" disabled={busy} onclick={() => changePreference('inbox')}>enable inbox only</button>
+            <button class="button button-secondary {mobileButton}" type="button" disabled={busy} onclick={() => changePreference('inbox')}>enable inbox only</button>
         {/if}
     </div>
     {#if permission === 'denied'}
@@ -129,15 +129,8 @@
     <section class="flex flex-col gap-2" aria-labelledby="notification-categories-heading">
         <h3 id="notification-categories-heading" class="plain-h3">notification categories</h3>
         {#each inbox.data.options as option (option.group)}
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <Switch.Root bind:checked={() => option.enabled, (receive) => changeGroup(option.group, receive)}
-                    disabled={savingGroup !== undefined} aria-labelledby={'notification-option-' + option.group}
-                    class="group inline-flex h-6 w-12 shrink-0 cursor-pointer items-center bg-bg3 p-[3px] hover:bg-bg4 disabled:cursor-wait">
-                    <Switch.Thumb class="size-[18px] transition-transform group-data-[state=checked]:translate-x-6"
-                        style={option.enabled ? 'background-color: var(--' + pageColors[option.group] + ')' : 'background-color: color-mix(in srgb, var(--gray) 70%, var(--fg0))'} />
-                </Switch.Root>
-                <span id={'notification-option-' + option.group} class="text-secondary">{groupLabels[option.group]}</span>
-            </div>
+            <SettingsSwitch checked={option.enabled} onChange={(receive) => changeGroup(option.group, receive)}
+                disabled={savingGroup !== undefined} label={groupLabels[option.group]} labelId={'notification-option-' + option.group} />
         {/each}
     </section>
     {#if feedback}<p class="form-feedback {failed ? 'text-red' : 'text-fg0'}" role={failed ? 'alert' : 'status'}>{feedback}</p>{/if}
