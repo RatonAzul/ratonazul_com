@@ -4,23 +4,25 @@
     import { CalendarIcon, CaretLeftIcon, CaretRightIcon, XIcon } from 'phosphor-svelte';
     import { validDate } from '$lib/utils/shared/calendar';
 
-    let { label, name, value = $bindable(''), min, required = false }: {
+    let { label, name, value = $bindable(''), min, max, required = false }: {
         label: string;
         name: string;
         value?: string;
         min: string;
+        max?: string;
         required?: boolean;
     } = $props();
 
     const selected = $derived(validDate(value) ? parseDate(value) : undefined);
     const minimum = $derived(parseDate(min));
+    const maximum = $derived(max ? parseDate(max) : undefined);
 </script>
 
 <div class="form-label">
     <input type="hidden" {name} value={selected?.toString() ?? ''} />
     <DatePicker.Root locale="en-GB" weekStartsOn={1} weekdayFormat="short" calendarLabel={label}
         value={selected} onValueChange={(date) => value = date?.toString() ?? ''}
-        minValue={minimum} placeholder={selected ?? minimum} {required} preventDeselect disableDaysOutsideMonth>
+        minValue={minimum} maxValue={maximum} placeholder={selected ?? minimum} {required} preventDeselect disableDaysOutsideMonth>
         <DatePicker.Label>{label}</DatePicker.Label>
         <div class="form-field flex items-center gap-2 py-0 focus-within:border-purple">
             <DatePicker.Input class="flex flex-1 tabular-nums">

@@ -1,5 +1,5 @@
-import { error, fail, redirect } from '@sveltejs/kit';
-import { auth } from '$lib/server/auth';
+import { error, fail } from '@sveltejs/kit';
+import { requireGamesAdmin } from '$lib/server/games/access';
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/auth.schema';
 import { eq } from 'drizzle-orm';
@@ -10,12 +10,6 @@ import { gamesRequest, listGames, GamesApiError } from '$lib/server/games-api';
 import { games, isGame, validDate, recordDate, puzzleDay, isaacDay, parseIsaac, parseSpanishWordle, wordleResult, wordleBoardResult, normalizeWord, type GameRecord, type IsaacInput, type WordleInput, type Solution } from '$lib/utils/games';
 import type { Actions, PageServerLoad } from './$types';
 
-async function requireAdmin(request: Request) {
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (!session) redirect(303, '/');
-    if (session.user.role !== 'admin') error(403, 'Forbidden');
-    return session.user.id;
-}
 function gameConfig(slug: string) {
     if (!isGame(slug)) error(404, 'Unknown game');
     return { ...games[slug], game: slug };
@@ -44,7 +38,7 @@ async function saveGameResult(
 }
 
 export const load: PageServerLoad = async ({ request, params, url }) => {
-    const actor = await requireAdmin(request);
+    const actor = await requireGamesAdmin(request);
     const config = gameConfig(params.game);
     const today = new Intl.DateTimeFormat('sv-SE', { dateStyle: 'short', timeZone: 'Europe/Madrid' }).format(new Date());
     const currentYear = Number(today.slice(0, 4));
@@ -67,7 +61,7 @@ export const load: PageServerLoad = async ({ request, params, url }) => {
 
 export const actions: Actions = {
     save: async ({ request, params }) => {
-        const actor = await requireAdmin(request);
+        const actor = await requireGamesAdmin(request);
         const config = gameConfig(params.game);
         const form = await request.formData();
         const value = (key: string) => String(form.get(key) ?? '');
@@ -129,7 +123,7 @@ export const actions: Actions = {
         }
     },
     delete: async ({ request, params }) => {
-        const actor = await requireAdmin(request);
+        const actor = await requireGamesAdmin(request);
         const config = gameConfig(params.game);
         const form = await request.formData();
         let deleted = false;

@@ -77,6 +77,13 @@ Paste the complete Isaaconnect share text. Puzzle #855 corresponds to
 2026-11-13; other puzzle dates are calculated from this anchor. Parsed times
 are stored in whole seconds because that is the API's representation.
 
+Use **Admin → Games → Games access** to assign the two accounts that can view
+the daily matchup on `/games`. It opens on today in Europe/Madrid and supports
+past dates. Wordle and La Palabra del Día compare guess counts. Isaaconnect
+uses each player’s best attempt, ranked by points, lives, and finishing time.
+Each game win adds one point to the daily scoreboard.
+Use `pnpm db:migrate` to create the website’s player slots.
+
 Run `pnpm test:games` for scoring, parser and calendar tests. Integration
 verification exercised authenticated CRUD, admin authorization, shared answers
 and calendar counts against the running local services using temporary

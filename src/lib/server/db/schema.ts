@@ -1,4 +1,5 @@
-import { boolean, pgEnum, pgTable, primaryKey, serial, integer, text } from 'drizzle-orm/pg-core';
+import { boolean, check, pgEnum, pgTable, primaryKey, serial, integer, text } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { notificationGroups } from '../../utils/notification-groups';
 import { user } from './auth.schema';
 
@@ -43,3 +44,12 @@ export const notificationGroupMute = pgTable('notification_group_mute', {
     userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
     group: notificationGroup('group_name').notNull()
 }, (table) => [primaryKey({ columns: [table.userId, table.group] })]);
+
+export const gamePlayers = pgTable('game_players', {
+    id: integer('id').primaryKey().default(1),
+    firstUserId: text('first_user_id').references(() => user.id, { onDelete: 'set null' }),
+    secondUserId: text('second_user_id').references(() => user.id, { onDelete: 'set null' })
+}, (table) => [
+    check('game_players_single_pair', sql`${table.id} = 1`),
+    check('game_players_distinct_users', sql`${table.firstUserId} <> ${table.secondUserId}`)
+]);
