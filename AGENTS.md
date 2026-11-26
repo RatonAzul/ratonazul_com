@@ -41,10 +41,14 @@ page also attempts to prefetch in its universal load function.
   exposes membership to all navbars.
 - `src/routes/profile/[userId]/`: owner-only profile editing and account deletion
   using Better Auth. The header links to the current user's profile.
+- `src/routes/games/` shows the public Games heading. Only the two players
+  selected in `/admin/games/access` can load the daily matchup. Compare the
+  best saved result per player and game using the Calendar result rules.
+  Display game scores and outcomes above separate board cards. Show submitted Wordle guesses and the Isaaconnect tie-break metrics when needed.
 - `src/routes/admin/games/`: game cards and per-game calendar/result management
   at `/wordle`, `/la-palabra-del-dia`, and `/isaaconnect` using `[game]`.
-- `src/lib/components/admin/Game{Calendar,Board,ResultEditor}.svelte`: reusable
-  yearly calendar, accessible colored board and result editor. Result cards use
+- `src/lib/components/admin/Game{Calendar,ResultEditor}.svelte`: reusable
+  yearly calendar and result editor. The shared `GameBoard` renders accessible colored boards. Result cards use
   two columns on large screens, labeled edit/delete icon buttons, and Wordle
   score/answer summaries below each board.
   The calendar uses the shared `MonthPicker` for four months on desktop, two on tablets, and one on mobile,

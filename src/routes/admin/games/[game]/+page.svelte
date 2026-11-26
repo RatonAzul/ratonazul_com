@@ -7,7 +7,7 @@
     import SectionSeparator from "$lib/components/shared/SectionSeparator.svelte";
     import H1WithBreadCrumb from '$lib/components/shared/H1WithBreadCrumb.svelte';
     import GameCalendar from '$lib/components/admin/GameCalendar.svelte';
-    import GameBoard from '$lib/components/admin/GameBoard.svelte';
+    import GameBoard from '$lib/components/shared/GameBoard.svelte';
     import GameResultEditor from '$lib/components/admin/GameResultEditor.svelte';
     import { games, playerCounts, puzzleDay } from '$lib/utils/games';
     import type { PageData, ActionData } from './$types';

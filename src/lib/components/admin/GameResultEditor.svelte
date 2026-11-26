@@ -4,7 +4,7 @@
     import { tick, untrack } from 'svelte';
     import { games, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, wordleResult, wordleBoardResult, normalizeWord, type Game, type GameRecord, type Player } from '$lib/utils/games';
     import FormSelect from '$lib/components/shared/FormSelect.svelte';
-    import GameBoard from './GameBoard.svelte';
+    import GameBoard from '$lib/components/shared/GameBoard.svelte';
 
     type Values = { id: string; userId: string; date: string; answer: string; words: string[]; share: string; mode?: string; board?: string };
     let { game, date, record, answer, defaultUserId, players, values = null }: { game: Game; date: string; record?: GameRecord; answer: string; defaultUserId: string; players: Player[]; values?: Values | null } = $props();

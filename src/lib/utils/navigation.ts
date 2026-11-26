@@ -1,9 +1,10 @@
-import { CalendarIcon, CameraIcon, ShieldIcon, TelevisionSimpleIcon, TireIcon } from 'phosphor-svelte';
+import { CalendarIcon, CameraIcon, JoystickIcon, ShieldIcon, TelevisionSimpleIcon, TireIcon } from 'phosphor-svelte';
 import { pageColors } from './page-colors';
 
 const publicLinks = [
     { href: '/media', label: 'media', icon: TelevisionSimpleIcon, color: pageColors.media },
     { href: '/pics', label: 'pics', icon: CameraIcon, color: pageColors.pics },
+    { href: '/games', label: 'games', icon: JoystickIcon, color: pageColors.games },
     { href: '/motorsport', label: 'motorsport', icon: TireIcon, color: pageColors.motorsport }
 ];
 

@@ -50,6 +50,13 @@
       "when": 1795556907675,
       "tag": "0006_notification_group_mutes",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795637216819,
+      "tag": "0007_game_players",
+      "breakpoints": true
     }
   ]
 }

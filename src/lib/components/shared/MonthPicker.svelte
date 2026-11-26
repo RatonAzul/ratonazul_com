@@ -3,15 +3,16 @@
     import { onMount, tick } from 'svelte';
     import CustomH2 from '$lib/components/shared/CustomH2.svelte';
     import ColoredSectionTitle from '$lib/components/shared/ColoredSectionTitle.svelte';
-    import { calendarMonths, formatCalendarDate } from '$lib/utils/shared/calendar';
+    import { calendarMonths, calendarWeekRange, emptyCalendarDayClass, formatCalendarDate } from '$lib/utils/shared/calendar';
 
     let {
-        date, firstDate, lastYear = 9999, id = 'calendar-months',
+        date, firstDate, lastDate, lastYear = 9999, id = 'calendar-months',
         label = 'Calendar date picker', children, dayHref = (day) => `?date=${day}`,
-        yearHref, dayStatus, today, plainRange = false
+        yearHref, dayStatus, today, plainRange = false, selection = 'day'
     }: {
         date: string;
         firstDate: string;
+        lastDate?: string;
         lastYear?: number;
         id?: string;
         label?: string;
@@ -20,6 +21,7 @@
         yearHref?: (year: number) => string;
         today: string;
         plainRange?: boolean;
+        selection?: 'day' | 'week' | 'month';
         dayStatus?: (day: string) => { className: string; label: string; backgroundColor?: string; color?: string; hasComments?: boolean } | undefined;
     } = $props();
     const weekdayFormat = new Intl.DateTimeFormat('en-GB', { weekday: 'long', timeZone: 'UTC' });
@@ -29,6 +31,7 @@
     let firstYear = $derived(Number(firstDate.slice(0, 4)));
     let firstMonth = $derived(year === firstYear ? Number(firstDate.slice(5, 7)) - 1 : 0);
     let months = $derived(calendarMonths(year).slice(firstMonth));
+    let selectedWeek = $derived(selection === 'week' ? calendarWeekRange(date) : null);
     let selectedMonth = $derived(Number(date.slice(5, 7)) - 1 - firstMonth);
 
     let viewport: HTMLDivElement;
@@ -113,10 +116,32 @@
 
     <div {id} class="months" bind:this={viewport} onscroll={trackScroll}>
         {#each months as month (month.dates[0])}
-            <div class="min-w-0 snap-start" role="group" aria-label={`${month.name} ${year}`}>
-                <p class="section-label mb-2 max-sm:hidden {month.dates[0]?.slice(0, 7) === today.slice(0, 7)
-                    ? 'bg-purple text-bg0' : 'bg-bg1 text-fg0'}">{month.name}</p>
-                <div class="surface-card grid grid-cols-7 gap-1 p-2">
+            {@const monthStart = month.dates[0]}
+            {@const monthTarget = monthStart < firstDate ? firstDate : monthStart}
+            {@const monthHref = selection === 'month' && (!lastDate || monthTarget <= lastDate) ? dayHref(monthTarget) : undefined}
+            {@const monthSelected = selection === 'month' && monthStart.slice(0, 7) === date.slice(0, 7)}
+            {@const weekIndex = selectedWeek
+                ? month.dates.findIndex(day => day >= selectedWeek.start && day < selectedWeek.end)
+                : -1}
+            <svelte:element this={monthHref ? 'a' : 'div'} href={monthHref} data-sveltekit-noscroll
+                class="group min-w-0 snap-start {selection === 'month' ? 'self-start border-2' : ''}
+                    {monthSelected ? 'border-fg0' : 'border-transparent'}"
+                role={monthHref ? undefined : 'group'}
+                aria-current={monthSelected ? 'true' : undefined}
+                aria-label={`${monthHref ? 'Select ' : ''}${month.name} ${year}`}>
+                {#if selection === 'month'}
+                    <p class="section-label mb-2 {monthSelected ? 'bg-fg0 text-bg0'
+                        : monthHref ? 'bg-bg1 text-fg0 group-hover:bg-bg2' : 'bg-bg1 text-gray'}">{month.name}</p>
+                {:else}
+                    <p class="section-label mb-2 max-sm:hidden {monthStart.slice(0, 7) === today.slice(0, 7)
+                        ? 'bg-purple text-bg0' : 'bg-bg1 text-fg0'}">{month.name}</p>
+                {/if}
+                <div class="surface-card relative grid grid-cols-7 gap-1 p-2">
+                    {#if weekIndex >= 0}
+                        <span class="pointer-events-none absolute inset-0 z-10 border-2 border-fg0"
+                            style:grid-area={`${Math.floor((month.offset + weekIndex) / 7) + 2} / 1 / span 1 / -1`}
+                            aria-hidden="true"></span>
+                    {/if}
                     {#each weekdays as weekday}
                         <span class="pb-1 text-center text-meta text-gray" title={weekday} aria-hidden="true">{weekday.slice(0, 1)}</span>
                     {/each}
@@ -125,11 +150,15 @@
                         {@const status = dayStatus?.(day)}
                         {@const surface = status?.className ?? 'bg-bg2 hover:bg-bg3'}
                         {@const dayLabel = `${weekdayFormat.format(new Date(day))} ${formatCalendarDate(day)}`}
-                        {@const selected = day === date}
+                        {@const selected = selection === 'day' && day === date}
+                        {@const inSelectedWeek = selectedWeek && day >= selectedWeek.start && day < selectedWeek.end}
                         {@const isToday = day === today}
-                        {@const details = [isToday ? 'today' : '', status?.label].filter(Boolean).join(', ')}
-                        <a href={dayHref(day)} data-sveltekit-noscroll
-                            class="relative flex aspect-square min-h-7 items-center justify-center text-meta tabular-nums {surface}
+                        {@const details = [isToday ? 'today' : '', inSelectedWeek ? 'selected week' : '', status?.label].filter(Boolean).join(', ')}
+                        {@const selectable = !lastDate || day <= lastDate}
+                        {@const linkDay = selectable && selection !== 'month'}
+                        <svelte:element this={linkDay ? 'a' : 'span'} href={linkDay ? dayHref(day) : undefined} data-sveltekit-noscroll
+                            class="relative flex aspect-square min-h-7 items-center justify-center text-meta tabular-nums
+                                {selectable ? surface : emptyCalendarDayClass}
                                 {selected ? 'ring-2 ring-inset ring-fg0 font-semibold' : isToday ? 'ring-2 ring-inset ring-purple' : ''}"
                             style:background-color={status?.backgroundColor}
                             style:color={status?.color}
@@ -146,10 +175,10 @@
                                     <span class="size-1.5 rounded-full bg-current" aria-hidden="true"></span>
                                 {/if}
                             </span>
-                        </a>
+                        </svelte:element>
                     {/each}
                 </div>
-            </div>
+            </svelte:element>
         {/each}
     </div>
 </section>

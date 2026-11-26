@@ -3,7 +3,7 @@
     import EventTypeIcon from '$lib/components/shared/EventTypeIcon.svelte';
     import CalendarDateField from '$lib/components/shared/CalendarDateField.svelte';
     import CalendarEventTypeSelect from '$lib/components/shared/CalendarEventTypeSelect.svelte';
-    import { formatCalendarDate } from '$lib/utils/shared/calendar';
+    import { calendarDayColors, formatCalendarDate, interactiveEmptyCalendarDayClass } from '$lib/utils/shared/calendar';
     import MonthPicker from '$lib/components/shared/MonthPicker.svelte';
     import Body from '$lib/components/shared/Body.svelte';
     import ColoredSectionTitle from '$lib/components/shared/ColoredSectionTitle.svelte';
@@ -29,19 +29,16 @@
         const eventColor = data.eventColors[day];
         const hasEvents = Object.hasOwn(data.eventColors, day);
         const hasActivity = hasComments || hasEvents;
+        if (!hasActivity) return { className: interactiveEmptyCalendarDayClass, label: '' };
         const hasAutomatedEvent = automatedDates.has(day);
         const surface = hasAutomatedEvent ? 'bg-bg2 hover:bg-bg3' : 'bg-bg0 hover:bg-bg2 focus-visible:bg-bg2';
-        const text = eventColor ? 'font-semibold'
-            : hasActivity ? 'text-fg0' : 'text-gray hover:text-fg0 focus-visible:text-fg0';
+        const text = eventColor ? 'font-semibold' : 'text-fg0';
         const label = [hasComments ? 'has comments' : '', hasEvents ? 'has events' : ''].filter(Boolean).join(', ');
         return {
             className: `${surface} ${text}`,
             label,
             hasComments,
-            color: eventColor ? `var(--${eventColor})` : undefined,
-            backgroundColor: eventColor
-                ? `color-mix(in srgb, var(--${eventColor}) ${eventColor === 'red' ? 15 : 25}%, transparent)`
-                : undefined
+            ...(eventColor ? calendarDayColors(eventColor) : {})
         };
     }
 </script>
