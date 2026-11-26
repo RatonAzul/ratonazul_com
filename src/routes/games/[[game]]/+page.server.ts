@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { listGames } from '$lib/server/games-api';
 import { gamePairForViewer } from '$lib/server/games/access';
-import { gameResultOutcome, rankGameResults } from '$lib/utils/game-result-summary';
+import { gameResultOutcome, rankGameResults, wordleStatistics } from '$lib/utils/game-result-summary';
 import { games, isGame, recordDate, validDate, type Game, type GameRecord } from '$lib/utils/games';
 import { calendarMonths, calendarWeekRange } from '$lib/utils/shared/calendar';
 import type { PageServerLoad } from './$types';
@@ -95,6 +95,19 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
     const matchups = matchupsForDay(date);
     const { start, end } = calendarWeekRange(date);
     const month = date.slice(0, 7);
+    const wordleHistory = game && game !== 'isaaconnect' ? results[0] : undefined;
+    const stats = wordleHistory?.status === 'fulfilled' ? players.map((_, index) => {
+        const scores: number[] = [];
+        for (const [day, matchup] of wordleHistory.value) {
+            const inPeriod = period === 'global'
+                || (period === 'daily' && day === date)
+                || (period === 'weekly' && day >= start && day < end)
+                || (period === 'monthly' && day.startsWith(month + '-'));
+            const record = matchup.results[index];
+            if (inPeriod && record && 'score' in record) scores.push(record.score);
+        }
+        return wordleStatistics(scores);
+    }) : null;
     let dates: string[] = [];
     if (period === 'weekly' && game !== 'isaaconnect') {
         dates = Array.from({ length: 7 }, (_, index) => {
@@ -145,5 +158,5 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
         }
     }
 
-    return { ...scope, matchup: { date, today, firstDate, players, matchups, days, pageNumber, pageCount, totals, calendar: complete ? calendar : null } };
+    return { ...scope, matchup: { date, today, firstDate, players, matchups, days, pageNumber, pageCount, totals, stats, calendar: complete ? calendar : null } };
 };
