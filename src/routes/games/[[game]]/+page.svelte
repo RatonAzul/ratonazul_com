@@ -9,26 +9,48 @@
     import MonthPicker from '$lib/components/shared/MonthPicker.svelte';
     import SectionSeparator from '$lib/components/shared/SectionSeparator.svelte';
     import UserAvatar from '$lib/components/shared/UserAvatar.svelte';
-    import WordleStats from '$lib/components/games/WordleStats.svelte';
+    import PlayerResultEditor from '$lib/components/games/PlayerResultEditor.svelte';
+    import GameStatsCard from '$lib/components/games/GameStatsCard.svelte';
     import { games, type Game } from '$lib/utils/games';
     import { defaultProfileColor, isProfileColor } from '$lib/utils/profile-colors';
     import { calendarDayColors, formatCalendarDate, interactiveEmptyCalendarDayClass } from '$lib/utils/shared/calendar';
-    import type { PageData } from './$types';
+    import type { ActionData, PageData } from './$types';
 
     type Matchup = NonNullable<PageData['matchup']>;
     const weekdayFormat = new Intl.DateTimeFormat('en-GB', { weekday: 'long', timeZone: 'UTC' });
 
-    let { data }: { data: PageData } = $props();
+    let { data, form }: { data: PageData; form: ActionData } = $props();
+    const isaacMetrics = ['points', 'lives', 'time'] as const;
+    const statNumber = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
+    let metricIndex = $state(0);
+    let isaacMetric = $derived(isaacMetrics[metricIndex]);
     let statsViewport = $state<HTMLDivElement>();
     let expandedBoards = $state<Record<string, boolean>>({});
     const gameIds = Object.keys(games) as Game[];
     const periods = ['daily', 'weekly', 'monthly', 'global'] as const;
     let period = $derived(data.period);
+    let submitAction = $derived(data.matchup
+        ? `?/submitResult&${matchupHref(data.matchup.date, period).slice(1)}&page=${data.matchup.pageNumber}`
+        : '?/submitResult');
 
     function showPlayerStats(index: number) {
         if (!statsViewport) return;
-        statsViewport.children[index]?.querySelector('button')?.focus({ preventScroll: true });
+        statsViewport.children[index]?.querySelector<HTMLButtonElement>('[data-switch-player]')?.focus({ preventScroll: true });
         statsViewport.scrollTo({ left: index * statsViewport.clientWidth });
+    }
+
+    function cycleMetric(direction: number) {
+        metricIndex = (metricIndex + direction + isaacMetrics.length) % isaacMetrics.length;
+    }
+
+    function averageLabel(value: number | null) {
+        return value === null ? '–' : statNumber.format(value);
+    }
+
+    function averageTimeLabel(value: number | null) {
+        if (value === null) return '–';
+        const seconds = Math.round(value);
+        return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
     }
 
     function matchupHref(date: string, tab: typeof periods[number]) {
@@ -63,11 +85,14 @@
     }
 </script>
 
-{#snippet gameResults(matchup: Matchup['matchups'][number], players: Matchup['players'], id: string)}
+{#snippet gameResults(matchup: Matchup['matchups'][number], players: Matchup['players'], day: string)}
+    {@const id = day + '-' + matchup.game}
+    {@const submission = form?.game === matchup.game && form.date === day ? form : null}
+    {@const canSubmit = day === data.matchup?.today}
     {#if !matchup.available}
         <p role="status" class="subtitle">unable to load results for this game.</p>
     {:else}
-        {@const expanded = expandedBoards[id] ?? false}
+        {@const expanded = expandedBoards[id] ?? Boolean(submission?.message)}
         <div class="grid grid-cols-2 gap-2">
             {#each players as player, index (player.id)}
                 {@const result = matchup.results[index]}
@@ -78,6 +103,7 @@
                 {@const neutralPoints = tiedPoints && matchup.outcome !== 'bothLost'}
                 {@const neutralLives = tiedLives && matchup.outcome !== 'bothLost'}
                 {@const { color, backgroundColor } = calendarDayColors(status ? resultAccents[status] : 'gray')}
+                {@const ownMissing = canSubmit && player.id === data.matchup?.viewer && !result}
                 <article aria-label={player.username || player.name}
                     class="surface-card flex min-h-8 min-w-0 items-stretch justify-between {index === 1 ? 'flex-row-reverse border-r-4' : 'border-l-4'}"
                     style:border-color={color} style:color style:background-color={backgroundColor}>
@@ -87,9 +113,16 @@
                         onclick={() => expandedBoards[id] = !expanded}>
                         <CaretDownIcon size={16} class="motion-safe:transition-transform {expanded ? 'rotate-180' : ''}" aria-hidden="true" />
                     </button>
-                    <p class="min-w-0 flex-1 self-center text-meta font-semibold sm:text-secondary {index === 1 ? 'pl-2 text-left sm:pl-5' : 'pr-2 text-right sm:pr-5'} {tiedPoints ? 'sr-only sm:not-sr-only' : ''}">
-                        {status ? resultLabels[status] : result ? 'pending' : 'no result yet'}
-                    </p>
+                    {#if ownMissing}
+                        <button type="button" class="min-w-0 flex-1 cursor-pointer self-stretch px-2 text-meta font-semibold text-green hover:text-fg0 sm:text-secondary {index === 1 ? 'text-left' : 'text-right'}"
+                            aria-expanded={expanded} aria-controls={'boards-' + id} onclick={() => expandedBoards[id] = !expanded}>
+                            + add result
+                        </button>
+                    {:else}
+                        <p class="min-w-0 flex-1 self-center text-meta font-semibold sm:text-secondary {index === 1 ? 'pl-2 text-left sm:pl-5' : 'pr-2 text-right sm:pr-5'} {tiedPoints ? 'sr-only sm:not-sr-only' : ''}">
+                            {status ? resultLabels[status] : result ? 'pending' : 'no result yet'}
+                        </p>
+                    {/if}
                     <div class="flex shrink-0 gap-px text-meta font-bold tabular-nums sm:gap-0.5 sm:text-secondary {index === 1 ? 'flex-row-reverse' : ''}">
                         {#if tiedLives}
                             <span class="flex min-w-7 items-center justify-center gap-0.5 px-1 leading-tight min-[360px]:px-2 min-[400px]:min-w-9 sm:min-w-18 sm:gap-1 lg:min-w-20"
@@ -126,6 +159,8 @@
                             style:border-color={'var(--' + player.color + ')'}>
                             {#if result?.rows}
                                 <GameBoard rows={result.rows} words={result.words} isaac={matchup.game === 'isaaconnect'} compact />
+                            {:else if canSubmit && player.id === data.matchup?.viewer}
+                                <PlayerResultEditor game={matchup.game} date={day} action={submitAction} message={submission?.message} />
                             {:else}
                                 <p class="subtitle">no result yet.</p>
                             {/if}
@@ -150,7 +185,7 @@
         {/each}
     </nav>
     {#if data.matchup}
-        {@const { date, today, firstDate, players, matchups, days, pageNumber, pageCount, totals, stats, calendar } = data.matchup}
+        {@const { date, today, firstDate, players, matchups, days, pageNumber, pageCount, totals, wordleStats, isaacStats, calendar } = data.matchup}
         {@const [leftPoints, rightPoints] = totals[period]}
         <section class="flex flex-col gap-4" aria-label="Game matchup">
             <nav class="tab-nav" aria-label="Scoreboard period">
@@ -159,6 +194,7 @@
                         aria-current={period === option ? 'page' : undefined}>{option}</a>
                 {/each}
             </nav>
+            {#if form?.warning}<p class="subtitle" role="status">{form.warning}</p>{/if}
             {#if period === 'daily' || calendar}
                 <div class="grid grid-cols-2 items-stretch gap-2">
                     {#each players as player, index (player.id)}
@@ -180,17 +216,38 @@
             {:else}
                 <p class="subtitle" role="status">unable to load days won.</p>
             {/if}
-            {#if data.game && data.game !== 'isaaconnect'}
+            {#if data.game}
                 <SectionSeparator class="my-0!" />
-                <section class="flex flex-col gap-2" aria-labelledby="wordle-statistics">
-                    <h3 class="plain-h3" id="wordle-statistics">stats</h3>
-                    {#if stats}
+                <section class="flex flex-col gap-2" aria-labelledby="game-statistics">
+                    <h3 class="plain-h3" id="game-statistics">stats</h3>
+                    {#if wordleStats || isaacStats}
                         <div class="flex min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none]
                             motion-safe:scroll-smooth sm:grid sm:grid-cols-2 sm:gap-2 sm:overflow-visible" bind:this={statsViewport}>
                             {#each players as player, index (player.id)}
+                                {@const wordle = wordleStats?.[index]}
+                                {@const isaac = isaacStats?.[index]}
                                 <div class="grid w-full min-w-0 shrink-0 snap-start">
-                                    <WordleStats name={player.username || player.name} color={player.color} stats={stats[index]}
-                                        right={index === 1} switchPlayer={() => showPlayerStats(1 - index)} />
+                                    {#if isaac}
+                                        <GameStatsCard name={player.username || player.name} color={player.color}
+                                            distribution={isaac.distribution[isaacMetric]} chart={{ label: isaacMetric, cycle: cycleMetric }}
+                                            summary={[
+                                                { label: 'games played', value: isaac.games },
+                                                { label: 'average points', value: averageLabel(isaac.averagePoints) },
+                                                { label: 'average lives', value: averageLabel(isaac.averageLives) },
+                                                { label: 'average time', value: averageTimeLabel(isaac.averageTime) },
+                                                { label: 'failures', value: isaac.failures }
+                                            ]}
+                                            right={index === 1} switchPlayer={() => showPlayerStats(1 - index)} />
+                                    {:else if wordle}
+                                        <GameStatsCard name={player.username || player.name} color={player.color}
+                                            distribution={wordle.distribution}
+                                            summary={[
+                                                { label: 'games played', value: wordle.games },
+                                                { label: 'average result', value: averageLabel(wordle.average) },
+                                                { label: 'failures (X)', value: wordle.failures }
+                                            ]}
+                                            right={index === 1} switchPlayer={() => showPlayerStats(1 - index)} />
+                                    {/if}
                                 </div>
                             {/each}
                         </div>
@@ -212,7 +269,7 @@
                                 </a>
                             </h3>
                         {/if}
-                        {@render gameResults(matchup, players, date + '-' + matchup.game)}
+                        {@render gameResults(matchup, players, date)}
                     </section>
                 {/each}
             {:else}
@@ -231,7 +288,7 @@
                             {:else}
                                 {#each day.matchups as matchup (matchup.game)}
                                     {#if !data.game}<h4 class="mt-2 text-secondary text-gray">{games[matchup.game].name}</h4>{/if}
-                                    {@render gameResults(matchup, players, day.date + '-' + matchup.game)}
+                                    {@render gameResults(matchup, players, day.date)}
                                 {/each}
                             {/if}
                         </section>

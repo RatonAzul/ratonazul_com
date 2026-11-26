@@ -48,6 +48,14 @@ export function gameResultSummary(game: Game, records: GameRecord[], playerName:
     return '';
 }
 
+function resultDistribution(labels: string[], counts: number[], games: number) {
+    return labels.map((result, index) => ({
+        result,
+        count: counts[index],
+        share: games ? counts[index] / games : 0
+    }));
+}
+
 export function wordleStatistics(scores: number[]) {
     const counts = [0, 0, 0, 0, 0, 0, 0];
     for (const score of scores) counts[score - 1]++;
@@ -61,10 +69,42 @@ export function wordleStatistics(scores: number[]) {
         games,
         failures,
         average: solved ? guesses / solved : null,
-        distribution: counts.map((count, index) => ({
-            result: index === 6 ? 'X' : String(index + 1),
-            count,
-            share: games ? count / games : 0
-        }))
+        distribution: resultDistribution(['1', '2', '3', '4', '5', '6', 'X'], counts, games)
+    };
+}
+
+const timeLimits = [60, 120, 180, 300];
+
+export function isaacStatistics(attempts: { points: number; lifes: number; time: number }[]) {
+    const points = [0, 0, 0, 0, 0];
+    const lives = [0, 0, 0, 0, 0];
+    const time = [0, 0, 0, 0, 0];
+    let totalPoints = 0;
+    let totalLives = 0;
+    let totalTime = 0;
+
+    for (const attempt of attempts) {
+        points[attempt.points]++;
+        lives[attempt.lifes]++;
+        const bucket = timeLimits.findIndex(limit => attempt.time < limit);
+        time[bucket === -1 ? timeLimits.length : bucket]++;
+        totalPoints += attempt.points;
+        totalLives += attempt.lifes;
+        totalTime += attempt.time;
+    }
+
+    const games = attempts.length;
+    const scores = ['0', '1', '2', '3', '4'];
+    return {
+        games,
+        failures: games - points[4],
+        averagePoints: games ? totalPoints / games : null,
+        averageLives: games ? totalLives / games : null,
+        averageTime: games ? totalTime / games : null,
+        distribution: {
+            points: resultDistribution(scores, points, games),
+            lives: resultDistribution(scores, lives, games),
+            time: resultDistribution(['<1m', '1–<2m', '2–<3m', '3–<5m', '5m+'], time, games)
+        }
     };
 }

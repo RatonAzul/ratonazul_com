@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { gameResultSummary, wordleStatistics } from '../src/lib/utils/game-result-summary.ts';
+import { gameResultSummary, isaacStatistics, wordleStatistics } from '../src/lib/utils/game-result-summary.ts';
 import { calendarMonths, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, playerCounts, recordDate, scoreGuess, validDate, wordleResult, wordleBoardResult, type GameRecord } from '../src/lib/utils/games.ts';
 
 test('board-only Wordle stops at the first green row or scores X/6', () => {
@@ -153,4 +153,23 @@ test('Wordle statistics include failures in the distribution and exclude them fr
     ]);
     assert.equal(wordleStatistics([7]).average, null);
     assert.ok(wordleStatistics([]).distribution.every(entry => entry.count === 0 && entry.share === 0));
+});
+
+test('Isaaconnect statistics count every attempt and place exact times in the next band', () => {
+    const stats = isaacStatistics([
+        { points: 0, lifes: 0, time: 59 },
+        { points: 4, lifes: 2, time: 60 },
+        { points: 1, lifes: 1, time: 120 },
+        { points: 4, lifes: 4, time: 180 },
+        { points: 2, lifes: 0, time: 300 }
+    ]);
+    assert.equal(stats.games, 5);
+    assert.equal(stats.failures, 3);
+    assert.equal(stats.averagePoints, 2.2);
+    assert.equal(stats.averageLives, 1.4);
+    assert.equal(stats.averageTime, 719 / 5);
+    assert.deepEqual(stats.distribution.points.map(row => row.count), [1, 1, 1, 0, 2]);
+    assert.deepEqual(stats.distribution.lives.map(row => row.count), [2, 1, 1, 0, 1]);
+    assert.ok(stats.distribution.time.every(row => row.count === 1 && row.share === 0.2));
+    assert.equal(isaacStatistics([]).averageTime, null);
 });

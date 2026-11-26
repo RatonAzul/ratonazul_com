@@ -44,7 +44,7 @@ page also attempts to prefetch in its universal load function.
 - `src/routes/games/[[game]]/` serves the Games overview and each game subpage. The overview compares all games, and each subpage filters the scoreboard and calendar to that game. Only the two players
   selected in `/admin/games/access` can load the daily matchup. Compare the
   best saved result per player and game using the Calendar result rules.
-  Display game scores and outcomes above separate board cards. Show submitted Wordle guesses and the Isaaconnect tie-break metrics when needed. Monthly and Global show seven dates per page using the same result widgets as Weekly. Global lists recorded dates newest first.
+  Display game scores and outcomes above separate board cards. Show submitted Wordle guesses and the Isaaconnect tie-break metrics when needed. Monthly and Global show seven dates per page using the same result widgets as Weekly. Global lists recorded dates newest first. Each configured player can submit their own missing result for today in Europe/Madrid using the inline editor. The server derives the player from the session and uses the existing result notification and calendar sync.
 - `src/routes/admin/games/`: game cards and per-game calendar/result management
   at `/wordle`, `/la-palabra-del-dia`, and `/isaaconnect` using `[game]`.
 - `src/lib/components/admin/Game{Calendar,ResultEditor}.svelte`: reusable

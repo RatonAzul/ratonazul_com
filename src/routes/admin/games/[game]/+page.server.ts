@@ -4,8 +4,7 @@ import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/auth.schema';
 import { eq } from 'drizzle-orm';
 import { syncCalendarGameResults } from '$lib/server/calendar/game-results';
-import { deliverNotification } from '$lib/server/notifications';
-import type { SiteNotification } from '$lib/types/notifications';
+import { createGameResult } from '$lib/server/games/results';
 import { gamesRequest, listGames, GamesApiError } from '$lib/server/games-api';
 import { games, isGame, validDate, recordDate, puzzleDay, isaacDay, parseIsaac, parseSpanishWordle, wordleResult, wordleBoardResult, normalizeWord, type GameRecord, type IsaacInput, type WordleInput, type Solution } from '$lib/utils/games';
 import type { Actions, PageServerLoad } from './$types';
@@ -31,10 +30,7 @@ async function saveGameResult(
         return;
     }
 
-    const result = await gamesRequest<GameRecord & { notification?: SiteNotification }>(endpoint, actor, 'POST', {
-        ...input, notification: { display_name: playerName.trim() || 'unknown player' }
-    });
-    if (result.notification) await deliverNotification(result.notification, input.user_id);
+    await createGameResult(endpoint, actor, input, playerName);
 }
 
 export const load: PageServerLoad = async ({ request, params, url }) => {
