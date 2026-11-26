@@ -2,8 +2,8 @@ import { error } from '@sveltejs/kit';
 import { listGames } from '$lib/server/games-api';
 import { gamePairForViewer } from '$lib/server/games/access';
 import { gameResultOutcome, rankGameResults } from '$lib/utils/game-result-summary';
-import { games, recordDate, validDate, type Game, type GameRecord } from '$lib/utils/games';
-import { calendarWeekRange } from '$lib/utils/shared/calendar';
+import { games, isGame, recordDate, validDate, type Game, type GameRecord } from '$lib/utils/games';
+import { calendarMonths, calendarWeekRange } from '$lib/utils/shared/calendar';
 import type { PageServerLoad } from './$types';
 
 const firstDate = '2026-08-01';
@@ -24,19 +24,25 @@ function displayResult(record: GameRecord | undefined) {
     };
 }
 
-export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
+export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) => {
+    const game = params.game;
+    if (game !== undefined && !isGame(game)) error(404, 'Game not found.');
+    const tab = url.searchParams.get('tab');
+    const period = tab === 'weekly' || tab === 'monthly' || tab === 'global' ? tab : 'daily';
+    const scope = { game, period } as const;
     setHeaders({ 'Cache-Control': 'private, no-store' });
-    if (!locals.user) return { matchup: null };
+    if (!locals.user) return { ...scope, matchup: null };
     const viewer = locals.user.id;
     const players = await gamePairForViewer(viewer);
-    if (!players) return { matchup: null };
+    if (!players) return { ...scope, matchup: null };
 
     const today = madridDate.format(new Date());
     const date = url.searchParams.get('date') ?? today;
     if (!validDate(date) || date < firstDate || date > today) error(400, 'Choose a past or current game date.');
 
     const year = date.slice(0, 4);
-    const results = await Promise.allSettled(gameIds.map(async game => {
+    const selectedGames = game ? [game] : gameIds;
+    const results = await Promise.allSettled(selectedGames.map(async game => {
         const histories = await Promise.all(players.map(player =>
             listGames<GameRecord>(games[game].endpoint, viewer, { user_id: player.id })
         ));
@@ -61,24 +67,62 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
     }));
 
     const scores = new Map<string, [number, number]>();
-    const matchups = results.map((result, index) => {
-        if (result.status === 'fulfilled') {
-            for (const [day, { outcome }] of result.value) {
-                if (!outcome) continue;
-                const score = scores.get(day) ?? [0, 0];
-                if (outcome === 'first') score[0]++;
-                if (outcome === 'second') score[1]++;
-                scores.set(day, score);
+    for (const result of results) {
+        if (result.status !== 'fulfilled') continue;
+        for (const [day, { outcome }] of result.value) {
+            if (!outcome) continue;
+            const score = scores.get(day) ?? [0, 0];
+            if (outcome === 'first') score[0]++;
+            if (outcome === 'second') score[1]++;
+            scores.set(day, score);
+        }
+    }
+
+    function matchupsForDay(day: string, wordlesOnly = false) {
+        return results.flatMap((result, index) => {
+            const game = selectedGames[index];
+            if (wordlesOnly && game === 'isaaconnect') return [];
+            const matchup = result.status === 'fulfilled' ? result.value.get(day) : undefined;
+            return [{
+                game,
+                available: result.status === 'fulfilled',
+                outcome: matchup?.outcome ?? null,
+                results: matchup?.results.map(displayResult) ?? [null, null]
+            }];
+        });
+    }
+
+    const matchups = matchupsForDay(date);
+    const { start, end } = calendarWeekRange(date);
+    const month = date.slice(0, 7);
+    let dates: string[] = [];
+    if (period === 'weekly' && game !== 'isaaconnect') {
+        dates = Array.from({ length: 7 }, (_, index) => {
+            const day = new Date(start);
+            day.setUTCDate(day.getUTCDate() + index);
+            return day.toISOString().slice(0, 10);
+        });
+    } else if (period === 'monthly') {
+        dates = calendarMonths(Number(year))[Number(date.slice(5, 7)) - 1].dates;
+    } else if (period === 'global') {
+        const recordedDates = new Set<string>();
+        for (const result of results) {
+            if (result.status === 'fulfilled') {
+                for (const day of result.value.keys()) recordedDates.add(day);
             }
         }
-        const matchup = result.status === 'fulfilled' ? result.value.get(date) : undefined;
-        return {
-            game: gameIds[index],
-            available: result.status === 'fulfilled',
-            outcome: matchup?.outcome ?? null,
-            results: matchup?.results.map(displayResult) ?? [null, null]
-        };
-    });
+        dates = [...recordedDates].sort().reverse();
+    }
+
+    const pageSize = 7;
+    const pageCount = Math.max(1, Math.ceil(dates.length / pageSize));
+    const requestedPage = Number(url.searchParams.get('page'));
+    const pageNumber = Number.isSafeInteger(requestedPage) ? Math.min(pageCount, Math.max(1, requestedPage)) : 1;
+    const pageStart = (pageNumber - 1) * pageSize;
+    const days = dates.slice(pageStart, pageStart + pageSize).map(date => ({
+        date,
+        matchups: date >= firstDate && date <= today ? matchupsForDay(date, period === 'weekly') : []
+    }));
     const complete = matchups.every(matchup => matchup.available);
     const calendar: Record<string, 'first' | 'second' | 'draw'> = {};
     const totals = {
@@ -88,9 +132,6 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
         global: [0, 0]
     };
     if (complete) {
-        const { start, end } = calendarWeekRange(date);
-        const month = date.slice(0, 7);
-
         for (const [day, [left, right]] of scores) {
             if (day.startsWith(year + '-')) {
                 calendar[day] = left === right ? 'draw' : left > right ? 'first' : 'second';
@@ -104,5 +145,5 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
         }
     }
 
-    return { matchup: { date, today, firstDate, players, matchups, totals, calendar: complete ? calendar : null } };
+    return { ...scope, matchup: { date, today, firstDate, players, matchups, days, pageNumber, pageCount, totals, calendar: complete ? calendar : null } };
 };
