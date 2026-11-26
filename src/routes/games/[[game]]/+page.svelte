@@ -9,6 +9,7 @@
     import MonthPicker from '$lib/components/shared/MonthPicker.svelte';
     import SectionSeparator from '$lib/components/shared/SectionSeparator.svelte';
     import UserAvatar from '$lib/components/shared/UserAvatar.svelte';
+    import WordleStats from '$lib/components/games/WordleStats.svelte';
     import { games, type Game } from '$lib/utils/games';
     import { defaultProfileColor, isProfileColor } from '$lib/utils/profile-colors';
     import { calendarDayColors, formatCalendarDate, interactiveEmptyCalendarDayClass } from '$lib/utils/shared/calendar';
@@ -18,10 +19,17 @@
     const weekdayFormat = new Intl.DateTimeFormat('en-GB', { weekday: 'long', timeZone: 'UTC' });
 
     let { data }: { data: PageData } = $props();
+    let statsViewport = $state<HTMLDivElement>();
     let expandedBoards = $state<Record<string, boolean>>({});
     const gameIds = Object.keys(games) as Game[];
     const periods = ['daily', 'weekly', 'monthly', 'global'] as const;
     let period = $derived(data.period);
+
+    function showPlayerStats(index: number) {
+        if (!statsViewport) return;
+        statsViewport.children[index]?.querySelector('button')?.focus({ preventScroll: true });
+        statsViewport.scrollTo({ left: index * statsViewport.clientWidth });
+    }
 
     function matchupHref(date: string, tab: typeof periods[number]) {
         return `?date=${date}${tab === 'daily' ? '' : `&tab=${tab}`}`;
@@ -142,7 +150,7 @@
         {/each}
     </nav>
     {#if data.matchup}
-        {@const { date, today, firstDate, players, matchups, days, pageNumber, pageCount, totals, calendar } = data.matchup}
+        {@const { date, today, firstDate, players, matchups, days, pageNumber, pageCount, totals, stats, calendar } = data.matchup}
         {@const [leftPoints, rightPoints] = totals[period]}
         <section class="flex flex-col gap-4" aria-label="Game matchup">
             <nav class="tab-nav" aria-label="Scoreboard period">
@@ -171,6 +179,25 @@
                 </div>
             {:else}
                 <p class="subtitle" role="status">unable to load days won.</p>
+            {/if}
+            {#if data.game && data.game !== 'isaaconnect'}
+                <SectionSeparator class="my-0!" />
+                <section class="flex flex-col gap-2" aria-labelledby="wordle-statistics">
+                    <h3 class="plain-h3" id="wordle-statistics">stats</h3>
+                    {#if stats}
+                        <div class="flex min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none]
+                            motion-safe:scroll-smooth sm:grid sm:grid-cols-2 sm:gap-2 sm:overflow-visible" bind:this={statsViewport}>
+                            {#each players as player, index (player.id)}
+                                <div class="grid w-full min-w-0 shrink-0 snap-start">
+                                    <WordleStats name={player.username || player.name} color={player.color} stats={stats[index]}
+                                        right={index === 1} switchPlayer={() => showPlayerStats(1 - index)} />
+                                </div>
+                            {/each}
+                        </div>
+                    {:else}
+                        <p class="subtitle" role="status">unable to load stats.</p>
+                    {/if}
+                </section>
             {/if}
             {#if period === 'daily'}
                 {#each matchups as matchup (matchup.game)}

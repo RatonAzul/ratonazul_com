@@ -47,3 +47,24 @@ export function gameResultSummary(game: Game, records: GameRecord[], playerName:
     }
     return '';
 }
+
+export function wordleStatistics(scores: number[]) {
+    const counts = [0, 0, 0, 0, 0, 0, 0];
+    for (const score of scores) counts[score - 1]++;
+
+    const games = scores.length;
+    const failures = counts[6];
+    const solved = games - failures;
+    const guesses = counts.slice(0, 6).reduce((total, count, index) => total + count * (index + 1), 0);
+
+    return {
+        games,
+        failures,
+        average: solved ? guesses / solved : null,
+        distribution: counts.map((count, index) => ({
+            result: index === 6 ? 'X' : String(index + 1),
+            count,
+            share: games ? count / games : 0
+        }))
+    };
+}
