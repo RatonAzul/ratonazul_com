@@ -124,8 +124,7 @@
                 ? month.dates.findIndex(day => day >= selectedWeek.start && day < selectedWeek.end)
                 : -1}
             <svelte:element this={monthHref ? 'a' : 'div'} href={monthHref} data-sveltekit-noscroll
-                class="group min-w-0 snap-start {selection === 'month' ? 'self-start border-2' : ''}
-                    {monthSelected ? 'border-fg0' : 'border-transparent'}"
+                class="group min-w-0 snap-start {selection === 'month' ? 'self-start' : ''}"
                 role={monthHref ? undefined : 'group'}
                 aria-current={monthSelected ? 'true' : undefined}
                 aria-label={`${monthHref ? 'Select ' : ''}${month.name} ${year}`}>
@@ -136,7 +135,7 @@
                     <p class="section-label mb-2 max-sm:hidden {monthStart.slice(0, 7) === today.slice(0, 7)
                         ? 'bg-purple text-bg0' : 'bg-bg1 text-fg0'}">{month.name}</p>
                 {/if}
-                <div class="surface-card relative grid grid-cols-7 gap-1 p-2">
+                <div class="surface-card relative grid grid-cols-7 gap-1 p-2 {monthSelected ? 'ring-2 ring-inset ring-fg0' : ''}">
                     {#if weekIndex >= 0}
                         <span class="pointer-events-none absolute inset-0 z-10 border-2 border-fg0"
                             style:grid-area={`${Math.floor((month.offset + weekIndex) / 7) + 2} / 1 / span 1 / -1`}

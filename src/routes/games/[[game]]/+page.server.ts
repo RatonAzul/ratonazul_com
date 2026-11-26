@@ -1,10 +1,12 @@
-import { error } from '@sveltejs/kit';
-import { listGames } from '$lib/server/games-api';
+import { error, fail } from '@sveltejs/kit';
+import { GamesApiError, listGames } from '$lib/server/games-api';
+import { syncCalendarGameResults, withCalendarGameLock } from '$lib/server/calendar/game-results';
+import { createGameResult } from '$lib/server/games/results';
 import { gamePairForViewer } from '$lib/server/games/access';
-import { gameResultOutcome, rankGameResults, wordleStatistics } from '$lib/utils/game-result-summary';
-import { games, isGame, recordDate, validDate, type Game, type GameRecord } from '$lib/utils/games';
+import { gameResultOutcome, isaacStatistics, rankGameResults, wordleStatistics } from '$lib/utils/game-result-summary';
+import { games, isGame, normalizeWord, parseIsaac, parseSpanishWordle, puzzleDay, recordDate, validDate, wordleBoardResult, wordleResult, type Game, type GameRecord, type Solution } from '$lib/utils/games';
 import { calendarMonths, calendarWeekRange } from '$lib/utils/shared/calendar';
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 
 const firstDate = '2026-08-01';
 const madridDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid', dateStyle: 'short' });
@@ -41,6 +43,16 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
     if (!validDate(date) || date < firstDate || date > today) error(400, 'Choose a past or current game date.');
 
     const year = date.slice(0, 4);
+    const { start, end } = calendarWeekRange(date);
+    const month = date.slice(0, 7);
+
+    function inSelectedPeriod(day: string) {
+        if (period === 'daily') return day === date;
+        if (period === 'weekly') return day >= start && day < end;
+        if (period === 'monthly') return day.startsWith(month + '-');
+        return true;
+    }
+
     const selectedGames = game ? [game] : gameIds;
     const results = await Promise.allSettled(selectedGames.map(async game => {
         const histories = await Promise.all(players.map(player =>
@@ -55,7 +67,7 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
             else byDate.set(day, [record]);
         }
 
-        return new Map([...byDate].map(([day, records]) => {
+        const matchups = new Map([...byDate].map(([day, records]) => {
             const ordered = rankGameResults(game, records);
             const first = ordered.find(record => record.user_id === players[0].id);
             const second = ordered.find(record => record.user_id === players[1].id);
@@ -64,12 +76,27 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
                 results: [first, second]
             }] as const;
         }));
+        const wordleStats = params.game && game !== 'isaaconnect' ? players.map((_, index) => {
+            const scores: number[] = [];
+            for (const [day, matchup] of matchups) {
+                const record = matchup.results[index];
+                if (inSelectedPeriod(day) && record && 'score' in record) scores.push(record.score);
+            }
+            return wordleStatistics(scores);
+        }) : null;
+        const isaacStats = params.game === 'isaaconnect' ? histories.map(records => isaacStatistics(
+            records.filter(record => {
+                const day = recordDate(record);
+                return day >= firstDate && day <= today && inSelectedPeriod(day);
+            }).filter(record => 'points' in record)
+        )) : null;
+        return { matchups, wordleStats, isaacStats };
     }));
 
     const scores = new Map<string, [number, number]>();
     for (const result of results) {
         if (result.status !== 'fulfilled') continue;
-        for (const [day, { outcome }] of result.value) {
+        for (const [day, { outcome }] of result.value.matchups) {
             if (!outcome) continue;
             const score = scores.get(day) ?? [0, 0];
             if (outcome === 'first') score[0]++;
@@ -82,7 +109,7 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
         return results.flatMap((result, index) => {
             const game = selectedGames[index];
             if (wordlesOnly && game === 'isaaconnect') return [];
-            const matchup = result.status === 'fulfilled' ? result.value.get(day) : undefined;
+            const matchup = result.status === 'fulfilled' ? result.value.matchups.get(day) : undefined;
             return [{
                 game,
                 available: result.status === 'fulfilled',
@@ -93,23 +120,11 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
     }
 
     const matchups = matchupsForDay(date);
-    const { start, end } = calendarWeekRange(date);
-    const month = date.slice(0, 7);
-    const wordleHistory = game && game !== 'isaaconnect' ? results[0] : undefined;
-    const stats = wordleHistory?.status === 'fulfilled' ? players.map((_, index) => {
-        const scores: number[] = [];
-        for (const [day, matchup] of wordleHistory.value) {
-            const inPeriod = period === 'global'
-                || (period === 'daily' && day === date)
-                || (period === 'weekly' && day >= start && day < end)
-                || (period === 'monthly' && day.startsWith(month + '-'));
-            const record = matchup.results[index];
-            if (inPeriod && record && 'score' in record) scores.push(record.score);
-        }
-        return wordleStatistics(scores);
-    }) : null;
+    const history = results[0];
+    const wordleStats = history.status === 'fulfilled' ? history.value.wordleStats : null;
+    const isaacStats = history.status === 'fulfilled' ? history.value.isaacStats : null;
     let dates: string[] = [];
-    if (period === 'weekly' && game !== 'isaaconnect') {
+    if (period === 'weekly') {
         dates = Array.from({ length: 7 }, (_, index) => {
             const day = new Date(start);
             day.setUTCDate(day.getUTCDate() + index);
@@ -121,7 +136,7 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
         const recordedDates = new Set<string>();
         for (const result of results) {
             if (result.status === 'fulfilled') {
-                for (const day of result.value.keys()) recordedDates.add(day);
+                for (const day of result.value.matchups.keys()) recordedDates.add(day);
             }
         }
         dates = [...recordedDates].sort().reverse();
@@ -134,7 +149,7 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
     const pageStart = (pageNumber - 1) * pageSize;
     const days = dates.slice(pageStart, pageStart + pageSize).map(date => ({
         date,
-        matchups: date >= firstDate && date <= today ? matchupsForDay(date, period === 'weekly') : []
+        matchups: date >= firstDate && date <= today ? matchupsForDay(date, period === 'weekly' && !game) : []
     }));
     const complete = matchups.every(matchup => matchup.available);
     const calendar: Record<string, 'first' | 'second' | 'draw'> = {};
@@ -158,5 +173,68 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
         }
     }
 
-    return { ...scope, matchup: { date, today, firstDate, players, matchups, days, pageNumber, pageCount, totals, stats, calendar: complete ? calendar : null } };
+    return { ...scope, matchup: { date, today, firstDate, viewer, players, matchups, days, pageNumber, pageCount, totals, wordleStats, isaacStats, calendar: complete ? calendar : null } };
+};
+
+export const actions: Actions = {
+    submitResult: async ({ locals, params, request }) => {
+        const player = locals.user;
+        if (!player || !(await gamePairForViewer(player.id))) error(403, 'Games access required.');
+        const form = await request.formData();
+        const field = (name: string) => String(form.get(name) ?? '');
+        const game = field('game');
+        const date = field('date');
+        if (!isGame(game) || (params.game && params.game !== game)) error(400, 'Choose a valid game.');
+        if (date !== madridDate.format(new Date())) {
+            return fail(400, { game, date, message: 'You can only submit today’s result.' });
+        }
+
+        const config = games[game];
+        const day = puzzleDay(game, date);
+        const mode = field('mode');
+        const share = field('share');
+        let saved = false;
+        try {
+            if (share.length > 20_000) throw new Error('The shared result is too long.');
+            await withCalendarGameLock(game, async () => {
+                if (date !== madridDate.format(new Date())) throw new Error('You can only submit today’s result.');
+                const existing = await listGames<GameRecord>(config.endpoint, player.id, {
+                    user_id: player.id,
+                    ...(game === 'isaaconnect' ? { day: String(day) } : { date })
+                });
+                if (existing.length) throw new GamesApiError(409, 'You already submitted this result.');
+
+                if (game === 'isaaconnect') {
+                    const result = parseIsaac(share);
+                    if (result.day !== day) throw new Error(`Today’s puzzle is #${day}.`);
+                    await createGameResult(config.endpoint, player.id, { ...result, user_id: player.id }, player.name);
+                } else {
+                    let result;
+                    if (mode === 'board') {
+                        result = wordleBoardResult(field('board'));
+                    } else if (mode === 'share' && game === 'la-palabra-del-dia') {
+                        result = parseSpanishWordle(share);
+                        if (result.day !== day) throw new Error(`Today’s puzzle is #${day}.`);
+                    } else if (mode === 'words') {
+                        const answer = normalizeWord(field('answer'));
+                        result = wordleResult(Array.from({ length: 6 }, (_, index) => field(`guess${index}`)), answer);
+                        const [solution] = await listGames<Solution>(games[game].solutions, player.id, { day: String(day) });
+                        if (solution && solution.word !== answer) throw new Error('The answer does not match today’s puzzle.');
+                    } else {
+                        throw new Error('Choose a valid input method.');
+                    }
+                    await createGameResult(config.endpoint, player.id, { ...result, day, date, user_id: player.id }, player.name);
+                }
+                saved = true;
+            });
+            await syncCalendarGameResults(game, [date], player.id);
+            return { game, date };
+        } catch (cause) {
+            if (saved) {
+                return { game, date, warning: 'Result saved. The calendar summary could not be updated.' };
+            }
+            const status = cause instanceof GamesApiError ? ([400, 409].includes(cause.status) ? cause.status : 503) : 400;
+            return fail(status, { game, date, message: cause instanceof Error ? cause.message : 'Unable to save this result.' });
+        }
+    }
 };
