@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { BellIcon, CalendarIcon, JoystickIcon, TireIcon, UsersIcon } from 'phosphor-svelte';
+    import { BellIcon, CalendarIcon, GameControllerIcon, TireIcon, UsersIcon } from 'phosphor-svelte';
     import AdminSectionCard from '$lib/components/admin/AdminSectionCard.svelte';
     import Body from '$lib/components/shared/Body.svelte';
     import H1WithBreadCrumb from '$lib/components/shared/H1WithBreadCrumb.svelte';
@@ -8,7 +8,7 @@
     const sections = [
         { name: 'notifications', icon: BellIcon, description: 'publish site-wide or group alerts' },
         { name: 'calendar', icon: CalendarIcon, description: 'manage calendar access, event types and events' },
-        { name: 'games', icon: JoystickIcon, description: 'manage wordle, la palabra del día and isaaconnect results' },
+        { name: 'games', icon: GameControllerIcon, description: 'manage wordle, la palabra del día and isaaconnect results' },
         { name: 'users', icon: UsersIcon, description: 'view users and manage their roles' },
         { name: 'motorsport', icon: TireIcon, description: 'manage drivers, meetings and race data' }
     ] as const;

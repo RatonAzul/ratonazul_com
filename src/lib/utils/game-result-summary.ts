@@ -74,6 +74,7 @@ export function wordleStatistics(scores: number[]) {
 }
 
 const timeLimits = [60, 120, 180, 300];
+const maxStatsTime = 600;
 
 export function isaacStatistics(attempts: { points: number; lifes: number; time: number }[]) {
     const points = [0, 0, 0, 0, 0];
@@ -82,29 +83,47 @@ export function isaacStatistics(attempts: { points: number; lifes: number; time:
     let totalPoints = 0;
     let totalLives = 0;
     let totalTime = 0;
+    let timedGames = 0;
 
     for (const attempt of attempts) {
         points[attempt.points]++;
         lives[attempt.lifes]++;
-        const bucket = timeLimits.findIndex(limit => attempt.time < limit);
-        time[bucket === -1 ? timeLimits.length : bucket]++;
         totalPoints += attempt.points;
         totalLives += attempt.lifes;
-        totalTime += attempt.time;
+        if (attempt.time <= maxStatsTime) {
+            const bucket = timeLimits.findIndex(limit => attempt.time < limit);
+            time[bucket === -1 ? timeLimits.length : bucket]++;
+            totalTime += attempt.time;
+            timedGames++;
+        }
     }
 
     const games = attempts.length;
-    const scores = ['0', '1', '2', '3', '4'];
+    const scores = ['4', '3', '2', '1', '0'];
     return {
         games,
         failures: games - points[4],
         averagePoints: games ? totalPoints / games : null,
         averageLives: games ? totalLives / games : null,
-        averageTime: games ? totalTime / games : null,
+        averageTime: timedGames ? totalTime / timedGames : null,
         distribution: {
-            points: resultDistribution(scores, points, games),
-            lives: resultDistribution(scores, lives, games),
-            time: resultDistribution(['<1m', '1–<2m', '2–<3m', '3–<5m', '5m+'], time, games)
+            points: resultDistribution(scores, points.toReversed(), games),
+            lives: resultDistribution(scores, lives.toReversed(), games),
+            time: resultDistribution(['<1m', '1–<2m', '2–<3m', '3–<5m', '5–10m'], time, timedGames)
         }
     };
+}
+
+export function pointProgression(events: { position: number; winner: 0 | 1 }[], length: number) {
+    let left = 0;
+    let right = 0;
+    const points = [{ position: 0, left, right }];
+
+    for (const { position, winner } of [...events].sort((a, b) => a.position - b.position)) {
+        if (winner === 0) left++;
+        else right++;
+        points.push({ position, left, right });
+    }
+    if (points.at(-1)?.position !== length) points.push({ position: length, left, right });
+    return points;
 }

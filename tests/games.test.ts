@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { gameResultSummary, isaacStatistics, wordleStatistics } from '../src/lib/utils/game-result-summary.ts';
+import { gameResultSummary, isaacStatistics, pointProgression, wordleStatistics } from '../src/lib/utils/game-result-summary.ts';
 import { calendarMonths, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, playerCounts, recordDate, scoreGuess, validDate, wordleResult, wordleBoardResult, type GameRecord } from '../src/lib/utils/games.ts';
 
 test('board-only Wordle stops at the first green row or scores X/6', () => {
@@ -155,21 +155,43 @@ test('Wordle statistics include failures in the distribution and exclude them fr
     assert.ok(wordleStatistics([]).distribution.every(entry => entry.count === 0 && entry.share === 0));
 });
 
-test('Isaaconnect statistics count every attempt and place exact times in the next band', () => {
+test('Isaaconnect statistics rank high scores first and exclude times over ten minutes', () => {
     const stats = isaacStatistics([
         { points: 0, lifes: 0, time: 59 },
         { points: 4, lifes: 2, time: 60 },
         { points: 1, lifes: 1, time: 120 },
         { points: 4, lifes: 4, time: 180 },
-        { points: 2, lifes: 0, time: 300 }
+        { points: 2, lifes: 0, time: 300 },
+        { points: 4, lifes: 2, time: 600 },
+        { points: 3, lifes: 1, time: 601 }
     ]);
-    assert.equal(stats.games, 5);
-    assert.equal(stats.failures, 3);
-    assert.equal(stats.averagePoints, 2.2);
-    assert.equal(stats.averageLives, 1.4);
-    assert.equal(stats.averageTime, 719 / 5);
-    assert.deepEqual(stats.distribution.points.map(row => row.count), [1, 1, 1, 0, 2]);
-    assert.deepEqual(stats.distribution.lives.map(row => row.count), [2, 1, 1, 0, 1]);
-    assert.ok(stats.distribution.time.every(row => row.count === 1 && row.share === 0.2));
+    assert.equal(stats.games, 7);
+    assert.equal(stats.failures, 4);
+    assert.equal(stats.averagePoints, 18 / 7);
+    assert.equal(stats.averageLives, 10 / 7);
+    assert.equal(stats.averageTime, 1319 / 6);
+    assert.deepEqual(stats.distribution.points.map(row => [row.result, row.count]), [
+        ['4', 3], ['3', 1], ['2', 1], ['1', 1], ['0', 1]
+    ]);
+    assert.deepEqual(stats.distribution.lives.map(row => row.count), [1, 0, 2, 2, 2]);
+    assert.deepEqual(stats.distribution.time.map(row => row.count), [1, 1, 1, 1, 2]);
+    assert.equal(stats.distribution.time.at(-1)?.share, 2 / 6);
+    assert.equal(isaacStatistics([{ points: 4, lifes: 2, time: 601 }]).averageTime, null);
     assert.equal(isaacStatistics([]).averageTime, null);
+});
+
+test('points progression accumulates chronologically and holds the final score to the period end', () => {
+    const points = pointProgression([
+        { position: 5, winner: 0 },
+        { position: 3, winner: 1 },
+        { position: 1, winner: 0 }
+    ], 7);
+    assert.deepEqual(points, [
+        { position: 0, left: 0, right: 0 },
+        { position: 1, left: 1, right: 0 },
+        { position: 3, left: 1, right: 1 },
+        { position: 5, left: 2, right: 1 },
+        { position: 7, left: 2, right: 1 }
+    ]);
+    assert.deepEqual(pointProgression([], 3).at(-1), { position: 3, left: 0, right: 0 });
 });
