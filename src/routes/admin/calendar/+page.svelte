@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { CalendarDotsIcon, JoystickIcon, TagIcon, UsersIcon } from 'phosphor-svelte';
+    import { CalendarDotsIcon, GameControllerIcon, TagIcon, UsersIcon } from 'phosphor-svelte';
     import AdminSectionCard from '$lib/components/admin/AdminSectionCard.svelte';
     import { pageColors } from '$lib/utils/page-colors';
     import Body from '$lib/components/shared/Body.svelte';
@@ -15,7 +15,7 @@
             color={pageColors.calendar} description="edit event categories and set their priority" />
         <AdminSectionCard href="/admin/calendar/events" title="manage events" icon={CalendarDotsIcon}
             color={pageColors.calendar} description="add, edit or delete calendar events" />
-        <AdminSectionCard href="/admin/calendar/game-results" title="game results" icon={JoystickIcon}
+        <AdminSectionCard href="/admin/calendar/game-results" title="game results" icon={GameControllerIcon}
             color={pageColors.calendar} description="choose event types for automatic game results" />
     </div>
 </Body>

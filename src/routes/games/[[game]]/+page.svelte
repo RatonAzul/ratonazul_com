@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { CaretDownIcon, HeartIcon, TimerIcon } from 'phosphor-svelte';
+    import { CaretDownIcon, GameControllerIcon, HeartIcon, TimerIcon } from 'phosphor-svelte';
     import { slide } from 'svelte/transition';
     import Body from '$lib/components/shared/Body.svelte';
     import CustomH1 from '$lib/components/shared/CustomH1.svelte';
@@ -10,6 +10,7 @@
     import SectionSeparator from '$lib/components/shared/SectionSeparator.svelte';
     import UserAvatar from '$lib/components/shared/UserAvatar.svelte';
     import PlayerResultEditor from '$lib/components/games/PlayerResultEditor.svelte';
+    import PointsProgression from '$lib/components/games/PointsProgression.svelte';
     import GameStatsCard from '$lib/components/games/GameStatsCard.svelte';
     import { games, type Game } from '$lib/utils/games';
     import { defaultProfileColor, isProfileColor } from '$lib/utils/profile-colors';
@@ -21,26 +22,27 @@
 
     let { data, form }: { data: PageData; form: ActionData } = $props();
     const isaacMetrics = ['points', 'lives', 'time'] as const;
+    const winRateFormat = new Intl.NumberFormat('en-GB', { style: 'percent', maximumFractionDigits: 0 });
     const statNumber = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
     let metricIndex = $state(0);
     let isaacMetric = $derived(isaacMetrics[metricIndex]);
-    let statsViewport = $state<HTMLDivElement>();
     let expandedBoards = $state<Record<string, boolean>>({});
-    const gameIds = Object.keys(games) as Game[];
+    const gamePages = [
+        { game: undefined, name: 'all games', icon: GameControllerIcon },
+        ...(Object.keys(games) as Game[]).map(game => ({ game, name: games[game].name, icon: gameIcons[game] }))
+    ];
     const periods = ['daily', 'weekly', 'monthly', 'global'] as const;
     let period = $derived(data.period);
     let submitAction = $derived(data.matchup
         ? `?/submitResult&${matchupHref(data.matchup.date, period).slice(1)}&page=${data.matchup.pageNumber}`
         : '?/submitResult');
 
-    function showPlayerStats(index: number) {
-        if (!statsViewport) return;
-        statsViewport.children[index]?.querySelector<HTMLButtonElement>('[data-switch-player]')?.focus({ preventScroll: true });
-        statsViewport.scrollTo({ left: index * statsViewport.clientWidth });
-    }
-
     function cycleMetric(direction: number) {
         metricIndex = (metricIndex + direction + isaacMetrics.length) % isaacMetrics.length;
+    }
+
+    function winRate(games: number, failures: number) {
+        return games === 0 ? '–' : winRateFormat.format((games - failures) / games);
     }
 
     function averageLabel(value: number | null) {
@@ -94,7 +96,7 @@
     {:else}
         {@const expanded = expandedBoards[id] ?? Boolean(submission?.message)}
         <div class="grid grid-cols-2 gap-2">
-            {#each players as player, index (player.id)}
+            {#each players as player, index}
                 {@const result = matchup.results[index]}
                 {@const status = playerStatus(matchup.outcome, index)}
                 {@const opponent = matchup.results[1 - index]}
@@ -103,7 +105,7 @@
                 {@const neutralPoints = tiedPoints && matchup.outcome !== 'bothLost'}
                 {@const neutralLives = tiedLives && matchup.outcome !== 'bothLost'}
                 {@const { color, backgroundColor } = calendarDayColors(status ? resultAccents[status] : 'gray')}
-                {@const ownMissing = canSubmit && player.id === data.matchup?.viewer && !result}
+                {@const ownMissing = canSubmit && index === data.matchup?.submissionSlot && !result}
                 <article aria-label={player.username || player.name}
                     class="surface-card flex min-h-8 min-w-0 items-stretch justify-between {index === 1 ? 'flex-row-reverse border-r-4' : 'border-l-4'}"
                     style:border-color={color} style:color style:background-color={backgroundColor}>
@@ -152,14 +154,14 @@
         <div id={'boards-' + id} class="empty:hidden">
             {#if expanded}
                 <div class="grid grid-cols-2 gap-2" transition:slide={{ duration: 160 }}>
-                    {#each players as player, index (player.id)}
+                    {#each players as player, index}
                         {@const result = matchup.results[index]}
                         <div role="group" aria-label={player.username || player.name}
                             class="surface-card flex min-w-0 flex-col items-center p-3 {index === 1 ? 'border-r-4 sm:items-start' : 'border-l-4 sm:items-end'}"
                             style:border-color={'var(--' + player.color + ')'}>
                             {#if result?.rows}
                                 <GameBoard rows={result.rows} words={result.words} isaac={matchup.game === 'isaaconnect'} compact />
-                            {:else if canSubmit && player.id === data.matchup?.viewer}
+                            {:else if canSubmit && index === data.matchup?.submissionSlot}
                                 <PlayerResultEditor game={matchup.game} date={day} action={submitAction} message={submission?.message} />
                             {:else}
                                 <p class="subtitle">no result yet.</p>
@@ -173,19 +175,27 @@
 {/snippet}
 
 <Body>
-    <CustomH1 class="mb-1!">{data.game ? games[data.game].name : 'games'}</CustomH1>
-    <nav class="mb-3 flex flex-wrap gap-x-4 gap-y-2 text-secondary" aria-label="Game pages">
+    <CustomH1 class="mb-1! flex items-center gap-2">
         {#if data.game}
-            <a class="internal-link" href={data.matchup ? '/games' + matchupHref(data.matchup.date, period) : '/games'}>[all]</a>
+            <FilledSectionIcon icon={gameIcons[data.game]} color="blue" />
+            {games[data.game].name}
+        {:else}
+            <FilledSectionIcon icon={GameControllerIcon} color="blue" />
+            all games
         {/if}
-        {#each gameIds as game (game)}
-            <a href={`/games/${game}${data.matchup ? matchupHref(data.matchup.date, period) : ''}`}
-                class={data.game === game ? 'font-semibold text-fg0' : 'internal-link'}
-                aria-current={data.game === game ? 'page' : undefined}>[{games[game].name}]</a>
+    </CustomH1>
+    <nav class="mb-3 flex flex-wrap gap-2" aria-label="Game pages">
+        {#each gamePages as entry (entry.name)}
+            {@const selected = data.game === entry.game}
+            <a href={`/games${entry.game ? '/' + entry.game : ''}${data.matchup ? matchupHref(data.matchup.date, period) : ''}`}
+                class="inline-flex hover:brightness-110" aria-current={selected ? 'page' : undefined}
+                aria-label={entry.name} title={entry.name}>
+                <FilledSectionIcon icon={entry.icon} color={selected ? 'fg0' : 'aqua'} compact />
+            </a>
         {/each}
     </nav>
     {#if data.matchup}
-        {@const { date, today, firstDate, players, matchups, days, pageNumber, pageCount, totals, wordleStats, isaacStats, calendar } = data.matchup}
+        {@const { date, today, firstDate, players, matchups, days, pageNumber, pageCount, totals, wordleStats, isaacStats, progression, rangeStart, rangeEnd, calendar } = data.matchup}
         {@const [leftPoints, rightPoints] = totals[period]}
         <section class="flex flex-col gap-4" aria-label="Game matchup">
             <nav class="tab-nav" aria-label="Scoreboard period">
@@ -197,7 +207,7 @@
             {#if form?.warning}<p class="subtitle" role="status">{form.warning}</p>{/if}
             {#if period === 'daily' || calendar}
                 <div class="grid grid-cols-2 items-stretch gap-2">
-                    {#each players as player, index (player.id)}
+                    {#each players as player, index}
                         {@const points = index === 0 ? leftPoints : rightPoints}
                         {@const { color, backgroundColor } = scoreColor(points, index === 0 ? rightPoints : leftPoints)}
                         <button type="button"
@@ -216,45 +226,52 @@
             {:else}
                 <p class="subtitle" role="status">unable to load days won.</p>
             {/if}
-            {#if data.game}
+            {#if data.game && period !== 'daily'}
                 <SectionSeparator class="my-0!" />
                 <section class="flex flex-col gap-2" aria-labelledby="game-statistics">
                     <h3 class="plain-h3" id="game-statistics">stats</h3>
                     {#if wordleStats || isaacStats}
-                        <div class="flex min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none]
-                            motion-safe:scroll-smooth sm:grid sm:grid-cols-2 sm:gap-2 sm:overflow-visible" bind:this={statsViewport}>
-                            {#each players as player, index (player.id)}
+                        <div class="grid grid-cols-2 gap-2">
+                            {#each players as player, index}
                                 {@const wordle = wordleStats?.[index]}
                                 {@const isaac = isaacStats?.[index]}
-                                <div class="grid w-full min-w-0 shrink-0 snap-start">
-                                    {#if isaac}
-                                        <GameStatsCard name={player.username || player.name} color={player.color}
-                                            distribution={isaac.distribution[isaacMetric]} chart={{ label: isaacMetric, cycle: cycleMetric }}
-                                            summary={[
-                                                { label: 'games played', value: isaac.games },
-                                                { label: 'average points', value: averageLabel(isaac.averagePoints) },
-                                                { label: 'average lives', value: averageLabel(isaac.averageLives) },
-                                                { label: 'average time', value: averageTimeLabel(isaac.averageTime) },
-                                                { label: 'failures', value: isaac.failures }
-                                            ]}
-                                            right={index === 1} switchPlayer={() => showPlayerStats(1 - index)} />
-                                    {:else if wordle}
-                                        <GameStatsCard name={player.username || player.name} color={player.color}
-                                            distribution={wordle.distribution}
-                                            summary={[
-                                                { label: 'games played', value: wordle.games },
-                                                { label: 'average result', value: averageLabel(wordle.average) },
-                                                { label: 'failures (X)', value: wordle.failures }
-                                            ]}
-                                            right={index === 1} switchPlayer={() => showPlayerStats(1 - index)} />
-                                    {/if}
-                                </div>
+                                {#if isaac}
+                                    <GameStatsCard name={player.username || player.name} color={player.color}
+                                        distribution={isaac.distribution[isaacMetric]} chart={{ label: isaacMetric, cycle: cycleMetric }}
+                                        summary={[
+                                            { label: 'games played', value: isaac.games },
+                                            {
+                                                label: 'average ' + isaacMetric,
+                                                value: isaacMetric === 'time' ? averageTimeLabel(isaac.averageTime)
+                                                    : averageLabel(isaacMetric === 'points' ? isaac.averagePoints : isaac.averageLives)
+                                            },
+                                            { label: 'win rate', value: winRate(isaac.games, isaac.failures) }
+                                        ]}
+                                        right={index === 1} />
+                                {:else if wordle}
+                                    <GameStatsCard name={player.username || player.name} color={player.color}
+                                        distribution={wordle.distribution}
+                                        summary={[
+                                            { label: 'games played', value: wordle.games },
+                                            { label: 'average result', value: averageLabel(wordle.average) },
+                                            { label: 'win rate', value: winRate(wordle.games, wordle.failures) }
+                                        ]}
+                                        right={index === 1} />
+                                {/if}
                             {/each}
                         </div>
                     {:else}
                         <p class="subtitle" role="status">unable to load stats.</p>
                     {/if}
                 </section>
+            {/if}
+            {#if progression}
+                {#if data.game && period !== 'daily'}
+                    <SectionSeparator class="my-0!" />
+                {/if}
+                <PointsProgression points={progression} {players}
+                    startLabel={period === 'daily' ? 'start' : formatCalendarDate(rangeStart)}
+                    endLabel={period === 'daily' ? (data.game ? 'after game' : 'after all games') : formatCalendarDate(rangeEnd)} />
             {/if}
             {#if period === 'daily'}
                 {#each matchups as matchup (matchup.game)}
@@ -273,12 +290,14 @@
                     </section>
                 {/each}
             {:else}
-                <div id="period-results" class="flex flex-col gap-4">
+                <SectionSeparator class="my-0!" />
+                <section id="period-results" class="flex flex-col gap-4" aria-labelledby="period-results-title">
+                    <h3 class="plain-h3" id="period-results-title">games</h3>
                     {#each days as day (day.date)}
-                        <section class="flex flex-col gap-2 border-t border-bg3 pt-4" aria-labelledby={'results-' + day.date}>
-                            <h3 class="plain-h3" id={'results-' + day.date}>
+                        <section class="flex flex-col gap-2" aria-labelledby={'results-' + day.date}>
+                            <h4 class="text-secondary text-fg0" id={'results-' + day.date}>
                                 <time datetime={day.date}>{weekdayFormat.format(new Date(day.date))} · {formatCalendarDate(day.date)}</time>
-                            </h3>
+                            </h4>
                             {#if day.matchups.length === 0}
                                 {#if day.date > today}
                                     <p class="surface-card subtitle border-l-4 border-aqua px-3 py-2">upcoming</p>
@@ -287,7 +306,7 @@
                                 {/if}
                             {:else}
                                 {#each day.matchups as matchup (matchup.game)}
-                                    {#if !data.game}<h4 class="mt-2 text-secondary text-gray">{games[matchup.game].name}</h4>{/if}
+                                    {#if !data.game}<h5 class="mt-2 text-secondary text-gray">{games[matchup.game].name}</h5>{/if}
                                     {@render gameResults(matchup, players, day.date)}
                                 {/each}
                             {/if}
@@ -308,7 +327,7 @@
                             {/if}
                         </nav>
                     {/if}
-                </div>
+                </section>
             {/if}
         </section>
         <SectionSeparator />

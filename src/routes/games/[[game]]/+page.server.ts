@@ -2,12 +2,13 @@ import { error, fail } from '@sveltejs/kit';
 import { GamesApiError, listGames } from '$lib/server/games-api';
 import { syncCalendarGameResults, withCalendarGameLock } from '$lib/server/calendar/game-results';
 import { createGameResult } from '$lib/server/games/results';
-import { gamePairForViewer } from '$lib/server/games/access';
-import { gameResultOutcome, isaacStatistics, rankGameResults, wordleStatistics } from '$lib/utils/game-result-summary';
+import { gameMatchupPlayers, gamePair } from '$lib/server/games/access';
+import { gameResultOutcome, isaacStatistics, pointProgression, rankGameResults, wordleStatistics } from '$lib/utils/game-result-summary';
 import { games, isGame, normalizeWord, parseIsaac, parseSpanishWordle, puzzleDay, recordDate, validDate, wordleBoardResult, wordleResult, type Game, type GameRecord, type Solution } from '$lib/utils/games';
 import { calendarMonths, calendarWeekRange } from '$lib/utils/shared/calendar';
 import type { Actions, PageServerLoad } from './$types';
 
+const millisecondsPerDay = 86_400_000;
 const firstDate = '2026-08-01';
 const madridDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid', dateStyle: 'short' });
 const gameIds = Object.keys(games) as Game[];
@@ -33,10 +34,11 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
     const period = tab === 'weekly' || tab === 'monthly' || tab === 'global' ? tab : 'daily';
     const scope = { game, period } as const;
     setHeaders({ 'Cache-Control': 'private, no-store' });
-    if (!locals.user) return { ...scope, matchup: null };
-    const viewer = locals.user.id;
-    const players = await gamePairForViewer(viewer);
+    const players = await gameMatchupPlayers();
     if (!players) return { ...scope, matchup: null };
+    const viewerId = locals.user?.id;
+    const submissionSlot = players.findIndex(player => player.id === viewerId);
+    const reader = viewerId ?? 'public-games';
 
     const today = madridDate.format(new Date());
     const date = url.searchParams.get('date') ?? today;
@@ -47,7 +49,6 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
     const month = date.slice(0, 7);
 
     function inSelectedPeriod(day: string) {
-        if (period === 'daily') return day === date;
         if (period === 'weekly') return day >= start && day < end;
         if (period === 'monthly') return day.startsWith(month + '-');
         return true;
@@ -56,7 +57,7 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
     const selectedGames = game ? [game] : gameIds;
     const results = await Promise.allSettled(selectedGames.map(async game => {
         const histories = await Promise.all(players.map(player =>
-            listGames<GameRecord>(games[game].endpoint, viewer, { user_id: player.id })
+            listGames<GameRecord>(games[game].endpoint, reader, { user_id: player.id })
         ));
         const byDate = new Map<string, GameRecord[]>();
         for (const record of histories.flat()) {
@@ -76,7 +77,7 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
                 results: [first, second]
             }] as const;
         }));
-        const wordleStats = params.game && game !== 'isaaconnect' ? players.map((_, index) => {
+        const wordleStats = period !== 'daily' && params.game && game !== 'isaaconnect' ? players.map((_, index) => {
             const scores: number[] = [];
             for (const [day, matchup] of matchups) {
                 const record = matchup.results[index];
@@ -84,7 +85,7 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
             }
             return wordleStatistics(scores);
         }) : null;
-        const isaacStats = params.game === 'isaaconnect' ? histories.map(records => isaacStatistics(
+        const isaacStats = period !== 'daily' && params.game === 'isaaconnect' ? histories.map(records => isaacStatistics(
             records.filter(record => {
                 const day = recordDate(record);
                 return day >= firstDate && day <= today && inSelectedPeriod(day);
@@ -159,6 +160,22 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
         monthly: [0, 0],
         global: [0, 0]
     };
+    const events: { position: number; winner: 0 | 1 }[] = [];
+    const rangeStart = period === 'weekly' ? start : period === 'monthly' ? month + '-01' : firstDate;
+    const lastPeriodDay = period === 'weekly' || period === 'monthly' ? dates.at(-1) ?? today : today;
+    const rangeEnd = lastPeriodDay < today ? lastPeriodDay : today;
+
+    function positionForDate(day: string) {
+        return (Date.parse(day) - Date.parse(rangeStart)) / millisecondsPerDay + 1;
+    }
+
+    if (period === 'daily') {
+        matchups.forEach(({ outcome }, index) => {
+            if (outcome === 'first' || outcome === 'second') {
+                events.push({ position: index + 1, winner: outcome === 'first' ? 0 : 1 });
+            }
+        });
+    }
     if (complete) {
         for (const [day, [left, right]] of scores) {
             if (day.startsWith(year + '-')) {
@@ -168,18 +185,32 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
 
             const winner = left > right ? 0 : 1;
             totals.global[winner]++;
+            if (period !== 'daily' && inSelectedPeriod(day)) {
+                events.push({ position: positionForDate(day), winner });
+            }
             if (day.startsWith(month + '-')) totals.monthly[winner]++;
             if (day >= start && day < end) totals.weekly[winner]++;
         }
     }
 
-    return { ...scope, matchup: { date, today, firstDate, viewer, players, matchups, days, pageNumber, pageCount, totals, wordleStats, isaacStats, calendar: complete ? calendar : null } };
+    const progression = period === 'daily' || complete
+        ? pointProgression(events, period === 'daily' ? matchups.length : positionForDate(rangeEnd))
+        : null;
+    const profiles = players.map(({ name, username, image, color }) => ({ name, username, image, color }));
+    return { ...scope, matchup: {
+        date, today, firstDate, submissionSlot, players: profiles, matchups, days, pageNumber, pageCount,
+        totals, wordleStats, isaacStats, progression, rangeStart, rangeEnd, calendar: complete ? calendar : null
+    } };
 };
 
 export const actions: Actions = {
     submitResult: async ({ locals, params, request }) => {
         const player = locals.user;
-        if (!player || !(await gamePairForViewer(player.id))) error(403, 'Games access required.');
+        if (!player) error(403, 'Only the configured players can submit results.');
+        const pair = await gamePair();
+        if (!pair?.firstUserId || !pair.secondUserId || (player.id !== pair.firstUserId && player.id !== pair.secondUserId)) {
+            error(403, 'Only the configured players can submit results.');
+        }
         const form = await request.formData();
         const field = (name: string) => String(form.get(name) ?? '');
         const game = field('game');

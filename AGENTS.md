@@ -41,8 +41,7 @@ page also attempts to prefetch in its universal load function.
   exposes membership to all navbars.
 - `src/routes/profile/[userId]/`: owner-only profile editing and account deletion
   using Better Auth. The header links to the current user's profile.
-- `src/routes/games/[[game]]/` serves the Games overview and each game subpage. The overview compares all games, and each subpage filters the scoreboard and calendar to that game. Only the two players
-  selected in `/admin/games/access` can load the daily matchup. Compare the
+- `src/routes/games/[[game]]/` serves the Games overview and each game subpage. The overview compares all games, and each subpage filters the scoreboard and calendar to that game. Public visitors can see the matchup for the two players selected in `/admin/games/access`. Compare the
   best saved result per player and game using the Calendar result rules.
   Display game scores and outcomes above separate board cards. Show submitted Wordle guesses and the Isaaconnect tie-break metrics when needed. Monthly and Global show seven dates per page using the same result widgets as Weekly. Global lists recorded dates newest first. Each configured player can submit their own missing result for today in Europe/Madrid using the inline editor. The server derives the player from the session and uses the existing result notification and calendar sync.
 - `src/routes/admin/games/`: game cards and per-game calendar/result management
