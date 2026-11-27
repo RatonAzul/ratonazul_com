@@ -127,3 +127,18 @@ export function pointProgression(events: { position: number; winner: 0 | 1 }[], 
     if (points.at(-1)?.position !== length) points.push({ position: length, left, right });
     return points;
 }
+
+export function compareGamePair(game: Game, records: GameRecord[], ids: readonly [string, string]) {
+    const [firstId, secondId] = ids;
+    const ranked = rankGameResults(game, records);
+    const first = ranked.find(record => record.user_id === firstId);
+    const second = ranked.find(record => record.user_id === secondId);
+    return {
+        outcome: first && second ? gameResultOutcome(first, second) : null,
+        results: [first, second]
+    } as const;
+}
+
+export function gameResultScore(record: GameRecord) {
+    return 'points' in record ? record.points + '/4' : (record.score === 7 ? 'X' : record.score) + '/6';
+}

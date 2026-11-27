@@ -1,16 +1,15 @@
 import { error, fail } from '@sveltejs/kit';
 import { GamesApiError, listGames } from '$lib/server/games-api';
 import { syncCalendarGameResults, withCalendarGameLock } from '$lib/server/calendar/game-results';
-import { createGameResult } from '$lib/server/games/results';
-import { gameMatchupPlayers, gamePair } from '$lib/server/games/access';
-import { gameResultOutcome, isaacStatistics, pointProgression, rankGameResults, wordleStatistics } from '$lib/utils/game-result-summary';
+import { createGameResult, currentGameDate } from '$lib/server/games/results';
+import { duelSetup } from '$lib/server/games/access';
+import { compareGamePair, gameResultScore, isaacStatistics, pointProgression, wordleStatistics } from '$lib/utils/game-result-summary';
 import { games, isGame, normalizeWord, parseIsaac, parseSpanishWordle, puzzleDay, recordDate, validDate, wordleBoardResult, wordleResult, type Game, type GameRecord, type Solution } from '$lib/utils/games';
 import { calendarMonths, calendarWeekRange } from '$lib/utils/shared/calendar';
 import type { Actions, PageServerLoad } from './$types';
 
 const millisecondsPerDay = 86_400_000;
 const firstDate = '2026-08-01';
-const madridDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid', dateStyle: 'short' });
 const gameIds = Object.keys(games) as Game[];
 
 function displayResult(record: GameRecord | undefined) {
@@ -18,29 +17,30 @@ function displayResult(record: GameRecord | undefined) {
     if ('points' in record) {
         const minutes = String(Math.floor(record.time / 60)).padStart(2, '0');
         const seconds = String(record.time % 60).padStart(2, '0');
-        return { rows: record.board, score: record.points + '/4', points: record.points, lives: record.lifes, time: minutes + ':' + seconds };
+        return { rows: record.board, score: gameResultScore(record), points: record.points, lives: record.lifes, time: minutes + ':' + seconds };
     }
     return {
-        score: (record.score === 7 ? 'X' : record.score) + '/6',
+        score: gameResultScore(record),
         rows: record.board.match(/.{5}/g) ?? [],
         words: record.words ?? []
     };
 }
 
-export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) => {
-    const game = params.game;
+export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
+    const game = url.searchParams.get('game') ?? undefined;
     if (game !== undefined && !isGame(game)) error(404, 'Game not found.');
     const tab = url.searchParams.get('tab');
     const period = tab === 'weekly' || tab === 'monthly' || tab === 'global' ? tab : 'daily';
     const scope = { game, period } as const;
     setHeaders({ 'Cache-Control': 'private, no-store' });
-    const players = await gameMatchupPlayers();
-    if (!players) return { ...scope, matchup: null };
     const viewerId = locals.user?.id;
+    const pairing = await duelSetup(viewerId, url.searchParams.get('first'), url.searchParams.get('second'));
+    if (!pairing) return { ...scope, matchup: null };
+    const { roster, players } = pairing;
     const submissionSlot = players.findIndex(player => player.id === viewerId);
     const reader = viewerId ?? 'public-games';
 
-    const today = madridDate.format(new Date());
+    const today = currentGameDate();
     const date = url.searchParams.get('date') ?? today;
     if (!validDate(date) || date < firstDate || date > today) error(400, 'Choose a past or current game date.');
 
@@ -54,7 +54,8 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
         return true;
     }
 
-    const selectedGames = game ? [game] : gameIds;
+    const selectedGame = game;
+    const selectedGames = selectedGame ? [selectedGame] : gameIds;
     const results = await Promise.allSettled(selectedGames.map(async game => {
         const histories = await Promise.all(players.map(player =>
             listGames<GameRecord>(games[game].endpoint, reader, { user_id: player.id })
@@ -68,16 +69,10 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
             else byDate.set(day, [record]);
         }
 
-        const matchups = new Map([...byDate].map(([day, records]) => {
-            const ordered = rankGameResults(game, records);
-            const first = ordered.find(record => record.user_id === players[0].id);
-            const second = ordered.find(record => record.user_id === players[1].id);
-            return [day, {
-                outcome: first && second ? gameResultOutcome(first, second) : null,
-                results: [first, second]
-            }] as const;
-        }));
-        const wordleStats = period !== 'daily' && params.game && game !== 'isaaconnect' ? players.map((_, index) => {
+        const matchups = new Map([...byDate].map(([day, records]) => [
+            day, compareGamePair(game, records, [players[0].id, players[1].id])
+        ] as const));
+        const wordleStats = period !== 'daily' && selectedGame && game !== 'isaaconnect' ? players.map((_, index) => {
             const scores: number[] = [];
             for (const [day, matchup] of matchups) {
                 const record = matchup.results[index];
@@ -85,7 +80,7 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
             }
             return wordleStatistics(scores);
         }) : null;
-        const isaacStats = period !== 'daily' && params.game === 'isaaconnect' ? histories.map(records => isaacStatistics(
+        const isaacStats = period !== 'daily' && selectedGame === 'isaaconnect' ? histories.map(records => isaacStatistics(
             records.filter(record => {
                 const day = recordDate(record);
                 return day >= firstDate && day <= today && inSelectedPeriod(day);
@@ -106,17 +101,16 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
         }
     }
 
-    function matchupsForDay(day: string, wordlesOnly = false) {
-        return results.flatMap((result, index) => {
+    function matchupsForDay(day: string) {
+        return results.map((result, index) => {
             const game = selectedGames[index];
-            if (wordlesOnly && game === 'isaaconnect') return [];
             const matchup = result.status === 'fulfilled' ? result.value.matchups.get(day) : undefined;
-            return [{
+            return {
                 game,
                 available: result.status === 'fulfilled',
                 outcome: matchup?.outcome ?? null,
                 results: matchup?.results.map(displayResult) ?? [null, null]
-            }];
+            };
         });
     }
 
@@ -150,7 +144,8 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
     const pageStart = (pageNumber - 1) * pageSize;
     const days = dates.slice(pageStart, pageStart + pageSize).map(date => ({
         date,
-        matchups: date >= firstDate && date <= today ? matchupsForDay(date, period === 'weekly' && !game) : []
+        score: scores.get(date) ?? [0, 0],
+        matchups: date >= firstDate && date <= today ? matchupsForDay(date) : []
     }));
     const complete = matchups.every(matchup => matchup.available);
     const calendar: Record<string, 'first' | 'second' | 'draw'> = {};
@@ -189,27 +184,23 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
     const progression = period !== 'daily' && complete
         ? pointProgression(events, positionForDate(rangeEnd))
         : null;
-    const profiles = players.map(({ name, username, image, color }) => ({ name, username, image, color }));
     return { ...scope, matchup: {
-        date, today, firstDate, submissionSlot, players: profiles, matchups, days, pageNumber, pageCount,
+        date, today, firstDate, submissionSlot, players, options: roster, matchups, days, pageNumber, pageCount,
         totals, wordleStats, isaacStats, progression, rangeStart, rangeEnd, calendar: complete ? calendar : null
     } };
 };
 
 export const actions: Actions = {
-    submitResult: async ({ locals, params, request }) => {
+    submitResult: async ({ locals, url, request }) => {
         const player = locals.user;
-        if (!player) error(403, 'Only the configured players can submit results.');
-        const pair = await gamePair();
-        if (!pair?.firstUserId || !pair.secondUserId || (player.id !== pair.firstUserId && player.id !== pair.secondUserId)) {
-            error(403, 'Only the configured players can submit results.');
-        }
+        if (!player) error(403, 'Sign in to submit your result.');
         const form = await request.formData();
         const field = (name: string) => String(form.get(name) ?? '');
         const game = field('game');
         const date = field('date');
-        if (!isGame(game) || (params.game && params.game !== game)) error(400, 'Choose a valid game.');
-        if (date !== madridDate.format(new Date())) {
+        const selectedGame = url.searchParams.get('game');
+        if (!isGame(game) || (selectedGame !== null && selectedGame !== game)) error(400, 'Choose a valid game.');
+        if (date !== currentGameDate()) {
             return fail(400, { game, date, message: 'You can only submit today’s result.' });
         }
 
@@ -221,7 +212,7 @@ export const actions: Actions = {
         try {
             if (share.length > 20_000) throw new Error('The shared result is too long.');
             await withCalendarGameLock(game, async () => {
-                if (date !== madridDate.format(new Date())) throw new Error('You can only submit today’s result.');
+                if (date !== currentGameDate()) throw new Error('You can only submit today’s result.');
                 const existing = await listGames<GameRecord>(config.endpoint, player.id, {
                     user_id: player.id,
                     ...(game === 'isaaconnect' ? { day: String(day) } : { date })

@@ -29,7 +29,7 @@
             {#each users as user (user.id)}
                 <li class="list-row flex-wrap border-l-4 {hasAccess ? 'border-green' : 'border-red'}">
                     <div class="flex min-w-0 items-center gap-3">
-                        <UserAvatar image={user.image} name={user.username || user.name} />
+                        <UserAvatar image={user.image} showImage={user.showImage} color={user.color} />
                         <div class="min-w-0 wrap-anywhere">
                             <p class="text-card-title">{user.username || user.name}</p>
                             <p class="subtitle">{user.email}</p>

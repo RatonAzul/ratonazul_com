@@ -4,6 +4,7 @@
     import { tick, untrack } from 'svelte';
     import { games, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, wordleResult, wordleBoardResult, normalizeWord, type Game, type GameRecord, type Player } from '$lib/utils/games';
     import FormSelect from '$lib/components/shared/FormSelect.svelte';
+    import UserSelect from '$lib/components/shared/UserSelect.svelte';
     import GameBoard from '$lib/components/shared/GameBoard.svelte';
 
     type Values = { id: string; userId: string; date: string; answer: string; words: string[]; share: string; mode?: string; board?: string };
@@ -47,10 +48,9 @@
     });
     let selectedPlayer = $derived(players.find(player => player.id === userId));
     let playerName = $derived(selectedPlayer?.username || selectedPlayer?.name || userId || 'choose a player');
-    let playerOptions = $derived([
+    let extraPlayers = $derived([
         ...(record && !players.some(player => player.id === record.user_id)
-            ? [{ value: record.user_id, label: 'unknown player (' + record.user_id + ')', disabled: true }] : []),
-        ...players.map(player => ({ value: player.id, label: (player.username || player.name) + ' · ' + player.id.slice(0, 8) }))
+            ? [{ value: record.user_id, label: 'unknown player (' + record.user_id.slice(0, 8) + ')', disabled: true }] : [])
     ]);
     let modeOptions = $derived([
         { value: 'words', label: 'enter words' },
@@ -82,7 +82,7 @@
     }}>
         <input type="hidden" name="id" value={record?.id ?? ''} />
         <input type="hidden" name="date" value={date} />
-        <FormSelect label="player" name="userId" options={playerOptions} bind:value={userId} placeholder="choose a player" required />
+        <UserSelect label="player" name="userId" users={players} extraOptions={extraPlayers} bind:value={userId} placeholder="choose a player" required />
         {#if game === 'isaaconnect'}
             <label class="form-label">share text
                 <textarea name="share" bind:value={share} rows="11" maxlength="20000" required class={`${inputClass} resize-y`} placeholder="Isaaconnect #855&#10;✅: 1/4 ❤️: 0/4&#10;🟦🟦🟥🟦&#10;Time: 06:10.549&#10;https://isaaconnect.com/"></textarea>

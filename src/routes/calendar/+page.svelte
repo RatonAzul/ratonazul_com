@@ -134,7 +134,7 @@
                     {#key data.date}
                         <form method="POST" action={`?/comment&date=${data.date}`}
                             class="surface-card flex min-h-14 items-center gap-2 p-3 sm:gap-3">
-                            <UserAvatar image={data.viewer.image} name={data.viewer.name} class="size-12 aspect-square max-sm:text-xs" />
+                            <UserAvatar image={data.viewer.image} showImage={data.viewer.showImage} color={data.viewer.color} class="size-12 aspect-square max-sm:text-xs" />
                             <label class="sr-only" for="calendar-comment">your comment</label>
                             <textarea id="calendar-comment" class="form-field min-w-0 flex-1 resize-y max-sm:text-xs" name="content" rows="2"
                                 placeholder="your comment" maxlength={data.maxCommentLength}
@@ -152,7 +152,7 @@
                             {@const isOwnComment = comment.user_id === data.viewerId}
                             {@const displayedTime = comment.updated_at ?? comment.created_at}
                             <li class="surface-card flex min-h-14 gap-3 border-r-4 p-3" style:--author-color={`var(--${comment.author.color})`} style:border-right-color="var(--author-color)">
-                                <UserAvatar image={comment.author.image} name={comment.author.name} class="size-12 aspect-square self-start max-sm:text-xs" />
+                                <UserAvatar image={comment.author.image} showImage={comment.author.showImage} color={comment.author.color} class="size-12 aspect-square self-start max-sm:text-xs" />
                                 <div class="relative min-w-0 flex-1 self-center text-secondary max-sm:text-xs">
                                     <div class="flex flex-wrap items-baseline gap-x-2" class:pr-10={isOwnComment}>
                                         <p class="text-card-title wrap-anywhere max-sm:text-sm" style:color="var(--author-color)">{comment.author.name}</p>

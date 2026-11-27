@@ -2,8 +2,9 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
-import { user } from '$lib/server/db/schema';
+import { gameOpponent, user } from '$lib/server/db/schema';
 import { isProfileColor } from '$lib/utils/profile-colors';
+import { registeredGamePlayers, preferredOpponent } from '$lib/server/games/access';
 import { pushConfig } from '$lib/server/notifications';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -16,9 +17,11 @@ async function requireOwner(request: Request, userId: string) {
 
 export const load: PageServerLoad = async ({ request, params }) => {
     await requireOwner(request, params.userId);
-    const [profile] = await db.select({ name: user.name, username: user.username, image: user.image, email: user.email, color: user.color }).from(user).where(eq(user.id, params.userId)).limit(1);
+    const [profile] = await db.select({ name: user.name, username: user.username, image: user.image, showImage: user.showImage, email: user.email, color: user.color }).from(user).where(eq(user.id, params.userId)).limit(1);
     if (!profile) error(404, 'User not found');
-    return { profile, userId: params.userId, pushPublicKey: pushConfig()?.publicKey ?? null };
+    const [players, opponentId] = await Promise.all([registeredGamePlayers(), preferredOpponent(params.userId)]);
+    const opponents = players.filter(player => player.id !== params.userId);
+    return { profile, userId: params.userId, pushPublicKey: pushConfig()?.publicKey ?? null, opponents, opponentId: opponentId ?? 'automatic' };
 };
 
 export const actions: Actions = {
@@ -30,6 +33,7 @@ export const actions: Actions = {
             name: String(form.get('name') ?? '').trim(),
             username: String(form.get('username') ?? '').trim(),
             image: String(form.get('image') ?? '').trim(),
+            showImage: form.has('showImage'),
             color: isProfileColor(color) ? color : undefined
         };
         if (color !== null && !values.color) return fail(400, { message: 'Choose a profile color from the palette.', values });
@@ -47,6 +51,8 @@ export const actions: Actions = {
                     name: values.name,
                     username: values.username,
                     image: values.image || null,
+                    showImage: values.showImage,
+                    profileSetupComplete: true,
                     ...(values.color && { color: values.color })
                 }
             });
@@ -54,6 +60,22 @@ export const actions: Actions = {
             return fail(400, { message: 'Unable to update your profile. Please try again.', values });
         }
         return { success: true, message: 'Profile saved.' };
+    },
+    saveOpponent: async ({ request, params }) => {
+        await requireOwner(request, params.userId);
+        const opponentId = (await request.formData()).get('opponent');
+        if (typeof opponentId !== 'string' || opponentId === params.userId) {
+            return fail(400, { success: false, opponentMessage: 'Choose another player.' });
+        }
+        if (opponentId !== 'automatic') {
+            const [opponent] = await db.select({ id: user.id }).from(user).where(eq(user.id, opponentId));
+            if (!opponent) return fail(400, { success: false, opponentMessage: 'Choose a registered player.' });
+            await db.insert(gameOpponent).values({ userId: params.userId, opponentId })
+                .onConflictDoUpdate({ target: gameOpponent.userId, set: { opponentId } });
+        } else {
+            await db.delete(gameOpponent).where(eq(gameOpponent.userId, params.userId));
+        }
+        return { success: true, opponentMessage: 'Duel opponent saved.' };
     },
     delete: async ({ request, params }) => {
         await requireOwner(request, params.userId);

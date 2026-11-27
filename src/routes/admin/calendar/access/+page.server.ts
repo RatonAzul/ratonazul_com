@@ -7,7 +7,7 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ request }) => {
     await requireCalendarAdmin(request);
-    const users = await db.select({ id: user.id, name: user.name, username: user.username, email: user.email, image: user.image, member: calendarMember.userId })
+    const users = await db.select({ id: user.id, name: user.name, username: user.username, email: user.email, image: user.image, showImage: user.showImage, color: user.color, member: calendarMember.userId })
         .from(user).leftJoin(calendarMember, eq(user.id, calendarMember.userId)).orderBy(user.name);
     return { users };
 };

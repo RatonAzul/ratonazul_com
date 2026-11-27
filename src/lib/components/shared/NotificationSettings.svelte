@@ -1,5 +1,5 @@
 <script lang="ts">
-    import SettingsSwitch from './SettingsSwitch.svelte';
+    import SettingsCheckbox from './SettingsCheckbox.svelte';
     import type { NotificationGroup } from '$lib/utils/notification-groups';
     import { onMount } from 'svelte';
     import { getDeviceAlerts, notificationWorker, setDeviceAlerts, supportsDeviceAlerts } from '$lib/utils/browser-notifications';
@@ -129,8 +129,8 @@
     <section class="flex flex-col gap-2" aria-labelledby="notification-categories-heading">
         <h3 id="notification-categories-heading" class="plain-h3">notification categories</h3>
         {#each inbox.data.options as option (option.group)}
-            <SettingsSwitch checked={option.enabled} onChange={(receive) => changeGroup(option.group, receive)}
-                disabled={savingGroup !== undefined} label={groupLabels[option.group]} labelId={'notification-option-' + option.group} />
+            <SettingsCheckbox checked={option.enabled} onChange={(receive) => changeGroup(option.group, receive)}
+                disabled={savingGroup !== undefined} label={groupLabels[option.group]} />
         {/each}
     </section>
     {#if feedback}<p class="form-feedback {failed ? 'text-red' : 'text-fg0'}" role={failed ? 'alert' : 'status'}>{feedback}</p>{/if}

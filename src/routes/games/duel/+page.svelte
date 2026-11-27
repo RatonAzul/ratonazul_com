@@ -1,18 +1,19 @@
 <script lang="ts">
     import { CaretDownIcon, GameControllerIcon, HeartIcon, TimerIcon } from 'phosphor-svelte';
+    import { goto } from '$app/navigation';
     import { slide } from 'svelte/transition';
     import Body from '$lib/components/shared/Body.svelte';
-    import CustomH1 from '$lib/components/shared/CustomH1.svelte';
+    import GamesPageHeader from '$lib/components/games/GamesPageHeader.svelte';
     import FilledSectionIcon from '$lib/components/shared/FilledSectionIcon.svelte';
     import { gameIcons } from '$lib/components/shared/game-icons';
     import GameBoard from '$lib/components/shared/GameBoard.svelte';
     import MonthPicker from '$lib/components/shared/MonthPicker.svelte';
     import SectionSeparator from '$lib/components/shared/SectionSeparator.svelte';
-    import UserAvatar from '$lib/components/shared/UserAvatar.svelte';
+    import DuelPlayerSelect from '$lib/components/games/DuelPlayerSelect.svelte';
     import PlayerResultEditor from '$lib/components/games/PlayerResultEditor.svelte';
     import PointsProgression from '$lib/components/games/PointsProgression.svelte';
     import GameStatsCard from '$lib/components/games/GameStatsCard.svelte';
-    import { games, type Game } from '$lib/utils/games';
+    import { gameFilterHref, games } from '$lib/utils/games';
     import { defaultProfileColor, isProfileColor } from '$lib/utils/profile-colors';
     import { calendarDayColors, formatCalendarDate, interactiveEmptyCalendarDayClass } from '$lib/utils/shared/calendar';
     import type { ActionData, PageData } from './$types';
@@ -26,11 +27,8 @@
     const statNumber = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
     let metricIndex = $state(0);
     let isaacMetric = $derived(isaacMetrics[metricIndex]);
+    let expandedDays = $state<Record<string, boolean>>({});
     let expandedBoards = $state<Record<string, boolean>>({});
-    const gamePages = [
-        { game: undefined, name: 'all games', icon: GameControllerIcon },
-        ...(Object.keys(games) as Game[]).map(game => ({ game, name: games[game].name, icon: gameIcons[game] }))
-    ];
     const periods = ['daily', 'weekly', 'monthly', 'global'] as const;
     let period = $derived(data.period);
     let submitAction = $derived(data.matchup
@@ -56,7 +54,22 @@
     }
 
     function matchupHref(date: string, tab: typeof periods[number]) {
-        return `?date=${date}${tab === 'daily' ? '' : `&tab=${tab}`}`;
+        const query = new URLSearchParams({ date });
+        if (tab !== 'daily') query.set('tab', tab);
+        if (data.game) query.set('game', data.game);
+        if (data.matchup) {
+            query.set('first', data.matchup.players[0].id);
+            query.set('second', data.matchup.players[1].id);
+        }
+        return `?${query}`;
+    }
+
+    function pickPlayer(index: number, id: string) {
+        const matchup = data.matchup;
+        if (!matchup || !id || matchup.players[index].id === id) return;
+        const query = new URLSearchParams(matchupHref(matchup.date, period).slice(1));
+        query.set(index === 0 ? 'first' : 'second', id);
+        void goto(`?${query}`, { noScroll: true, keepFocus: true });
     }
 
     const tiedStatBackground = 'color-mix(in srgb, var(--gray) 25%, var(--bg0))';
@@ -87,7 +100,8 @@
     }
 </script>
 
-{#snippet gameResults(matchup: Matchup['matchups'][number], players: Matchup['players'], day: string)}
+{#snippet gameResults(matchup: Matchup['matchups'][number], players: Matchup['players'], day: string, compact = false)}
+    {@const textSize = compact ? 'text-[0.625rem] leading-tight' : 'text-meta sm:text-secondary'}
     {@const id = day + '-' + matchup.game}
     {@const submission = form?.game === matchup.game && form.date === day ? form : null}
     {@const canSubmit = day === data.matchup?.today}
@@ -96,7 +110,7 @@
     {:else}
         {@const expanded = expandedBoards[id] ?? Boolean(submission?.message)}
         <div class="grid grid-cols-2 gap-2">
-            {#each players as player, index}
+            {#each players as player, index (player.id)}
                 {@const result = matchup.results[index]}
                 {@const status = playerStatus(matchup.outcome, index)}
                 {@const opponent = matchup.results[1 - index]}
@@ -107,29 +121,29 @@
                 {@const { color, backgroundColor } = calendarDayColors(status ? resultAccents[status] : 'gray')}
                 {@const ownMissing = canSubmit && index === data.matchup?.submissionSlot && !result}
                 <article aria-label={player.username || player.name}
-                    class="surface-card flex min-h-8 min-w-0 items-stretch justify-between {index === 1 ? 'flex-row-reverse border-r-4' : 'border-l-4'}"
+                    class="surface-card flex min-w-0 items-stretch justify-between {compact ? 'min-h-6' : 'min-h-8'} {index === 1 ? 'flex-row-reverse border-r-4' : 'border-l-4'}"
                     style:border-color={color} style:color style:background-color={backgroundColor}>
                     <button type="button" class="flex w-6 shrink-0 cursor-pointer items-center sm:w-8 justify-center hover:bg-bg2/50 focus-visible:bg-bg2/50"
                         aria-label={`${expanded ? 'Hide' : 'Show'} ${games[matchup.game].name} boards`}
                         aria-expanded={expanded} aria-controls={'boards-' + id}
                         onclick={() => expandedBoards[id] = !expanded}>
-                        <CaretDownIcon size={16} class="motion-safe:transition-transform {expanded ? 'rotate-180' : ''}" aria-hidden="true" />
+                        <CaretDownIcon size={compact ? 12 : 16} class="motion-safe:transition-transform {expanded ? 'rotate-180' : ''}" aria-hidden="true" />
                     </button>
                     {#if ownMissing}
-                        <button type="button" class="min-w-0 flex-1 cursor-pointer self-stretch px-2 text-meta font-semibold text-green hover:text-fg0 sm:text-secondary {index === 1 ? 'text-left' : 'text-right'}"
+                        <button type="button" class="min-w-0 flex-1 cursor-pointer self-stretch px-2 font-semibold text-green hover:text-fg0 {textSize} {index === 1 ? 'text-left' : 'text-right'}"
                             aria-expanded={expanded} aria-controls={'boards-' + id} onclick={() => expandedBoards[id] = !expanded}>
                             + add result
                         </button>
                     {:else}
-                        <p class="min-w-0 flex-1 self-center text-meta font-semibold sm:text-secondary {index === 1 ? 'pl-2 text-left sm:pl-5' : 'pr-2 text-right sm:pr-5'} {tiedPoints ? 'sr-only sm:not-sr-only' : ''}">
+                        <p class="min-w-0 flex-1 self-center font-semibold {textSize} {index === 1 ? 'pl-2 text-left sm:pl-5' : 'pr-2 text-right sm:pr-5'} {tiedPoints ? 'sr-only sm:not-sr-only' : ''}">
                             {status ? resultLabels[status] : result ? 'pending' : 'no result yet'}
                         </p>
                     {/if}
-                    <div class="flex shrink-0 gap-px text-meta font-bold tabular-nums sm:gap-0.5 sm:text-secondary {index === 1 ? 'flex-row-reverse' : ''}">
+                    <div class="flex shrink-0 gap-px font-bold tabular-nums sm:gap-0.5 {textSize} {index === 1 ? 'flex-row-reverse' : ''}">
                         {#if tiedLives}
                             <span class="flex min-w-7 items-center justify-center gap-0.5 px-1 leading-tight min-[360px]:px-2 min-[400px]:min-w-9 sm:min-w-18 sm:gap-1 lg:min-w-20"
                                 style:background-color={backgroundColor}>
-                                <TimerIcon class="size-3 shrink-0 sm:size-4" aria-hidden="true" />
+                                <TimerIcon class="size-3 shrink-0 {compact ? '' : 'sm:size-4'}" aria-hidden="true" />
                                 <span><span class="sr-only">Time </span>{result.time}</span>
                             </span>
                         {/if}
@@ -137,7 +151,7 @@
                             <span class="flex min-w-7 items-center justify-center gap-0.5 px-1 leading-tight min-[360px]:px-2 min-[400px]:min-w-9 sm:min-w-18 sm:gap-1 lg:min-w-20"
                                 style:color={neutralLives ? 'var(--gray)' : color}
                                 style:background-color={neutralLives ? tiedStatBackground : backgroundColor}>
-                                <HeartIcon class="size-3 shrink-0 sm:size-4" aria-hidden="true" />
+                                <HeartIcon class="size-3 shrink-0 {compact ? '' : 'sm:size-4'}" aria-hidden="true" />
                                 <span><span class="sr-only">Lives </span>{result.lives}/4</span>
                             </span>
                         {/if}
@@ -154,7 +168,7 @@
         <div id={'boards-' + id} class="empty:hidden">
             {#if expanded}
                 <div class="grid grid-cols-2 gap-2" transition:slide={{ duration: 160 }}>
-                    {#each players as player, index}
+                    {#each players as player, index (player.id)}
                         {@const result = matchup.results[index]}
                         <div role="group" aria-label={player.username || player.name}
                             class="surface-card flex min-w-0 flex-col items-center p-3 {index === 1 ? 'border-r-4 sm:items-start' : 'border-l-4 sm:items-end'}"
@@ -174,28 +188,61 @@
     {/if}
 {/snippet}
 
-<Body>
-    <CustomH1 class="mb-1! flex items-center gap-2">
-        {#if data.game}
-            <FilledSectionIcon icon={gameIcons[data.game]} color="blue" />
-            {games[data.game].name}
-        {:else}
-            <FilledSectionIcon icon={GameControllerIcon} color="blue" />
-            all games
-        {/if}
-    </CustomH1>
-    <nav class="mb-3 flex flex-wrap gap-2" aria-label="Game pages">
-        {#each gamePages as entry (entry.name)}
-            {@const selected = data.game === entry.game}
-            <a href={`/games${entry.game ? '/' + entry.game : ''}${data.matchup ? matchupHref(data.matchup.date, period) : ''}`}
-                class="inline-flex hover:brightness-110" aria-current={selected ? 'page' : undefined}
-                aria-label={entry.name} title={entry.name}>
-                <FilledSectionIcon icon={entry.icon} color={selected ? 'fg0' : 'aqua'} compact />
-            </a>
+{#snippet individualGames(day: Matchup['days'][number], players: Matchup['players'], compact = false)}
+    {#each day.matchups as matchup (matchup.game)}
+        {#if !data.game}<h5 class="mt-2 text-meta text-gray">{games[matchup.game].name}</h5>{/if}
+        {@render gameResults(matchup, players, day.date, compact)}
+    {/each}
+{/snippet}
+
+{#snippet dayScoreboard(day: Matchup['days'][number], players: Matchup['players'])}
+    {@const expanded = expandedDays[day.date] ?? Boolean(form?.message && form.date === day.date)}
+    {@const available = day.matchups.every(matchup => matchup.available)}
+    {@const dateLabel = formatCalendarDate(day.date)}
+    <button type="button" class="grid w-full cursor-pointer grid-cols-2 gap-2 hover:brightness-110"
+        aria-label={`${expanded ? 'Hide' : 'Show'} games for ${dateLabel}${available ? `, score ${day.score.join(' to ')}` : ''}`}
+        aria-expanded={expanded} aria-controls={'day-games-' + day.date}
+        onclick={() => expandedDays[day.date] = !expanded}>
+        {#each players as player, index (player.id)}
+            {@const points = day.score[index]}
+            {@const opponent = day.score[1 - index]}
+            {@const { color, backgroundColor } = available ? scoreColor(points, opponent) : calendarDayColors('gray')}
+            <span class="surface-card flex min-h-8 min-w-0 items-stretch gap-1
+                {index === 1 ? 'flex-row-reverse border-r-4' : 'border-l-4'}"
+                style:border-color={color} style:color style:background-color={backgroundColor}>
+                <span class="flex w-6 shrink-0 items-center justify-center sm:w-8" aria-hidden="true">
+                    <CaretDownIcon size={16} class="motion-safe:transition-transform {expanded ? 'rotate-180' : ''}" />
+                </span>
+                <span class="min-w-0 flex-1 self-center truncate text-meta font-semibold sm:text-secondary
+                    {index === 1 ? 'pl-2 text-left sm:pl-5' : 'pr-2 text-right sm:pr-5'}">
+                    {player.username || player.name}
+                </span>
+                <span class="flex min-w-12 items-center justify-center text-secondary font-bold tabular-nums sm:w-24 lg:w-28"
+                    style:background-color={backgroundColor}>{available ? points : '–'}</span>
+            </span>
         {/each}
-    </nav>
+    </button>
+    <div id={'day-games-' + day.date} class="empty:hidden">
+        {#if expanded}
+            <div class="mx-2 flex min-w-0 flex-col gap-2 sm:mx-4"
+                transition:slide={{ duration: 160 }}>
+                {@render individualGames(day, players, true)}
+            </div>
+        {/if}
+    </div>
+{/snippet}
+
+<Body>
+    {@const gameTitle = data.game ? games[data.game].name : 'all games'}
+    {@const duelQuery = data.matchup ? matchupHref(data.matchup.date, period) : ''}
+    <GamesPageHeader title={gameTitle} icon={data.game ? gameIcons[data.game] : GameControllerIcon}
+        items={[
+            { label: 'games', href: '/games' },
+            ...(data.game ? [{ label: 'duel', href: gameFilterHref('/games/duel', duelQuery) }, { label: gameTitle }] : [{ label: 'duel' }])
+        ]}
+        navigation={{ path: '/games/duel', game: data.game, query: duelQuery }} />
     {#if data.matchup}
-        {@const { date, today, firstDate, players, matchups, days, pageNumber, pageCount, totals, wordleStats, isaacStats, progression, rangeStart, rangeEnd, calendar } = data.matchup}
+        {@const { date, today, firstDate, players, options, matchups, days, pageNumber, pageCount, totals, wordleStats, isaacStats, progression, rangeStart, rangeEnd, calendar } = data.matchup}
         {@const [leftPoints, rightPoints] = totals[period]}
         <section class="flex flex-col gap-4" aria-label="Game matchup">
             <nav class="tab-nav" aria-label="Scoreboard period">
@@ -205,34 +252,33 @@
                 {/each}
             </nav>
             {#if form?.warning}<p class="subtitle" role="status">{form.warning}</p>{/if}
-            {#if period === 'daily' || calendar}
-                <div class="grid grid-cols-2 items-stretch gap-2">
-                    {#each players as player, index}
-                        {@const points = index === 0 ? leftPoints : rightPoints}
-                        {@const { color, backgroundColor } = scoreColor(points, index === 0 ? rightPoints : leftPoints)}
-                        <button type="button"
-                            class="surface-card flex min-w-0 cursor-pointer items-center gap-3 hover:brightness-110 focus-visible:brightness-110 {index === 1 ? 'flex-row-reverse border-r-4 pr-1 sm:pr-2' : 'border-l-4 pl-1 sm:pl-2'}"
-                            style:border-color={color} style:background-color={backgroundColor}>
-                            <UserAvatar image={player.image} name={player.name} class="my-1 size-9 sm:size-12" />
-                            <span class="min-w-0 flex-1 truncate text-body font-semibold sm:text-section-title {index === 1 ? 'text-right' : 'text-left'}"
-                                style:color title={player.username || player.name}>
-                                {player.username || player.name}
-                            </span>
-                            <span class="flex w-12 shrink-0 items-center justify-center self-stretch text-body font-bold tabular-nums sm:w-28 sm:text-card-title lg:w-36"
-                                style:color style:background-color={backgroundColor}>{points}</span>
-                        </button>
-                    {/each}
-                </div>
-            {:else}
+            <div class="grid grid-cols-2 items-stretch gap-2">
+                {#each players as player, index (player.id)}
+                    {@const points = index === 0 ? leftPoints : rightPoints}
+                    {@const { color, backgroundColor } = scoreColor(points, index === 0 ? rightPoints : leftPoints)}
+                    <DuelPlayerSelect {player} options={options.filter(option => option.id !== players[1 - index].id)}
+                        points={period === 'daily' || calendar ? points : null} {color} {backgroundColor}
+                        right={index === 1} selectPlayer={id => pickPlayer(index, id)} />
+                {/each}
+            </div>
+            {#if period !== 'daily' && !calendar}
                 <p class="subtitle" role="status">unable to load days won.</p>
             {/if}
+            <SectionSeparator class="my-0!" />
+            <MonthPicker {date} {today} {firstDate} plainRange compact yearInRange lastDate={today} lastYear={Number(today.slice(0, 4))}
+                id="game-results-months" label="Game results calendar"
+                selection={period === 'weekly' ? 'week' : period === 'monthly' ? 'month' : 'day'} dayHref={(day) => matchupHref(day, period)} {dayStatus}>
+                {#if !calendar}
+                    <p class="subtitle mb-3" role="status">unable to load daily winners.</p>
+                {/if}
+            </MonthPicker>
+            <SectionSeparator class="my-0!" />
             {#if data.game && period !== 'daily'}
-                <SectionSeparator class="my-0!" />
                 <section class="flex flex-col gap-2" aria-labelledby="game-statistics">
                     <h3 class="plain-h3" id="game-statistics">stats</h3>
                     {#if wordleStats || isaacStats}
                         <div class="grid grid-cols-2 gap-2">
-                            {#each players as player, index}
+                            {#each players as player, index (player.id)}
                                 {@const wordle = wordleStats?.[index]}
                                 {@const isaac = isaacStats?.[index]}
                                 {#if isaac}
@@ -274,13 +320,13 @@
                     endLabel={formatCalendarDate(rangeEnd)} />
             {/if}
             {#if period === 'daily'}
-                {#each matchups as matchup (matchup.game)}
-                    <section class="flex flex-col gap-2 border-t border-bg3 pt-4"
+                {#each matchups as matchup, index (matchup.game)}
+                    <section class="flex flex-col gap-2 {index > 0 ? 'border-t border-bg3 pt-4' : ''}"
                         aria-labelledby={data.game ? undefined : 'matchup-' + matchup.game}
                         aria-label={data.game ? 'Daily game results' : undefined}>
                         {#if !data.game}
                             <h3 class="plain-h3" id={'matchup-' + matchup.game}>
-                                <a class="inline-flex items-center gap-2 text-aqua hover:text-fg0" href={`/games/${matchup.game}${matchupHref(date, period)}`}>
+                                <a class="inline-flex items-center gap-2 text-aqua hover:text-fg0" href={gameFilterHref('/games/duel', matchupHref(date, period), matchup.game)}>
                                     <FilledSectionIcon icon={gameIcons[matchup.game]} color="aqua" />
                                     {games[matchup.game].name}
                                 </a>
@@ -290,10 +336,13 @@
                     </section>
                 {/each}
             {:else}
-                <SectionSeparator class="my-0!" />
+                {#if data.game || progression}
+                    <SectionSeparator class="my-0!" />
+                {/if}
                 <section id="period-results" class="flex flex-col gap-4" aria-labelledby="period-results-title">
                     <h3 class="plain-h3" id="period-results-title">games</h3>
-                    {#each days as day (day.date)}
+                    {#each days as day, index (day.date)}
+                        {#if index > 0}<SectionSeparator class="my-0!" />{/if}
                         <section class="flex flex-col gap-2" aria-labelledby={'results-' + day.date}>
                             <h4 class="text-secondary text-fg0" id={'results-' + day.date}>
                                 <time datetime={day.date}>{weekdayFormat.format(new Date(day.date))} · {formatCalendarDate(day.date)}</time>
@@ -304,11 +353,10 @@
                                 {:else}
                                     <p class="subtitle">no results</p>
                                 {/if}
+                            {:else if !data.game && (period === 'weekly' || period === 'monthly')}
+                                {@render dayScoreboard(day, players)}
                             {:else}
-                                {#each day.matchups as matchup (matchup.game)}
-                                    {#if !data.game}<h5 class="mt-2 text-secondary text-gray">{games[matchup.game].name}</h5>{/if}
-                                    {@render gameResults(matchup, players, day.date)}
-                                {/each}
+                                {@render individualGames(day, players)}
                             {/if}
                         </section>
                     {:else}
@@ -330,13 +378,7 @@
                 </section>
             {/if}
         </section>
-        <SectionSeparator />
-        <MonthPicker {date} {today} {firstDate} plainRange lastDate={today} lastYear={Number(today.slice(0, 4))}
-            id="game-results-months" label="Game results calendar"
-            selection={period === 'weekly' ? 'week' : period === 'monthly' ? 'month' : 'day'} dayHref={(day) => matchupHref(day, period)} {dayStatus}>
-            {#if !calendar}
-                <p class="subtitle mb-3" role="status">unable to load daily winners.</p>
-            {/if}
-        </MonthPicker>
+    {:else}
+        <p class="subtitle">A duel needs two registered players.</p>
     {/if}
 </Body>

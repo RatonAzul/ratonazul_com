@@ -21,7 +21,7 @@
         {#each data.users as user (user.id)}
             <li class="list-row flex-wrap border-l-4 {user.role === 'admin' ? 'border-blue' : 'border-gray'}">
                 <a href={`/admin/users/${user.id}`} class="flex min-w-32 flex-1 items-center gap-3 hover:text-blue">
-                    <UserAvatar image={user.image} name={user.username || user.name} />
+                    <UserAvatar image={user.image} showImage={user.showImage} color={user.color} />
                     <div class="min-w-0">
                         <p class="text-card-title truncate flex items-center gap-1">
                             {user.username || user.name || 'unnamed user'}

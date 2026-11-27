@@ -1,8 +1,8 @@
 import { error, redirect } from '@sveltejs/kit';
-import { eq, inArray } from 'drizzle-orm';
+import { asc, eq, sql } from 'drizzle-orm';
 import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
-import { gamePlayers, user } from '$lib/server/db/schema';
+import { gameOpponent, user } from '$lib/server/db/schema';
 
 export async function requireGamesAdmin(request: Request) {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -11,18 +11,30 @@ export async function requireGamesAdmin(request: Request) {
     return session.user.id;
 }
 
-export async function gamePair() {
-    const [pair] = await db.select().from(gamePlayers).where(eq(gamePlayers.id, 1));
-    return pair;
+export function registeredGamePlayers() {
+    return db.select({ id: user.id, name: user.name, username: user.username, image: sql<string | null>`case when ${user.showImage} then ${user.image} end`, showImage: user.showImage, color: user.color })
+        .from(user).orderBy(asc(user.createdAt), asc(user.id));
 }
 
-export async function gameMatchupPlayers() {
-    const pair = await gamePair();
-    if (!pair?.firstUserId || !pair.secondUserId) return;
+export async function preferredOpponent(userId: string) {
+    const [preference] = await db.select({ opponentId: gameOpponent.opponentId }).from(gameOpponent)
+        .where(eq(gameOpponent.userId, userId));
+    return preference?.opponentId;
+}
 
-    const players = await db.select({ id: user.id, name: user.name, username: user.username, image: user.image, color: user.color })
-        .from(user).where(inArray(user.id, [pair.firstUserId, pair.secondUserId]));
-    const first = players.find(player => player.id === pair.firstUserId);
-    const second = players.find(player => player.id === pair.secondUserId);
-    if (first && second) return [first, second] as const;
+export async function duelSetup(viewerId?: string, firstId: string | null = null, secondId: string | null = null) {
+    const [roster, opponentId] = await Promise.all([
+        registeredGamePlayers(),
+        viewerId ? preferredOpponent(viewerId) : undefined
+    ]);
+    if (roster.length < 2) return null;
+
+    const first = firstId === null
+        ? roster.find(player => player.id === viewerId && player.id !== secondId) ?? roster.find(player => player.id !== secondId)
+        : roster.find(player => player.id === firstId);
+    const second = secondId === null
+        ? roster.find(player => player.id === opponentId && player.id !== first?.id) ?? roster.find(player => player.id !== first?.id)
+        : roster.find(player => player.id === secondId);
+    if (!first || !second || first.id === second.id) error(400, 'Choose two different players.');
+    return { roster, players: [first, second] as const };
 }

@@ -41,9 +41,16 @@ page also attempts to prefetch in its universal load function.
   exposes membership to all navbars.
 - `src/routes/profile/[userId]/`: owner-only profile editing and account deletion
   using Better Auth. The header links to the current user's profile.
-- `src/routes/games/[[game]]/` serves the Games overview and each game subpage. The overview compares all games, and each subpage filters the scoreboard and calendar to that game. Public visitors can see the matchup for the two players selected in `/admin/games/access`. Compare the
-  best saved result per player and game using the Calendar result rules.
-  Display game scores and outcomes above separate board cards. Show submitted Wordle guesses and the Isaaconnect tie-break metrics when needed. Monthly and Global show seven dates per page using the same result widgets as Weekly. Global lists recorded dates newest first. Each configured player can submit their own missing result for today in Europe/Madrid using the inline editor. The server derives the player from the session and uses the existing result notification and calendar sync.
+- `src/routes/games/` is the Games lobby with today’s duel totals, individual game scores, and a Results link.
+  `src/routes/games/duel/` compares two selected registered players and
+  supports an optional `game` query filter, as does Results. The scoreboard dropdowns update the URL pair.
+  Signed-in viewers default to themselves and their preferred opponent, managed
+  in profile settings. Compare best saved results using the Calendar rules and
+  show compact boards. Monthly and Global use seven dates per page. Global
+  lists recorded dates newest first. A signed-in player can submit their own
+  missing result for today in Europe/Madrid when shown in the duel. The server
+  derives result ownership from the session and uses the existing notification
+  and calendar sync. Each player avatar links to their public Games profile. The Results route ranks all participants separately by game for the selected period. Wordle scores 6 through 1 by guesses, and an unsolved puzzle scores 0. Isaaconnect uses the highest points per player and puzzle. Equal totals share a position and sort by when the total was reached.
 - `src/routes/admin/games/`: game cards and per-game calendar/result management
   at `/wordle`, `/la-palabra-del-dia`, and `/isaaconnect` using `[game]`.
 - `src/lib/components/admin/Game{Calendar,ResultEditor}.svelte`: reusable
@@ -74,7 +81,7 @@ page also attempts to prefetch in its universal load function.
 - `src/lib/types/`: service DTOs and UI types. Motorsport types are exported;
   several media files currently declare ambient interfaces/enums.
 - `src/lib/components/{shared,media,pick-the-grid,admin}/`: reusable UI by domain;
-  `admin/AdminBreadcrumbs.svelte` renders the gray admin navigation path and
+  `shared/Breadcrumbs.svelte` renders the gray navigation path and
   `shared/H1WithBreadCrumb.svelte` combines it with a page heading.
 - `src/lib/utils/`: date formatting, media transformations, bet drafts,
   driver lookup, and meeting status calculations.
@@ -97,7 +104,7 @@ page also attempts to prefetch in its universal load function.
 - `src/lib/auth-client.ts` exports the shared `authClient` and `useSession`
   with the admin plugin and inferred profile fields.
 - `shared/LogInUser.svelte` shows the account popup, signs users in and out,
-  and supports inline editing of the username and display name.
+  and uses the same dialog for first-time profile setup and editing the username, display name, and image URL. Profile images are hidden by default and use a filled profile-color avatar until enabled. New accounts get the games, calendar, and motorsport notification groups, with profile notification switches off. Admin membership follows the account’s admin role.
 - `server/db/auth.schema.ts` defines user, session, account, verification,
   including role and ban fields. `schema.ts` re-exports it and contains a
   scaffold `task` table. Root `auth-schema.ts` is another schema artifact;

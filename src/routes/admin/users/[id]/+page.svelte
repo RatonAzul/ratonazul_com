@@ -57,7 +57,7 @@
         <fieldset>
             <legend class="mb-2 text-section-title text-green">notification groups</legend>
             <div class="flex flex-wrap gap-2">
-                {#each notificationGroups as group (group)}
+                {#each notificationGroups.filter(group => group !== 'admin' || data.user.role === 'admin') as group (group)}
                     <label class="group-toggle inline-flex cursor-pointer" style:--group-color={'var(--' + pageColors[group] + ')'}>
                         <input type="checkbox" name="groups" value={group} checked={data.groups.includes(group)} class="sr-only" />
                         <span class="button min-h-8 border px-3 py-1">{group}</span>

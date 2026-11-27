@@ -53,3 +53,10 @@ export const gamePlayers = pgTable('game_players', {
     check('game_players_single_pair', sql`${table.id} = 1`),
     check('game_players_distinct_users', sql`${table.firstUserId} <> ${table.secondUserId}`)
 ]);
+
+export const gameOpponent = pgTable('game_opponent', {
+    userId: text('user_id').primaryKey().references(() => user.id, { onDelete: 'cascade' }),
+    opponentId: text('opponent_id').notNull().references(() => user.id, { onDelete: 'cascade' })
+}, (table) => [
+    check('game_opponent_distinct_users', sql`${table.userId} <> ${table.opponentId}`)
+]);
