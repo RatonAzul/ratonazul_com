@@ -5,6 +5,8 @@ import type { PageServerLoad } from './$types';
 
 type AdminUser = Awaited<ReturnType<typeof auth.api.listUsers>>['users'][number] & {
 	username?: string | null;
+    showImage?: boolean;
+    color?: string;
 };
 
 export const load: PageServerLoad = async ({ request }) => {

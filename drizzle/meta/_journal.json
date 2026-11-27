@@ -57,6 +57,20 @@
       "when": 1795637216819,
       "tag": "0007_game_players",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795797260287,
+      "tag": "0008_game_opponent",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795798863176,
+      "tag": "0009_user_profile_defaults",
+      "breakpoints": true
     }
   ]
 }

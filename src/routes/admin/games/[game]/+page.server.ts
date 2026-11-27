@@ -43,7 +43,7 @@ export const load: PageServerLoad = async ({ request, params, url }) => {
     if (!/^\d{4}$/.test(rawYear) || year < 2026 || year > currentYear) error(400, 'Choose a year from 2026 to the current year.');
     const date = url.searchParams.get('date') ?? (year === currentYear ? today : `${year}-01-01`);
     if (!validDate(date) || Number(date.slice(0, 4)) !== year) error(400, 'Choose a valid date within the selected year.');
-    const players = await db.select({ id: user.id, name: user.name, username: user.username }).from(user).orderBy(user.name);
+    const players = await db.select({ id: user.id, name: user.name, username: user.username, image: user.image, showImage: user.showImage, color: user.color }).from(user).orderBy(user.name);
     try {
         const records = await listGames<GameRecord>(config.endpoint, actor);
         const daily = records.filter(record => 'date' in record ? record.date === date : record.day === isaacDay(date));

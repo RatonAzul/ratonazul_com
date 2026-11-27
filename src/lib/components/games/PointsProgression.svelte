@@ -5,7 +5,7 @@
 
     let { points, players, startLabel, endLabel }: {
         points: ReturnType<typeof pointProgression>;
-        players: { name: string; username: string | null; color: string | null }[];
+        players: readonly { name: string; username: string | null; color: string | null }[];
         startLabel: string;
         endLabel: string;
     } = $props();

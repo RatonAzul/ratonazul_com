@@ -6,6 +6,8 @@ import type { Actions, PageServerLoad } from './$types';
 
 type AdminUser = Awaited<ReturnType<typeof auth.api.getUser>> & {
 	username?: string | null;
+    showImage?: boolean;
+    color?: string;
 };
 
 export const load: PageServerLoad = async ({ params, request }) => {
@@ -25,7 +27,9 @@ export const actions: Actions = {
         if (!values.every(isNotificationGroup)) return fail(400, { message: 'Invalid notification group.' });
 
         await auth.api.getUser({ query: { id: params.id }, headers: request.headers });
-        await setNotificationGroups(params.id, values);
+        if (!(await setNotificationGroups(params.id, values))) {
+            return fail(400, { message: 'The admin notification group is only available to admins.' });
+        }
         redirect(303, `/admin/users/${params.id}`);
     },
 	save: async ({ params, request }) => {

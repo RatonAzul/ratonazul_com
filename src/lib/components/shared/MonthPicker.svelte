@@ -8,7 +8,7 @@
     let {
         date, firstDate, lastDate, lastYear = 9999, id = 'calendar-months',
         label = 'Calendar date picker', children, dayHref = (day) => `?date=${day}`,
-        yearHref, dayStatus, today, plainRange = false, selection = 'day'
+        yearHref, dayStatus, today, plainRange = false, selection = 'day', compact = false, yearInRange = false
     }: {
         date: string;
         firstDate: string;
@@ -22,6 +22,8 @@
         today: string;
         plainRange?: boolean;
         selection?: 'day' | 'week' | 'month';
+        compact?: boolean;
+        yearInRange?: boolean;
         dayStatus?: (day: string) => { className: string; label: string; backgroundColor?: string; color?: string; hasComments?: boolean } | undefined;
     } = $props();
     const weekdayFormat = new Intl.DateTimeFormat('en-GB', { weekday: 'long', timeZone: 'UTC' });
@@ -39,7 +41,13 @@
     let start = $state(0);
     let lastStart = $derived(Math.max(0, months.length - visibleMonths));
     let lastVisible = $derived(Math.min(start + visibleMonths - 1, months.length - 1));
-    let range = $derived(start === lastVisible ? months[start]?.name : `${months[start]?.name} – ${months[lastVisible]?.name}`);
+    let range = $derived(start === lastVisible ? rangeMonth(start) :
+        `${rangeMonth(start)}${yearInRange ? ' - ' : ' – '}${rangeMonth(lastVisible)}`);
+
+    function rangeMonth(index: number) {
+        const month = months[index]?.name ?? '';
+        return month && yearInRange ? `${month} ${String(year).slice(-2)}'` : month;
+    }
 
     function hrefForYear(target: number) {
         return yearHref?.(target) ?? dayHref(target === firstYear ? firstDate : `${target}-01-01`);
@@ -85,10 +93,9 @@
     });
 </script>
 
-<section class="min-w-0" aria-label={label}>
-    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <CustomH2>{year}</CustomH2>
-        <nav class="flex flex-wrap gap-4 text-secondary" aria-label="Calendar years">
+{#snippet yearLinks()}
+    {#if year > firstYear || year < lastYear}
+        <nav class="flex flex-wrap items-center gap-x-4 gap-y-1 text-secondary" aria-label="Calendar years">
             {#if year > firstYear}
                 <a class="internal-link" href={hrefForYear(year - 1)}>[← {year - 1}]</a>
             {/if}
@@ -96,7 +103,16 @@
                 <a class="internal-link" href={hrefForYear(year + 1)}>[{year + 1} →]</a>
             {/if}
         </nav>
-    </div>
+    {/if}
+{/snippet}
+
+<section class="min-w-0" aria-label={label}>
+    {#if !yearInRange}
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <CustomH2>{year}</CustomH2>
+            {@render yearLinks()}
+        </div>
+    {/if}
     {@render children?.()}
     <div class="mb-3 flex gap-2">
         <div class="min-w-0 flex-1" aria-live="polite" aria-atomic="true">
@@ -106,6 +122,7 @@
                 <ColoredSectionTitle title={range ?? ''} class="h-full" />
             {/if}
         </div>
+        {#if yearInRange}{@render yearLinks()}{/if}
         <div class="flex gap-2">
             <button type="button" class="action-icon h-auto min-h-8 w-12" aria-label="Previous months" aria-controls={id}
                 disabled={start === 0} onclick={() => moveTo(start - visibleMonths)}><span aria-hidden="true">←</span></button>
@@ -114,7 +131,7 @@
         </div>
     </div>
 
-    <div {id} class="months" bind:this={viewport} onscroll={trackScroll}>
+    <div {id} class="months" class:compact={compact} bind:this={viewport} onscroll={trackScroll}>
         {#each months as month (month.dates[0])}
             {@const monthStart = month.dates[0]}
             {@const monthTarget = monthStart < firstDate ? firstDate : monthStart}
@@ -132,10 +149,10 @@
                     <p class="section-label mb-2 {monthSelected ? 'bg-fg0 text-bg0'
                         : monthHref ? 'bg-bg1 text-fg0 group-hover:bg-bg2' : 'bg-bg1 text-gray'}">{month.name}</p>
                 {:else}
-                    <p class="section-label mb-2 max-sm:hidden {monthStart.slice(0, 7) === today.slice(0, 7)
+                    <p class="section-label mb-2 {compact ? '' : 'max-sm:hidden'} {monthStart.slice(0, 7) === today.slice(0, 7)
                         ? 'bg-purple text-bg0' : 'bg-bg1 text-fg0'}">{month.name}</p>
                 {/if}
-                <div class="surface-card relative grid grid-cols-7 gap-1 p-2 {monthSelected ? 'ring-2 ring-inset ring-fg0' : ''}">
+                <div class="surface-card relative grid grid-cols-7 {compact ? 'gap-0.5 p-1.5' : 'gap-1 p-2'} {monthSelected ? 'ring-2 ring-inset ring-fg0' : ''}">
                     {#if weekIndex >= 0}
                         <span class="pointer-events-none absolute inset-0 z-10 border-2 border-fg0"
                             style:grid-area={`${Math.floor((month.offset + weekIndex) / 7) + 2} / 1 / span 1 / -1`}
@@ -156,7 +173,8 @@
                         {@const selectable = !lastDate || day <= lastDate}
                         {@const linkDay = selectable && selection !== 'month'}
                         <svelte:element this={linkDay ? 'a' : 'span'} href={linkDay ? dayHref(day) : undefined} data-sveltekit-noscroll
-                            class="relative flex aspect-square min-h-7 items-center justify-center text-meta tabular-nums
+                            class="relative flex aspect-square items-center justify-center text-meta tabular-nums
+                                {compact ? 'min-h-0' : 'min-h-7'}
                                 {selectable ? surface : emptyCalendarDayClass}
                                 {selected ? 'ring-2 ring-inset ring-fg0 font-semibold' : isToday ? 'ring-2 ring-inset ring-purple' : ''}"
                             style:background-color={status?.backgroundColor}
@@ -195,6 +213,13 @@
         scrollbar-width: none;
     }
     .months::-webkit-scrollbar { display: none; }
+    @media (max-width: 639px) {
+        .months.compact {
+            --visible-months: 2;
+            grid-auto-columns: calc((100% - 0.5rem) / 2);
+            gap: 0.5rem;
+        }
+    }
     @media (min-width: 640px) {
         .months {
             --visible-months: 2;
@@ -205,6 +230,11 @@
         .months {
             --visible-months: 4;
             grid-auto-columns: calc((100% - 3rem) / 4);
+        }
+        .months.compact {
+            --visible-months: 6;
+            grid-auto-columns: calc((100% - 2.5rem) / 6);
+            gap: 0.5rem;
         }
     }
     @media (min-width: 1920px) {

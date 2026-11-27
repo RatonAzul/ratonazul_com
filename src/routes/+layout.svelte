@@ -1,7 +1,6 @@
 <script lang="ts">
 	import './layout.css';
 	import { IconContext } from 'phosphor-svelte';
-	import favicon from '$lib/assets/favicon.svg';
 	import "../app.css";
 	import Header from "$lib/components/shared/Header.svelte";
 	import {showCrt, theme} from "$lib/stores/globalSettings";
@@ -17,7 +16,13 @@
 	})
 </script>
 
-<svelte:head><link rel="icon" href={favicon} /><link rel="manifest" href="/site.webmanifest" /></svelte:head>
+<svelte:head>
+	<link rel="icon" href="/favicon.ico" sizes="any" />
+	<link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16" />
+	<link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+	<link rel="manifest" href="/site.webmanifest" />
+</svelte:head>
 <QueryClientProvider client={data.queryClient}>
 	<IconContext values={{ weight: 'bold' }}>
 		<div class="theme-{theme.current} w-full min-h-dvh bg-bg0 text-fg0 {showCrt.current ? 'crt' : ''}">

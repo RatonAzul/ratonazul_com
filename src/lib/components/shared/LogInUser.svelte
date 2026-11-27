@@ -4,8 +4,10 @@
     import { invalidateAll } from '$app/navigation';
     import { SignOutIcon, SignInIcon, GoogleLogoIcon, PencilIcon } from 'phosphor-svelte';
     import { Dialog, Popover } from 'bits-ui';
-    import { defaultProfileColor, isProfileColor } from '$lib/utils/profile-colors';
+    import { defaultProfileColor, isProfileColor, profileColors } from '$lib/utils/profile-colors';
     import MobileMenu from './MobileMenu.svelte';
+    import ProfileColorSwatches from './ProfileColorSwatches.svelte';
+    import SettingsCheckbox from './SettingsCheckbox.svelte';
     import UserAvatar from './UserAvatar.svelte';
     import VisualSettings from './VisualSettings.svelte';
 
@@ -22,13 +24,21 @@
     let promptedUser = $state('');
     let username = $state('');
     let name = $state('');
+    let image = $state('');
+    let showImage = $state(false);
+    let selectedColor = $state<(typeof profileColors)[number]>(defaultProfileColor);
+    let newProfile = $state(false);
     let saving = $state(false);
     let feedback = $state('');
     let logoutFailed = $state(false);
 
-    function editNames(current: NonNullable<typeof user>) {
+    function editProfile(current: NonNullable<typeof user>, setup = false) {
         username = current.username ?? '';
         name = current.name;
+        image = current.image ?? '';
+        showImage = current.showImage ?? false;
+        selectedColor = isProfileColor(current.color) ? current.color : defaultProfileColor;
+        newProfile = setup;
         feedback = '';
         editing = true;
     }
@@ -36,22 +46,29 @@
     $effect(() => {
         if (user && user.id !== promptedUser) {
             promptedUser = user.id;
-            if (!user.username) editNames(user);
+            if (!user.profileSetupComplete || !user.username) editProfile(user, true);
         }
     });
 
-    async function saveNames(event: SubmitEvent) {
+    async function saveProfile(event: SubmitEvent) {
         event.preventDefault();
         if (!username.trim() || !name.trim() || saving) return;
         saving = true;
         feedback = '';
         try {
-            const result = await authClient.updateUser({ username: username.trim(), name: name.trim() });
+            const picture = image.trim();
+            if (picture && !['http:', 'https:'].includes(new URL(picture).protocol)) {
+                feedback = 'enter an HTTP or HTTPS image URL.';
+                return;
+            }
+            const result = await authClient.updateUser({
+                username: username.trim(), name: name.trim(), image: picture || null, showImage, color: selectedColor, profileSetupComplete: true
+            });
             if (result.error) throw result.error;
             editing = false;
             await invalidateAll();
         } catch {
-            feedback = 'unable to save your name. please try again.';
+            feedback = 'unable to save your profile. please try again.';
         } finally {
             saving = false;
         }
@@ -71,7 +88,7 @@
 
 {#snippet accountTrigger()}
     {#if user}
-        <UserAvatar image={user.image} name={user.name} class="size-10 bg-transparent! text-inherit!" />
+        <UserAvatar image={user.image} showImage={user.showImage} color={profileColor} class="size-10" />
         <span class="hidden max-w-36 truncate px-3 sm:block" style:color={'var(--' + profileColor + ')'}>{user.username || user.name}</span>
     {:else}
         <SignInIcon class="size-5" />
@@ -82,7 +99,7 @@
     {#if user}
         {@const current = user}
         <div class="surface-card-hover relative flex items-center gap-3 p-2">
-            <UserAvatar image={user.image} name={user.name} class="size-12" />
+            <UserAvatar image={user.image} showImage={user.showImage} color={profileColor} class="size-12" />
             <div class="min-w-0 flex-1 break-words border-r-4 pe-2" style:border-right-color={'var(--' + profileColor + ')'}>
                 <div class="flex items-center gap-2">
                     <a href={'/profile/' + encodeURIComponent(user.id)}
@@ -92,7 +109,7 @@
                     </a>
                     <button type="button" class="relative z-10 inline-flex size-3 shrink-0 cursor-pointer items-center after:absolute after:inset-s-0 after:-inset-e-6 after:-inset-y-3 hover:opacity-80"
                         style:color={'var(--' + profileColor + ')'}
-                        aria-label="edit username and display name" onclick={() => { open = false; editNames(current); }}>
+                        aria-label="edit profile" onclick={() => { open = false; editProfile(current); }}>
                         <PencilIcon class="size-3" />
                     </button>
                 </div>
@@ -137,11 +154,22 @@
 <Dialog.Root bind:open={editing}>
     <Dialog.Portal>
         <Dialog.Overlay class="dialog-backdrop" />
-        <Dialog.Content class="dialog-panel fixed top-1/2 left-1/2 z-50 max-w-[min(24rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2">
-            <Dialog.Title class="mb-3 text-card-title text-blue">edit profile names</Dialog.Title>
-            <form class="flex flex-col gap-3" onsubmit={saveNames}>
+        <Dialog.Content class="dialog-panel fixed top-1/2 max-h-[calc(100dvh-2rem)] overflow-y-auto left-1/2 z-50 max-w-[min(24rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2">
+            <Dialog.Title class="mb-3 text-card-title text-blue">{newProfile ? 'set up your profile' : 'edit profile'}</Dialog.Title>
+            <div class="surface-card mb-3 flex items-center gap-3 border-r-4 p-2"
+                style:border-right-color={`var(--${selectedColor})`}>
+                <UserAvatar image={image.trim()} {showImage} color={selectedColor} class="size-12" />
+                <div class="min-w-0 break-words">
+                    <p class="text-card-title" style:color={`var(--${selectedColor})`}>{username.trim() || 'username'}</p>
+                    <p class="text-secondary text-fg0">{name.trim() || 'display name'}</p>
+                </div>
+            </div>
+            <form class="flex flex-col gap-3" onsubmit={saveProfile}>
                 <label class="form-label">username<input class="form-field" autocomplete="username" maxlength="15" bind:value={username} required /></label>
                 <label class="form-label">display name<input class="form-field" autocomplete="name" maxlength="100" bind:value={name} required /></label>
+                <label class="form-label">image URL<input class="form-field" type="url" bind:value={image} /></label>
+                <SettingsCheckbox label="show profile picture" bind:checked={showImage} />
+                <ProfileColorSwatches bind:color={selectedColor} />
                 {#if feedback}<p class="form-feedback text-red" role="alert">{feedback}</p>{/if}
                 <div class="flex justify-end gap-2">
                     <Dialog.Close class="button button-danger">cancel</Dialog.Close>

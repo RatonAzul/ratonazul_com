@@ -56,11 +56,12 @@ export const load: PageServerLoad = async ({ request, url }) => {
     if (comments.length && !commentDates.includes(date)) commentDates.push(date);
 
     const ids = [...new Set([viewer.id, ...comments.map((comment) => comment.user_id)])];
-    const authors = await db.select({ id: user.id, name: user.name, image: user.image, color: user.color })
+    const authors = await db.select({ id: user.id, name: user.name, image: user.image, showImage: user.showImage, color: user.color })
         .from(user).where(inArray(user.id, ids));
     const profiles = new Map(authors.map((author) => [author.id, {
         name: author.name,
-        image: author.image,
+        image: author.showImage ? author.image : null,
+        showImage: author.showImage,
         color: author.color
     }]));
 
@@ -73,9 +74,9 @@ export const load: PageServerLoad = async ({ request, url }) => {
         maxCommentLength,
         comments: comments.map((comment) => ({
             ...comment,
-            author: profiles.get(comment.user_id) ?? { name: 'unknown user', image: null, color: defaultProfileColor }
+            author: profiles.get(comment.user_id) ?? { name: 'unknown user', image: null, showImage: false, color: defaultProfileColor }
         })),
-        viewer: profiles.get(viewer.id) ?? { name: viewer.name, image: viewer.image, color: defaultProfileColor },
+        viewer: profiles.get(viewer.id) ?? { name: viewer.name, image: null, showImage: false, color: defaultProfileColor },
         viewerId: viewer.id,
         ownComment: comments.some((comment) => comment.user_id === viewer.id),
         loadError: ''

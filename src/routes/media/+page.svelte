@@ -45,8 +45,5 @@
             <CustomH2 class="mb-3">manga</CustomH2>
             <MangaSection {currentlyReadingManga} {recentlyReadManga}/>
         </div>
-
-        <SectionSeparator class="lg:col-span-2" />
-
     </div>
 </Body>

@@ -45,11 +45,13 @@ export async function getNotificationGroups(userId: string) {
 }
 
 export async function setNotificationGroups(userId: string, groups: NotificationGroup[]) {
-    await db.transaction(async (tx) => {
-        // Serialize replacements for the same account.
-        await tx.select({ id: user.id }).from(user).where(eq(user.id, userId)).for('update');
+    return db.transaction(async (tx) => {
+        // Serialize replacements and role changes for the same account.
+        const [account] = await tx.select({ role: user.role }).from(user).where(eq(user.id, userId)).for('update');
+        if (!account || (account.role !== 'admin' && groups.includes('admin'))) return false;
         await tx.delete(notificationGroupMember).where(eq(notificationGroupMember.userId, userId));
         if (groups.length) await tx.insert(notificationGroupMember).values(groups.map((group) => ({ group, userId })));
+        return true;
     });
 }
 

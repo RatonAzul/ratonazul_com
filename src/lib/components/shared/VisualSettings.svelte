@@ -1,7 +1,7 @@
 <script lang="ts">
     import { CheckIcon } from 'phosphor-svelte';
     import { showCrt, theme } from '$lib/stores/globalSettings';
-    import SettingsSwitch from './SettingsSwitch.svelte';
+    import SettingsCheckbox from './SettingsCheckbox.svelte';
     import ColorPalette from './ColorPalette.svelte';
 
     let { compact = true }: { compact?: boolean } = $props();
@@ -27,6 +27,6 @@
             {/each}
         </div>
     </div>
-    <SettingsSwitch checked={showCrt.current} onChange={(checked) => showCrt.current = checked}
-        label={showCrt.current ? 'hide crt effect' : 'show crt effect'} accessibleLabel="crt effect" />
+    <SettingsCheckbox checked={showCrt.current} onChange={(checked) => showCrt.current = checked}
+        label="show crt effect" />
 </div>

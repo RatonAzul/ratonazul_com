@@ -19,9 +19,18 @@ export const auth = betterAuth({
 			clientSecret: env.GOOGLE_CLIENT_SECRET as string,
 		}
 	},
+	databaseHooks: {
+		user: {
+			create: {
+				before: async (user) => ({ data: { ...user, showImage: false, profileSetupComplete: false } })
+			}
+		}
+	},
 	user: {
 		deleteUser: { enabled: true },
 		additionalFields: {
+			showImage: { type: 'boolean', required: false, defaultValue: false },
+			profileSetupComplete: { type: 'boolean', required: false, defaultValue: false },
 			username: {
 				type: "string",
 				required: false,

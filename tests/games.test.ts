@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { gameResultSummary, isaacStatistics, pointProgression, wordleStatistics } from '../src/lib/utils/game-result-summary.ts';
+import { leaderboard } from '../src/lib/utils/game-leaderboard.ts';
 import { calendarMonths, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, playerCounts, recordDate, scoreGuess, validDate, wordleResult, wordleBoardResult, type GameRecord } from '../src/lib/utils/games.ts';
 
 test('board-only Wordle stops at the first green row or scores X/6', () => {
@@ -194,4 +195,33 @@ test('points progression accumulates chronologically and holds the final score t
         { position: 7, left: 2, right: 1 }
     ]);
     assert.deepEqual(pointProgression([], 3).at(-1), { position: 3, left: 0, right: 0 });
+});
+
+test('Wordle leaderboard converts guesses to points and shares ranks in date order', () => {
+    const record = (id: number, user_id: string, date: string, score: number, created_at?: string): GameRecord =>
+        ({ id, user_id, date, day: id, score, created_at, board: '', words: [], is_simple: true });
+    assert.deepEqual(leaderboard([
+        record(1, 'late', '2026-11-15', 2),
+        record(2, 'early', '2026-11-14', 2, '2026-11-14T08:00:00Z'),
+        record(3, 'late-same-day', '2026-11-14', 2, '2026-11-14T09:00:00Z'),
+        record(4, 'winner', '2026-11-14', 1),
+        record(5, 'winner', '2026-11-15', 6),
+        record(6, 'unsolved', '2026-11-14', 7)
+    ]), [
+        { id: 'winner', points: 7, position: 1 },
+        { id: 'early', points: 5, position: 2 },
+        { id: 'late-same-day', points: 5, position: 2 },
+        { id: 'late', points: 5, position: 2 },
+        { id: 'unsolved', points: 0, position: 5 }
+    ]);
+});
+
+test('Isaaconnect leaderboard uses the highest points per player per puzzle', () => {
+    const attempt = (id: number, date: string, points: number, lifes: number): GameRecord =>
+        ({ id, user_id: 'player', day: isaacDay(date), points, lifes, time: 60, board: [] });
+    assert.deepEqual(leaderboard([
+        attempt(1, '2026-11-14', 1, 4),
+        attempt(2, '2026-11-14', 4, 0),
+        attempt(3, '2026-11-15', 2, 3)
+    ]), [{ id: 'player', points: 6, position: 1 }]);
 });

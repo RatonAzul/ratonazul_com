@@ -8,11 +8,17 @@ export const games = {
 } as const;
 export type Game = keyof typeof games;
 export function isGame(value: string): value is Game { return Object.hasOwn(games, value); }
+export function gameFilterHref(path: string, query: string | URLSearchParams, game?: Game) {
+    const params = new URLSearchParams(query);
+    if (game) params.set('game', game);
+    else params.delete('game');
+    return params.size ? `${path}?${params}` : path;
+}
 export type WordleInput = { day: number; date: string; board: string; score: number; user_id: string; is_simple: boolean; words: string[] };
 export type IsaacInput = { day: number; points: number; lifes: number; time: number; board: string[]; user_id: string };
-export type GameRecord = (WordleInput | IsaacInput) & { id: number };
+export type GameRecord = (WordleInput | IsaacInput) & { id: number; created_at?: string };
 export type Solution = { id: number; day: number; word: string };
-export type Player = { id: string; name: string; username: string | null };
+export type Player = { id: string; name: string; username: string | null; image?: string | null; showImage?: boolean; color?: string };
 const DAY = 86_400_000;
 const PUZZLE_ANCHOR = Date.UTC(2026, 10, 14);
 const PUZZLE_NUMBERS: Record<Game, number> = { wordle: 1974, 'la-palabra-del-dia': 1773, isaaconnect: 856 };
