@@ -266,12 +266,12 @@
                 </section>
             {/if}
             {#if progression}
-                {#if data.game && period !== 'daily'}
+                {#if data.game}
                     <SectionSeparator class="my-0!" />
                 {/if}
                 <PointsProgression points={progression} {players}
-                    startLabel={period === 'daily' ? 'start' : formatCalendarDate(rangeStart)}
-                    endLabel={period === 'daily' ? (data.game ? 'after game' : 'after all games') : formatCalendarDate(rangeEnd)} />
+                    startLabel={formatCalendarDate(rangeStart)}
+                    endLabel={formatCalendarDate(rangeEnd)} />
             {/if}
             {#if period === 'daily'}
                 {#each matchups as matchup (matchup.game)}

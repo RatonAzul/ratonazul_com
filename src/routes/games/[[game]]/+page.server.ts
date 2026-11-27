@@ -169,13 +169,6 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
         return (Date.parse(day) - Date.parse(rangeStart)) / millisecondsPerDay + 1;
     }
 
-    if (period === 'daily') {
-        matchups.forEach(({ outcome }, index) => {
-            if (outcome === 'first' || outcome === 'second') {
-                events.push({ position: index + 1, winner: outcome === 'first' ? 0 : 1 });
-            }
-        });
-    }
     if (complete) {
         for (const [day, [left, right]] of scores) {
             if (day.startsWith(year + '-')) {
@@ -193,8 +186,8 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
         }
     }
 
-    const progression = period === 'daily' || complete
-        ? pointProgression(events, period === 'daily' ? matchups.length : positionForDate(rangeEnd))
+    const progression = period !== 'daily' && complete
+        ? pointProgression(events, positionForDate(rangeEnd))
         : null;
     const profiles = players.map(({ name, username, image, color }) => ({ name, username, image, color }));
     return { ...scope, matchup: {
