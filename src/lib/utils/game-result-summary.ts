@@ -142,3 +142,17 @@ export function compareGamePair(game: Game, records: GameRecord[], ids: readonly
 export function gameResultScore(record: GameRecord) {
     return 'points' in record ? record.points + '/4' : (record.score === 7 ? 'X' : record.score) + '/6';
 }
+
+export function displayGameResult(record: GameRecord | undefined) {
+    if (!record) return null;
+    if ('points' in record) {
+        const minutes = String(Math.floor(record.time / 60)).padStart(2, '0');
+        const seconds = String(record.time % 60).padStart(2, '0');
+        return { rows: record.board, score: gameResultScore(record), points: record.points, lives: record.lifes, time: minutes + ':' + seconds };
+    }
+    return {
+        score: gameResultScore(record),
+        rows: record.board.match(/.{5}/g) ?? [],
+        words: record.words ?? []
+    };
+}

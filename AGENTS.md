@@ -41,14 +41,14 @@ page also attempts to prefetch in its universal load function.
   exposes membership to all navbars.
 - `src/routes/profile/[userId]/`: owner-only profile editing and account deletion
   using Better Auth. The header links to the current user's profile.
-- `src/routes/games/` is the Games lobby with today’s duel totals, individual game scores, and a Results link.
+- `src/routes/games/` is the Games lobby with today’s duel totals, individual game scores, and a top-three preview of today’s standings, with headings and bottom links to the full views.
   `src/routes/games/duel/` compares two selected registered players and
   supports an optional `game` query filter, as does Results. The scoreboard dropdowns update the URL pair.
   Signed-in viewers default to themselves and their preferred opponent, managed
   in profile settings. Compare best saved results using the Calendar rules and
   show compact boards. Monthly and Global use seven dates per page. Global
   lists recorded dates newest first. A signed-in player can submit their own
-  missing result for today in Europe/Madrid when shown in the duel. The server
+  missing result for today in Europe/Madrid from the lobby or when shown in the duel. The server
   derives result ownership from the session and uses the existing notification
   and calendar sync. Each player avatar links to their public Games profile. The Results route ranks all participants separately by game for the selected period. Wordle scores 6 through 1 by guesses, and an unsolved puzzle scores 0. Isaaconnect uses the highest points per player and puzzle. Equal totals share a position and sort by when the total was reached.
 - `src/routes/admin/games/`: game cards and per-game calendar/result management
