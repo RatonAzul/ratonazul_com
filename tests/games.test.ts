@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { gameNotificationPuzzle } from '../src/lib/utils/game-notification.ts';
 import { gameResultSummary, isaacStatistics, pointProgression, wordleStatistics } from '../src/lib/utils/game-result-summary.ts';
 import { boardsByPoints, leaderboard } from '../src/lib/utils/game-leaderboard.ts';
 import { calendarMonths, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, playerCounts, recordDate, scoreGuess, validDate, wordleResult, wordleBoardResult, type GameRecord } from '../src/lib/utils/games.ts';
@@ -234,4 +235,17 @@ test('daily boards keep every attempt and order equal scores by submission time'
         attempt(2, 4, '2026-11-14T09:00:00Z'),
         attempt(3, 4, '2026-11-14T08:00:00Z')
     ]).map(row => row.id), [3, 2, 1]);
+});
+
+test('game notifications identify the original puzzle without reading the score or board', () => {
+    for (const [name, description, game, day] of [
+        ['Wordle', 'Wordle 1,974 X/6\n\n⬛⬛⬛⬛⬛', 'wordle', 1974],
+        ['La palabra del día', 'La palabra del día #1773 2/6\n\n🟩🟩🟩🟩🟩', 'la-palabra-del-dia', 1773],
+        ['Isaaconnect', 'Isaaconnect #856\n✅: 4/4 ❤️: 3/4', 'isaaconnect', 856]
+    ] as const) {
+        assert.deepEqual(gameNotificationPuzzle({ section: 'Games', title: 'Ada played ' + name, description }), { game, day });
+    }
+    assert.deepEqual(gameNotificationPuzzle({ section: 'Games', title: 'Ada played Wordle', description: 'unexpected format' }),
+        { game: 'wordle', day: null });
+    assert.equal(gameNotificationPuzzle({ section: 'Games', title: 'Games tonight', description: 'See you at eight' }), undefined);
 });

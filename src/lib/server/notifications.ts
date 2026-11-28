@@ -4,7 +4,9 @@ import { and, eq, exists, inArray, ne, notExists, or } from 'drizzle-orm';
 import { sendNotification } from 'web-push';
 import { db } from '$lib/server/db';
 import { calendarMember, notificationGroupMember, notificationGroupMute, notificationPreference, notificationRead, pushSubscription, user } from '$lib/server/db/schema';
-import { gamesRequest } from '$lib/server/games-api';
+import { gamesRequest, listGames } from '$lib/server/games-api';
+import { gameNotificationPuzzle, hiddenGameNotificationDescription } from '$lib/utils/game-notification';
+import { games, type Game, type GameRecord } from '$lib/utils/games';
 import { isNotificationGroup, notificationGroups, type NotificationGroup } from '$lib/utils/notification-groups';
 import type { NotificationInbox, SiteNotification } from '$lib/types/notifications';
 
@@ -110,6 +112,24 @@ export async function setNotificationGroupPreference(userId: string, group: Noti
     return true;
 }
 
+async function hideInboxGameResults(items: SiteNotification[], userId: string) {
+    const submitted = new Map<Game, Promise<Set<number>>>();
+    return Promise.all(items.map(async item => {
+        const puzzle = gameNotificationPuzzle(item);
+        if (!puzzle) return item;
+        if (puzzle.day !== null) {
+            const { game, day } = puzzle;
+            if (!submitted.has(game)) {
+                submitted.set(game, listGames<GameRecord>(games[game].endpoint, userId, { user_id: userId })
+                    .then(records => new Set(records.filter(record => record.user_id === userId).map(record => record.day)))
+                    .catch(() => new Set<number>()));
+            }
+            if ((await submitted.get(game))?.has(day)) return item;
+        }
+        return { ...item, description: hiddenGameNotificationDescription };
+    }));
+}
+
 export async function getInbox(userId: string): Promise<NotificationInbox> {
     const [[pref], options] = await Promise.all([
         db.select().from(notificationPreference).where(eq(notificationPreference.userId, userId)),
@@ -119,7 +139,7 @@ export async function getInbox(userId: string): Promise<NotificationInbox> {
     const inbox: NotificationInbox = { enabled, options, items: [], available: true };
     if (pref?.enabled) {
         try {
-            const items = await visibleNotifications(userId);
+            const items = await hideInboxGameResults(await visibleNotifications(userId), userId);
             const read = items.length ? await db.select({ id: notificationRead.notificationId }).from(notificationRead)
                 .where(and(eq(notificationRead.userId, userId), inArray(notificationRead.notificationId, items.map((item) => item.id)))) : [];
             const readIds = new Set(read.map((item) => item.id));
@@ -177,14 +197,20 @@ export async function deliverNotification(item: SiteNotification, excludedUserId
     const vapidDetails = pushConfig();
     if (!vapidDetails) return 'published to the inbox. browser push is not configured.';
 
-    const description = Array.from(item.description);
-    const title = Array.from(item.title);
-    const payload = JSON.stringify({
-        id: item.id,
-        title: title.length > 128 ? title.slice(0, 127).join('') + '…' : item.title,
-        description: description.length > 400 ? description.slice(0, 399).join('') + '…' : item.description,
-        link: item.link
-    });
+    function pushPayload(body: string) {
+        const description = Array.from(body);
+        const title = Array.from(item.title);
+        return JSON.stringify({
+            id: item.id,
+            title: title.length > 128 ? title.slice(0, 127).join('') + '…' : item.title,
+            description: description.length > 400 ? description.slice(0, 399).join('') + '…' : body,
+            link: item.link
+        });
+    }
+
+    const puzzle = gameNotificationPuzzle(item);
+    const fullPayload = pushPayload(item.description);
+    const hiddenPayload = puzzle ? pushPayload(hiddenGameNotificationDescription) : fullPayload;
 
     let failed = 0;
     try {
@@ -200,11 +226,17 @@ export async function deliverNotification(item: SiteNotification, excludedUserId
             .where(and(eq(notificationPreference.enabled, true), members && inArray(pushSubscription.userId, members),
                 excludedUserId ? ne(pushSubscription.userId, excludedUserId) : undefined,
                 recipientIds ? inArray(pushSubscription.userId, recipientIds) : undefined, sectionEnabled));
+        const submitted = puzzle && puzzle.day !== null && subscriptions.length
+            ? new Set(await listGames<GameRecord>(games[puzzle.game].endpoint, excludedUserId ?? 'public-games',
+                { day: String(puzzle.day) })
+                .then(records => records.filter(record => record.day === puzzle.day).map(record => record.user_id))
+                .catch(() => []))
+            : new Set<string>();
         for (let start = 0; start < subscriptions.length; start += 20) {
             await Promise.all(subscriptions.slice(start, start + 20).map(async ({ push_subscription: sub }) => {
                 try {
                     await sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                        payload, { vapidDetails, TTL: 86_400, timeout: 2500 });
+                        submitted.has(sub.userId) ? fullPayload : hiddenPayload, { vapidDetails, TTL: 86_400, timeout: 2500 });
                 } catch (cause) {
                     const code = (cause as { statusCode?: number })?.statusCode;
                     if (code === 404 || code === 410) {
