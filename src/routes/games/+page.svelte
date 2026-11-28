@@ -15,10 +15,27 @@
     import { calendarDayColors } from '$lib/utils/shared/calendar';
     import type { ActionData, PageData } from './$types';
 
-    type Today = NonNullable<PageData['today']>;
-    type Outcome = Today['matchups'][number]['outcome'];
+    type Duel = NonNullable<PageData['duel']>;
+    const periods = ['daily', 'weekly', 'monthly', 'global'] as const;
+    type Period = (typeof periods)[number];
+    type Outcome = Duel['matchups'][number]['outcome'];
 
     let { data, form }: { data: PageData; form: ActionData } = $props();
+
+    function lobbyQuery(section?: 'duel' | 'results', period?: Period) {
+        const duel = section === 'duel' ? period : data.duelPeriod;
+        const results = section === 'results' ? period : data.resultsPeriod;
+        const query = new URLSearchParams();
+        if (duel && duel !== 'daily') query.set('duel', duel);
+        if (results && results !== 'daily') query.set('results', results);
+        return query;
+    }
+
+    function periodQuery(period: Period) {
+        const query = new URLSearchParams({ date: data.date });
+        if (period !== 'daily') query.set('tab', period);
+        return query;
+    }
 
     function accent(outcome: Outcome, index: number) {
         if (!outcome || outcome === 'draw') return 'gray';
@@ -26,7 +43,7 @@
     }
 </script>
 
-{#snippet scoreboard(players: Today['players'], scores: (string | number | null)[], outcome: Outcome, compact = false)}
+{#snippet scoreboard(players: Duel['players'], scores: (string | number | null)[], outcome: Outcome, compact = false)}
     <div class="grid grid-cols-2 gap-2">
         {#each players as player, index (player.id)}
             {@const { color, backgroundColor } = calendarDayColors(accent(outcome, index))}
@@ -47,7 +64,7 @@
     </div>
 {/snippet}
 
-{#snippet gameHeading(game: Today['matchups'][number]['game'], href?: string)}
+{#snippet gameHeading(game: Duel['matchups'][number]['game'], href?: string)}
     {#snippet label()}
         <FilledSectionIcon icon={gameIcons[game]} color="aqua" compact />
         {games[game].name}
@@ -61,11 +78,22 @@
     </h3>
 {/snippet}
 
+{#snippet periodTabs(section: 'duel' | 'results', current: Period)}
+    <nav class="tab-nav" aria-label={section === 'duel' ? 'Duel period' : 'Results period'}>
+        {#each periods as period (period)}
+            <a href={`/games?${lobbyQuery(section, period)}`} class="tab-link" data-sveltekit-noscroll
+                aria-current={current === period ? 'page' : undefined}>{period}</a>
+        {/each}
+    </nav>
+{/snippet}
+
 <Body>
-    {@const today = data.today}
-    {@const query = today ? new URLSearchParams({ date: today.date, first: today.players[0].id, second: today.players[1].id }) : null}
-    {@const duelHref = query ? `/games/duel?${query}` : '/games/duel'}
-    {@const resultsHref = `/games/results?date=${data.date}`}
+    {@const duel = data.duel}
+    {@const duelQuery = periodQuery(data.duelPeriod)}
+    {@const resultsQuery = periodQuery(data.resultsPeriod)}
+    {@const pairQuery = duel ? new URLSearchParams({ ...Object.fromEntries(duelQuery), first: duel.players[0].id, second: duel.players[1].id }) : duelQuery}
+    {@const duelHref = `/games/duel?${pairQuery}`}
+    {@const resultsHref = `/games/results?${resultsQuery}`}
     <CustomH1 class="flex items-center gap-2">
         <FilledSectionIcon icon={GameControllerIcon} color="blue" />
         games
@@ -78,7 +106,7 @@
                 <div class="flex flex-wrap gap-2" role="group" aria-label="Add preferred games">
                     {#each data.availableGames as game (game)}
                         {@const Icon = gameIcons[game]}
-                        <form method="POST" action="?/gamePreference" use:enhance>
+                        <form method="POST" action={`?/gamePreference&${lobbyQuery()}`} use:enhance>
                             <input type="hidden" name="game" value={game} />
                             <button type="submit" name="mode" value="add" class="button button-secondary min-h-8 px-2 py-1" aria-label={'Add ' + games[game].name + ' to preferred games'}>
                                 <Icon class="size-4 shrink-0" aria-hidden="true" />
@@ -96,7 +124,7 @@
                         <div class="flex min-w-0 flex-col gap-1.5">
                             <div class="flex items-center justify-between gap-2">
                                 {@render gameHeading(submission.game)}
-                                <form method="POST" action="?/gamePreference" use:enhance>
+                                <form method="POST" action={`?/gamePreference&${lobbyQuery()}`} use:enhance>
                                     <input type="hidden" name="game" value={submission.game} />
                                     <button type="submit" name="mode" value="remove" class="flex size-8 cursor-pointer items-center justify-center text-gray hover:text-fg0"
                                         aria-label={'Remove ' + games[submission.game].name + ' from preferred games'} title="remove preferred game">
@@ -128,7 +156,7 @@
                                         <CaretDownIcon class="size-3.5 group-open:rotate-180" aria-hidden="true" />
                                     </summary>
                                     <div class="p-3">
-                                        <PlayerResultEditor game={submission.game} date={data.date} action="?/submitResult" message={failed} />
+                                        <PlayerResultEditor game={submission.game} date={data.date} action={`?/submitResult&${lobbyQuery()}`} message={failed} />
                                     </div>
                                 </details>
                             {/if}
@@ -145,19 +173,20 @@
     <section class="flex flex-col gap-3" aria-labelledby="lobby-duel-title">
         <h2 id="lobby-duel-title"><a href={duelHref} class="inline-flex items-center gap-2 hover:text-fg0">
             <FilledSectionIcon icon={SwordIcon} color="green" />
-            today’s duel
+            duel
         </a></h2>
-        {#if today}
-            {@const { players, points, matchups } = today}
+        {@render periodTabs('duel', data.duelPeriod)}
+        {#if duel}
+            {@const { players, points, matchups } = duel}
             {@const winner = !points || points[0] === points[1] ? null : points[0] > points[1] ? 'first' : 'second'}
             {@render scoreboard(players, points ?? [null, null], winner)}
             <div class="mt-2 grid gap-3 lg:grid-cols-(--game-columns)"
                 style:--game-columns={`repeat(${matchups.length}, minmax(0, 1fr))`}>
                 {#each matchups as matchup (matchup.game)}
                     <div class="flex min-w-0 flex-col gap-1">
-                        {@render gameHeading(matchup.game, gameFilterHref('/games/duel', query ?? '', matchup.game))}
+                        {@render gameHeading(matchup.game, gameFilterHref('/games/duel', pairQuery, matchup.game))}
                         {@render scoreboard(players, matchup.scores, matchup.outcome, true)}
-                        {#if matchup.hidden}
+                        {#if matchup.hidden && data.duelPeriod === 'daily'}
                             <div class="grid grid-cols-2 justify-items-center gap-2">
                                 {#each players as player (player.id)}
                                     <div class="surface-card flex w-full justify-center p-2" role="group" aria-label={player.username || player.name}>
@@ -172,16 +201,17 @@
         {:else}
             <p class="subtitle">A duel needs two players with a preferred game in common.</p>
         {/if}
-        <a href={duelHref} class="internal-link self-center text-secondary">[open duel]</a>
+        <a href={duelHref} class="button button-accent self-center">open duel</a>
     </section>
 
     <SectionSeparator />
     <section class="flex flex-col gap-3" aria-labelledby="lobby-results-title">
         <h2 id="lobby-results-title"><a href={resultsHref} class="inline-flex items-center gap-2 hover:text-fg0">
             <FilledSectionIcon icon={ListNumbersIcon} color="green" />
-            today’s results
+            results
         </a></h2>
-        <GameRankings boards={data.results} period="daily" date={data.date} query={`?date=${data.date}`} />
-        <a href={resultsHref} class="internal-link self-center text-secondary">[open results]</a>
+        {@render periodTabs('results', data.resultsPeriod)}
+        <GameRankings boards={data.results} period={data.resultsPeriod} date={data.date} query={`?${resultsQuery}`} />
+        <a href={resultsHref} class="button button-accent self-center">open results</a>
     </section>
 </Body>

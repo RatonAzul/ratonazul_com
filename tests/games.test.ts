@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { gameNotificationPuzzle } from '../src/lib/utils/game-notification.ts';
 import { gameResultSummary, isaacStatistics, pointProgression, wordleStatistics } from '../src/lib/utils/game-result-summary.ts';
-import { boardsByPoints, leaderboard } from '../src/lib/utils/game-leaderboard.ts';
+import { boardsByPoints, leaderboard, rankingPointProgression } from '../src/lib/utils/game-leaderboard.ts';
 import { calendarMonths, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, playerCounts, recordDate, scoreGuess, validDate, wordleResult, wordleBoardResult, type GameRecord } from '../src/lib/utils/games.ts';
 
 test('board-only Wordle stops at the first green row or scores X/6', () => {
@@ -248,4 +248,14 @@ test('game notifications identify the original puzzle without reading the score 
     assert.deepEqual(gameNotificationPuzzle({ section: 'Games', title: 'Ada played Wordle', description: 'unexpected format' }),
         { game: 'wordle', day: null });
     assert.equal(gameNotificationPuzzle({ section: 'Games', title: 'Games tonight', description: 'See you at eight' }), undefined);
+});
+
+test('ranking progression counts the best attempt per date and carries scores across gaps', () => {
+    assert.deepEqual(rankingPointProgression([
+        { date: '2026-11-15', points: 3 },
+        { date: '2026-11-15', points: 4 },
+        { date: '2026-11-16', points: null },
+        { date: '2026-11-17', points: 2 },
+        { date: '2026-11-18', points: 6 }
+    ], '2026-11-14', '2026-11-17'), [0, 0, 4, 4, 6]);
 });
