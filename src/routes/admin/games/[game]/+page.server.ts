@@ -1,4 +1,5 @@
 import { error, fail } from '@sveltejs/kit';
+import { byResultCount, playerResultCounts } from '$lib/server/games/player-activity';
 import { requireGamesAdmin } from '$lib/server/games/access';
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/auth.schema';
@@ -44,14 +45,16 @@ export const load: PageServerLoad = async ({ request, params, url }) => {
     const date = url.searchParams.get('date') ?? (year === currentYear ? today : `${year}-01-01`);
     if (!validDate(date) || Number(date.slice(0, 4)) !== year) error(400, 'Choose a valid date within the selected year.');
     const players = await db.select({ id: user.id, name: user.name, username: user.username, image: user.image, showImage: user.showImage, color: user.color }).from(user).orderBy(user.name);
+    const history = listGames<GameRecord>(config.endpoint, actor);
+    const activity = playerResultCounts(actor, { game: config.game, records: history });
     try {
-        const records = await listGames<GameRecord>(config.endpoint, actor);
+        const records = await history;
         const daily = records.filter(record => 'date' in record ? record.date === date : record.day === isaacDay(date));
         const days = [...new Set([puzzleDay(params.game as keyof typeof games, date), ...daily.map(record => record.day)])];
         const solutions = config.solutions ? (await Promise.all(days.map(day => listGames<Solution>(config.solutions!, actor, { day: String(day) })))).flat() : [];
-        return { game: params.game as keyof typeof games, year, currentYear, today, date, defaultUserId: actor, players, records, daily, solutions, loadError: '' };
+        return { game: params.game as keyof typeof games, year, currentYear, today, date, defaultUserId: actor, players: players.sort(byResultCount(await activity)), records, daily, solutions, loadError: '' };
     } catch (cause) {
-        return { game: params.game as keyof typeof games, year, currentYear, today, date, defaultUserId: actor, players, records: [] as GameRecord[], daily: [] as GameRecord[], solutions: [] as Solution[], loadError: report(cause).message };
+        return { game: params.game as keyof typeof games, year, currentYear, today, date, defaultUserId: actor, players: players.sort(byResultCount(await activity)), records: [] as GameRecord[], daily: [] as GameRecord[], solutions: [] as Solution[], loadError: report(cause).message };
     }
 };
 

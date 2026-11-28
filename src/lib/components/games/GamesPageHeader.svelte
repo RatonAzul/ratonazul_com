@@ -11,7 +11,7 @@
         title: string;
         items: BreadcrumbItem[];
         icon?: Component<{ class?: string }>;
-        navigation?: { path: '/games/duel' | '/games/results'; game?: Game; query?: string };
+        navigation?: { path: '/games/duel' | '/games/results'; game?: Game; query?: string; availableGames?: Game[] };
     } = $props();
 
     const pages = [
@@ -26,7 +26,7 @@
 </CustomH1>
 <Breadcrumbs {items} label="Games breadcrumb" showSingle class="mb-2" />
 <nav class="mb-3 flex flex-wrap gap-2" aria-label={navigation?.path === '/games/results' ? 'Results games' : 'Duel games'}>
-    {#each pages as entry (entry.name)}
+    {#each pages.filter(entry => !entry.game || !navigation?.availableGames || navigation.availableGames.includes(entry.game)) as entry (entry.name)}
         {@const selected = navigation !== undefined && navigation.game === entry.game}
         <a href={gameFilterHref(navigation?.path ?? '/games/duel', navigation?.query ?? '', entry.game)}
             class="inline-flex hover:brightness-110" aria-current={selected ? 'page' : undefined}

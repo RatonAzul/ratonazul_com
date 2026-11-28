@@ -3,6 +3,8 @@ import { deliverNotification } from '$lib/server/notifications';
 import type { SiteNotification } from '$lib/types/notifications';
 import type { GameRecord, IsaacInput, WordleInput } from '$lib/utils/games';
 
+export const firstGameDate = '2026-08-01';
+
 const madridDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid', dateStyle: 'short' });
 
 export function currentGameDate() {

@@ -3,8 +3,10 @@ import { eq } from 'drizzle-orm';
 import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { gameOpponent, user } from '$lib/server/db/schema';
+import { sharedGames } from '$lib/utils/games';
 import { isProfileColor } from '$lib/utils/profile-colors';
-import { registeredGamePlayers, preferredOpponent } from '$lib/server/games/access';
+import { byResultCount, playerResultCounts } from '$lib/server/games/player-activity';
+import { gamePreferenceRoster, preferredOpponent } from '$lib/server/games/access';
 import { pushConfig } from '$lib/server/notifications';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -19,9 +21,11 @@ export const load: PageServerLoad = async ({ request, params }) => {
     await requireOwner(request, params.userId);
     const [profile] = await db.select({ name: user.name, username: user.username, image: user.image, showImage: user.showImage, email: user.email, color: user.color }).from(user).where(eq(user.id, params.userId)).limit(1);
     if (!profile) error(404, 'User not found');
-    const [players, opponentId] = await Promise.all([registeredGamePlayers(), preferredOpponent(params.userId)]);
-    const opponents = players.filter(player => player.id !== params.userId);
-    return { profile, userId: params.userId, pushPublicKey: pushConfig()?.publicKey ?? null, opponents, opponentId: opponentId ?? 'automatic' };
+    const [players, opponentId] = await Promise.all([gamePreferenceRoster(), preferredOpponent(params.userId)]);
+    const preferredGames = players.find(player => player.id === params.userId)?.preferredGames ?? [];
+    const opponents = players.filter(player => player.id !== params.userId && sharedGames(preferredGames, player.preferredGames).length);
+    if (opponents.length > 1) opponents.sort(byResultCount(await playerResultCounts(params.userId)));
+    return { profile, userId: params.userId, pushPublicKey: pushConfig()?.publicKey ?? null, opponents, opponentId: opponents.find(player => player.id === opponentId)?.id ?? 'automatic' };
 };
 
 export const actions: Actions = {
@@ -68,8 +72,12 @@ export const actions: Actions = {
             return fail(400, { success: false, opponentMessage: 'Choose another player.' });
         }
         if (opponentId !== 'automatic') {
-            const [opponent] = await db.select({ id: user.id }).from(user).where(eq(user.id, opponentId));
-            if (!opponent) return fail(400, { success: false, opponentMessage: 'Choose a registered player.' });
+            const players = await gamePreferenceRoster();
+            const owner = players.find(player => player.id === params.userId);
+            const opponent = players.find(player => player.id === opponentId);
+            if (!owner || !opponent || !sharedGames(owner.preferredGames, opponent.preferredGames).length) {
+                return fail(400, { success: false, opponentMessage: 'Choose a player with a preferred game in common.' });
+            }
             await db.insert(gameOpponent).values({ userId: params.userId, opponentId })
                 .onConflictDoUpdate({ target: gameOpponent.userId, set: { opponentId } });
         } else {

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { gameResultSummary, isaacStatistics, pointProgression, wordleStatistics } from '../src/lib/utils/game-result-summary.ts';
-import { leaderboard } from '../src/lib/utils/game-leaderboard.ts';
+import { boardsByPoints, leaderboard } from '../src/lib/utils/game-leaderboard.ts';
 import { calendarMonths, puzzleDay, isaacDay, isaacShare, parseIsaac, parseSpanishWordle, spanishWordleShare, playerCounts, recordDate, scoreGuess, validDate, wordleResult, wordleBoardResult, type GameRecord } from '../src/lib/utils/games.ts';
 
 test('board-only Wordle stops at the first green row or scores X/6', () => {
@@ -224,4 +224,14 @@ test('Isaaconnect leaderboard uses the highest points per player per puzzle', ()
         attempt(2, '2026-11-14', 4, 0),
         attempt(3, '2026-11-15', 2, 3)
     ]), [{ id: 'player', points: 6, position: 1 }]);
+});
+
+test('daily boards keep every attempt and order equal scores by submission time', () => {
+    const attempt = (id: number, points: number, created_at: string): GameRecord =>
+        ({ id, user_id: 'player', day: isaacDay('2026-11-14'), points, created_at, lifes: 2, time: 60, board: [] });
+    assert.deepEqual(boardsByPoints([
+        attempt(1, 2, '2026-11-14T06:00:00Z'),
+        attempt(2, 4, '2026-11-14T09:00:00Z'),
+        attempt(3, 4, '2026-11-14T08:00:00Z')
+    ]).map(row => row.id), [3, 2, 1]);
 });
