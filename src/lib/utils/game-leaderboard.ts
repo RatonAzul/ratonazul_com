@@ -52,3 +52,22 @@ export function leaderboard(gameResults: GameRecord[]) {
         return { id, points, position };
     });
 }
+
+export function rankingPointProgression(
+    attempts: { date: string; points: number | null }[], start: string, end: string
+) {
+    const dayLength = 86_400_000;
+    const first = Date.parse(start);
+    const length = (Date.parse(end) - first) / dayLength + 1;
+    const best = new Map<number, number>();
+    for (const { date, points } of attempts) {
+        if (points === null) continue;
+        const position = (Date.parse(date) - first) / dayLength + 1;
+        if (position >= 1 && position <= length) best.set(position, Math.max(best.get(position) ?? 0, points));
+    }
+    let total = 0;
+    return [0, ...Array.from({ length }, (_, index) => {
+        total += best.get(index + 1) ?? 0;
+        return total;
+    })];
+}

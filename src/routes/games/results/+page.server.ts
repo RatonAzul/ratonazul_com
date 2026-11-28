@@ -4,7 +4,7 @@ import { rankingRows, submittedGameDates } from '$lib/server/games/result-visibi
 import { preferredGamesFor, registeredGamePlayers } from '$lib/server/games/access';
 import { currentGameDate, firstGameDate as firstDate } from '$lib/server/games/results';
 import { gameFilterHref, games, isGame, recordDate, validDate, type Game, type GameRecord } from '$lib/utils/games';
-import { calendarWeekRange } from '$lib/utils/shared/calendar';
+import { calendarMonths, calendarWeekRange } from '$lib/utils/shared/calendar';
 import type { PageServerLoad } from './$types';
 
 const gameIds = Object.keys(games) as Game[];
@@ -28,6 +28,11 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
     const { start, end } = calendarWeekRange(date);
     const month = date.slice(0, 7);
     const year = date.slice(0, 4);
+    const rangeStart = period === 'weekly' ? start : period === 'monthly' ? month + '-01' : period === 'global' ? firstDate : date;
+    const rangeLast = period === 'weekly' ? new Date(Date.parse(end) - 86_400_000).toISOString().slice(0, 10)
+        : period === 'monthly' ? calendarMonths(Number(year))[Number(date.slice(5, 7)) - 1].dates.at(-1) ?? today
+        : period === 'global' ? today : date;
+    const rangeEnd = rangeLast < today ? rangeLast : today;
     const reader = locals.user?.id ?? 'public-games';
 
     const [players, histories] = await Promise.all([
@@ -58,9 +63,9 @@ export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
         });
         for (const day of dayRecords) calendar[day] = (calendar[day] ?? 0) + 1;
         const visibleDates = submittedGameDates(history.value, locals.user?.id);
-        const rows = rankingRows(scoped, profiles, visibleDates);
+        const rows = rankingRows(scoped, profiles, visibleDates, period !== 'daily');
         return { game, available: true, rows };
     });
 
-    return { firstDate, today, date, period, game, availableGames, calendar, boards } as const;
+    return { firstDate, today, date, period, game, availableGames, calendar, boards, rangeStart, rangeEnd } as const;
 };

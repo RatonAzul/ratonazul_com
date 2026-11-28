@@ -9,7 +9,8 @@ export function submittedGameDates(records: GameRecord[], viewerId: string | und
 export function rankingRows<Player extends { id: string }>(
     records: GameRecord[],
     profiles: Map<string, Player>,
-    visibleDates: Set<string>
+    visibleDates: Set<string>,
+    showPeriodTotals = false
 ) {
     const attemptsByPlayer = new Map<string, Map<string, {
         id: string; date: string; points: number | null; board: ReturnType<typeof displayGameResult>
@@ -28,7 +29,7 @@ export function rankingRows<Player extends { id: string }>(
         entries.set(date, { id: date, date, points: null, board: null });
         attemptsByPlayer.set(record.user_id, entries);
     }
-    const rankings = visibleRecords.length === records.length
+    const rankings = showPeriodTotals || visibleRecords.length === records.length
         ? leaderboard(records)
         : [...attemptsByPlayer.keys()].sort().map(id => ({ id, points: null, position: null }));
     return rankings.map(row => ({
