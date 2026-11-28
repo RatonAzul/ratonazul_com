@@ -60,3 +60,11 @@ export const gameOpponent = pgTable('game_opponent', {
 }, (table) => [
     check('game_opponent_distinct_users', sql`${table.userId} <> ${table.opponentId}`)
 ]);
+
+export const gamePreference = pgTable('game_preference', {
+    userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+    game: text('game').$type<import('../../utils/games').Game>().notNull()
+}, (table) => [
+    primaryKey({ columns: [table.userId, table.game] }),
+    check('game_preference_known_game', sql`${table.game} in ('wordle', 'la-palabra-del-dia', 'isaaconnect')`)
+]);

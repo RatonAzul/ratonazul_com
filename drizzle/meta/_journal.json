@@ -71,6 +71,13 @@
       "when": 1795798863176,
       "tag": "0009_user_profile_defaults",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795807155461,
+      "tag": "0010_game_preferences",
+      "breakpoints": true
     }
   ]
 }

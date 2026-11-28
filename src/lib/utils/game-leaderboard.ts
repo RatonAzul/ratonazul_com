@@ -1,12 +1,25 @@
 import { recordDate, type GameRecord } from './games.ts';
 
+export function gamePoints(record: GameRecord) {
+    return 'points' in record ? record.points : 7 - record.score;
+}
+
+function submissionTime(record: GameRecord, day = recordDate(record)) {
+    const timestamp = Date.parse(record.created_at ?? day);
+    return Number.isFinite(timestamp) ? timestamp : Date.parse(day);
+}
+
+export function boardsByPoints(records: GameRecord[]) {
+    return [...records].sort((a, b) => gamePoints(b) - gamePoints(a) ||
+        submissionTime(a) - submissionTime(b) || a.id - b.id);
+}
+
 export function leaderboard(gameResults: GameRecord[]) {
     const bestByPlayer = new Map<string, Map<string, { points: number; submitted: number }>>();
     for (const record of gameResults) {
         const day = recordDate(record);
-        const points = 'points' in record ? record.points : 7 - record.score;
-        const timestamp = Date.parse(record.created_at ?? day);
-        const submitted = Number.isFinite(timestamp) ? timestamp : Date.parse(day);
+        const points = gamePoints(record);
+        const submitted = submissionTime(record, day);
 
         const puzzles = bestByPlayer.get(record.user_id) ?? new Map();
         bestByPlayer.set(record.user_id, puzzles);

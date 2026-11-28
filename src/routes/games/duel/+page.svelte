@@ -6,6 +6,7 @@
     import GamesPageHeader from '$lib/components/games/GamesPageHeader.svelte';
     import FilledSectionIcon from '$lib/components/shared/FilledSectionIcon.svelte';
     import { gameIcons } from '$lib/components/shared/game-icons';
+    import HiddenGameBoard from '$lib/components/games/HiddenGameBoard.svelte';
     import GameBoard from '$lib/components/shared/GameBoard.svelte';
     import MonthPicker from '$lib/components/shared/MonthPicker.svelte';
     import SectionSeparator from '$lib/components/shared/SectionSeparator.svelte';
@@ -13,7 +14,7 @@
     import PlayerResultEditor from '$lib/components/games/PlayerResultEditor.svelte';
     import PointsProgression from '$lib/components/games/PointsProgression.svelte';
     import GameStatsCard from '$lib/components/games/GameStatsCard.svelte';
-    import { gameFilterHref, games } from '$lib/utils/games';
+    import { gameFilterHref, games, sharedGames } from '$lib/utils/games';
     import { defaultProfileColor, isProfileColor } from '$lib/utils/profile-colors';
     import { calendarDayColors, formatCalendarDate, interactiveEmptyCalendarDayClass } from '$lib/utils/shared/calendar';
     import type { ActionData, PageData } from './$types';
@@ -69,6 +70,10 @@
         if (!matchup || !id || matchup.players[index].id === id) return;
         const query = new URLSearchParams(matchupHref(matchup.date, period).slice(1));
         query.set(index === 0 ? 'first' : 'second', id);
+        const candidate = matchup.options.find(option => option.id === id);
+        if (data.game && (!candidate || !sharedGames(candidate.preferredGames, matchup.players[1 - index].preferredGames).includes(data.game))) {
+            query.delete('game');
+        }
         void goto(`?${query}`, { noScroll: true, keepFocus: true });
     }
 
@@ -104,7 +109,7 @@
     {@const textSize = compact ? 'text-[0.625rem] leading-tight' : 'text-meta sm:text-secondary'}
     {@const id = day + '-' + matchup.game}
     {@const submission = form?.game === matchup.game && form.date === day ? form : null}
-    {@const canSubmit = day === data.matchup?.today}
+    {@const canSubmit = Boolean(data.matchup && day >= data.matchup.firstDate && day <= data.matchup.today)}
     {#if !matchup.available}
         <p role="status" class="subtitle">unable to load results for this game.</p>
     {:else}
@@ -136,7 +141,7 @@
                         </button>
                     {:else}
                         <p class="min-w-0 flex-1 self-center font-semibold {textSize} {index === 1 ? 'pl-2 text-left sm:pl-5' : 'pr-2 text-right sm:pr-5'} {tiedPoints ? 'sr-only sm:not-sr-only' : ''}">
-                            {status ? resultLabels[status] : result ? 'pending' : 'no result yet'}
+                            {matchup.hidden ? 'hidden' : status ? resultLabels[status] : result ? 'pending' : 'no result yet'}
                         </p>
                     {/if}
                     <div class="flex shrink-0 gap-px font-bold tabular-nums sm:gap-0.5 {textSize} {index === 1 ? 'flex-row-reverse' : ''}">
@@ -159,7 +164,7 @@
                             style:color={neutralPoints ? 'var(--gray)' : color}
                             style:background-color={neutralPoints ? tiedStatBackground : backgroundColor}>
                             {#if result?.points !== undefined}<span class="sr-only">Points </span>{/if}
-                            {result?.score ?? '–'}
+                            {matchup.hidden ? (matchup.game === 'isaaconnect' ? '?/4' : '?/6') : result?.score ?? '–'}
                         </span>
                     </div>
                 </article>
@@ -177,6 +182,8 @@
                                 <GameBoard rows={result.rows} words={result.words} isaac={matchup.game === 'isaaconnect'} compact />
                             {:else if canSubmit && index === data.matchup?.submissionSlot}
                                 <PlayerResultEditor game={matchup.game} date={day} action={submitAction} message={submission?.message} />
+                            {:else if matchup.hidden}
+                                <HiddenGameBoard isaac={matchup.game === 'isaaconnect'} />
                             {:else}
                                 <p class="subtitle">no result yet.</p>
                             {/if}
@@ -197,16 +204,16 @@
 
 {#snippet dayScoreboard(day: Matchup['days'][number], players: Matchup['players'])}
     {@const expanded = expandedDays[day.date] ?? Boolean(form?.message && form.date === day.date)}
-    {@const available = day.matchups.every(matchup => matchup.available)}
+    {@const score = day.matchups.every(matchup => matchup.available) ? day.score : null}
     {@const dateLabel = formatCalendarDate(day.date)}
     <button type="button" class="grid w-full cursor-pointer grid-cols-2 gap-2 hover:brightness-110"
-        aria-label={`${expanded ? 'Hide' : 'Show'} games for ${dateLabel}${available ? `, score ${day.score.join(' to ')}` : ''}`}
+        aria-label={`${expanded ? 'Hide' : 'Show'} games for ${dateLabel}${score ? `, score ${score.join(' to ')}` : ''}`}
         aria-expanded={expanded} aria-controls={'day-games-' + day.date}
         onclick={() => expandedDays[day.date] = !expanded}>
         {#each players as player, index (player.id)}
-            {@const points = day.score[index]}
-            {@const opponent = day.score[1 - index]}
-            {@const { color, backgroundColor } = available ? scoreColor(points, opponent) : calendarDayColors('gray')}
+            {@const points = score?.[index] ?? 0}
+            {@const opponent = score?.[1 - index] ?? 0}
+            {@const { color, backgroundColor } = score ? scoreColor(points, opponent) : calendarDayColors('gray')}
             <span class="surface-card flex min-h-8 min-w-0 items-stretch gap-1
                 {index === 1 ? 'flex-row-reverse border-r-4' : 'border-l-4'}"
                 style:border-color={color} style:color style:background-color={backgroundColor}>
@@ -218,7 +225,7 @@
                     {player.username || player.name}
                 </span>
                 <span class="flex min-w-12 items-center justify-center text-secondary font-bold tabular-nums sm:w-24 lg:w-28"
-                    style:background-color={backgroundColor}>{available ? points : '–'}</span>
+                    style:background-color={backgroundColor}>{score ? points : '–'}</span>
             </span>
         {/each}
     </button>
@@ -240,10 +247,10 @@
             { label: 'games', href: '/games' },
             ...(data.game ? [{ label: 'duel', href: gameFilterHref('/games/duel', duelQuery) }, { label: gameTitle }] : [{ label: 'duel' }])
         ]}
-        navigation={{ path: '/games/duel', game: data.game, query: duelQuery }} />
+        navigation={{ path: '/games/duel', game: data.game, query: duelQuery, availableGames: data.matchup?.commonGames ?? [] }} />
     {#if data.matchup}
-        {@const { date, today, firstDate, players, options, matchups, days, pageNumber, pageCount, totals, wordleStats, isaacStats, progression, rangeStart, rangeEnd, calendar } = data.matchup}
-        {@const [leftPoints, rightPoints] = totals[period]}
+        {@const { date, today, firstDate, players, options, matchups, days, pageNumber, pageCount, points: totalPoints, totalsHidden, periodHidden, wordleStats, isaacStats, progression, rangeStart, rangeEnd, calendar } = data.matchup}
+        {@const [leftPoints, rightPoints] = totalPoints ?? [0, 0]}
         <section class="flex flex-col gap-4" aria-label="Game matchup">
             <nav class="tab-nav" aria-label="Scoreboard period">
                 {#each periods as option (option)}
@@ -256,12 +263,14 @@
                 {#each players as player, index (player.id)}
                     {@const points = index === 0 ? leftPoints : rightPoints}
                     {@const { color, backgroundColor } = scoreColor(points, index === 0 ? rightPoints : leftPoints)}
-                    <DuelPlayerSelect {player} options={options.filter(option => option.id !== players[1 - index].id)}
-                        points={period === 'daily' || calendar ? points : null} {color} {backgroundColor}
+                    <DuelPlayerSelect {player} options={options.filter(option => option.id !== players[1 - index].id && sharedGames(option.preferredGames, players[1 - index].preferredGames).length)}
+                        points={totalPoints ? points : null} {color} {backgroundColor}
                         right={index === 1} selectPlayer={id => pickPlayer(index, id)} />
                 {/each}
             </div>
-            {#if period !== 'daily' && !calendar}
+            {#if totalsHidden}
+                <p class="subtitle">submit your results to reveal the scores.</p>
+            {:else if period !== 'daily' && !calendar}
                 <p class="subtitle" role="status">unable to load days won.</p>
             {/if}
             <SectionSeparator class="my-0!" />
@@ -306,6 +315,8 @@
                                 {/if}
                             {/each}
                         </div>
+                    {:else if periodHidden}
+                        <p class="subtitle">stats are hidden until you submit your results.</p>
                     {:else}
                         <p class="subtitle" role="status">unable to load stats.</p>
                     {/if}
@@ -379,6 +390,6 @@
             {/if}
         </section>
     {:else}
-        <p class="subtitle">A duel needs two registered players.</p>
+        <p class="subtitle">A duel needs two players with a preferred game in common.</p>
     {/if}
 </Body>

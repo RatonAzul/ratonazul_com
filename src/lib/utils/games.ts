@@ -128,3 +128,7 @@ export function spanishWordleShare(record: WordleInput): string {
     const colors: Record<string, string> = { o: '🟩', i: '🟨', x: '⬛' };
     return `La palabra del día #${record.day} ${record.score === 7 ? 'X' : record.score}/6\n\n${(record.board.match(/.{5}/gu) ?? []).map(row => [...row].map(cell => colors[cell]).join('')).join('\n')}\n\nhttps://lapalabradeldia.com/`;
 }
+
+export function sharedGames(first: readonly Game[], second: readonly Game[]) {
+    return first.filter(game => second.includes(game));
+}

@@ -1,23 +1,27 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { listGames } from '$lib/server/games-api';
-import { registeredGamePlayers } from '$lib/server/games/access';
-import { currentGameDate } from '$lib/server/games/results';
-import { leaderboard } from '$lib/utils/game-leaderboard';
-import { games, isGame, recordDate, validDate, type Game, type GameRecord } from '$lib/utils/games';
+import { rankingRows, submittedGameDates } from '$lib/server/games/result-visibility';
+import { preferredGamesFor, registeredGamePlayers } from '$lib/server/games/access';
+import { currentGameDate, firstGameDate as firstDate } from '$lib/server/games/results';
+import { gameFilterHref, games, isGame, recordDate, validDate, type Game, type GameRecord } from '$lib/utils/games';
 import { calendarWeekRange } from '$lib/utils/shared/calendar';
 import type { PageServerLoad } from './$types';
 
-const firstDate = '2026-08-01';
 const gameIds = Object.keys(games) as Game[];
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
+    setHeaders({ 'Cache-Control': 'private, no-store' });
     const today = currentGameDate();
     const date = url.searchParams.get('date') ?? today;
     if (!validDate(date) || date < firstDate || date > today) error(400, 'Choose a past or current game date.');
 
     const game = url.searchParams.get('game') ?? undefined;
     if (game !== undefined && !isGame(game)) error(404, 'Game not found.');
-    const selectedGames = game ? [game] : gameIds;
+    const viewerId = locals.user?.id;
+    const preferredGames = viewerId ? await preferredGamesFor(viewerId) : gameIds;
+    const availableGames = gameIds.filter(option => preferredGames.includes(option));
+    if (game && !availableGames.includes(game)) redirect(303, gameFilterHref('/games/results', url.searchParams));
+    const selectedGames = game ? [game] : availableGames;
 
     const tab = url.searchParams.get('tab');
     const period = tab === 'weekly' || tab === 'monthly' || tab === 'global' ? tab : 'daily';
@@ -53,9 +57,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
             return inPeriod(day);
         });
         for (const day of dayRecords) calendar[day] = (calendar[day] ?? 0) + 1;
-        const rows = leaderboard(scoped).map(row => ({ ...row, player: profiles.get(row.id)! }));
+        const visibleDates = submittedGameDates(history.value, locals.user?.id);
+        const rows = rankingRows(scoped, profiles, visibleDates);
         return { game, available: true, rows };
     });
 
-    return { firstDate, today, date, period, game, calendar, boards } as const;
+    return { firstDate, today, date, period, game, availableGames, calendar, boards } as const;
 };
